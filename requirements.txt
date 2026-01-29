@@ -1,0 +1,9 @@
+# Python dependencies for ArbifyBeta
+
+# Core dependencies
+requests>=2.31.0
+selenium>=4.0.0
+undetected-chromedriver>=3.5.0
+
+# Database - Supabase SDK for direct database queries
+supabase>=2.0.0
