@@ -4549,7 +4549,7 @@ def run_dynamic_bootstrap():
                 continue
             
             try:
-                # BOOTSTRAP: szinkron nyitás hogy biztosan megnyíljon mielőtt scanneljük
+                # BOOTSTRAP: szinkron nyitás hogy biztosan megnyíljon mielőtt szkenneljük
                 _open_next_tab_sync(next_url)
                 opened_next.add(next_url)
                 
