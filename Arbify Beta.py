@@ -177,6 +177,9 @@ NAV_WORKER_MAX_PAIRS = 11
 # Egy párra mennyi ideig várunk maximum (másodpercben)
 PAIR_TIMEOUT_SEC = FIX_URL_WAIT_SEC  # 17 mp - optimalizált timeout
 
+# Instant timeout: ha nincs külső target, várjunk minimum ennyi időt megnyitás után
+NO_EXTERNAL_TARGET_MIN_WAIT_SEC = 5.0  # 5 mp minimum várakozás
+
 # Milyen gyakran kérdezzük le CDP-vel a Target.getTargets-et (másodperc)
 CDP_POLL_INTERVAL = 0.40  # 400 ms - optimalizált polling rate
 
@@ -2298,6 +2301,7 @@ def resolve_pairs_round_robin(pairs) -> tuple[list[tuple[str | None, str | None]
                     log(f"[RR] ✓ Pár kész (idx={pair_idx}) f1={f1} f2={f2}")
 
         # Instant timeout check: ha nincs külső 'page' target, ne várjunk tovább
+        # MÓDOSÍTVA: csak akkor instant timeout, ha már eltelt NO_EXTERNAL_TARGET_MIN_WAIT_SEC a megnyitás óta
         has_external_targets = False
         for t in targets:
             if t.get("type") != "page":
@@ -2313,8 +2317,12 @@ def resolve_pairs_round_robin(pairs) -> tuple[list[tuple[str | None, str | None]
             except Exception:
                 pass
         
-        if not has_external_targets and tracking:
-            log("[RR] ⚡ Nincs külső 'page' target → instant timeout")
+        # Instant timeout csak akkor, ha:
+        # 1. Nincs külső 'page' target
+        # 2. ÉS eltelt NO_EXTERNAL_TARGET_MIN_WAIT_SEC a megnyitás óta (t0)
+        elapsed_since_open = time.time() - t0
+        if not has_external_targets and tracking and elapsed_since_open >= NO_EXTERNAL_TARGET_MIN_WAIT_SEC:
+            log(f"[RR] ⚡ Nincs külső 'page' target + {elapsed_since_open:.1f}s eltelt → instant timeout")
             break
 
         # debug log 2 mp-enként (ha engedélyezve)
