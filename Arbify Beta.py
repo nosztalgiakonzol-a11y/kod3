@@ -32,6 +32,16 @@ from selenium.common.exceptions import (
     WebDriverException,
 )
 
+# Supabase SDK import for direct database queries
+try:
+    from supabase import create_client
+    SUPABASE_SDK_AVAILABLE = True
+except ImportError:
+    SUPABASE_SDK_AVAILABLE = False
+    print("⚠️ Supabase SDK not installed. Run: pip install supabase")
+    print("   Database reconciliation will use fallback method.")
+
+
 # --- DEBUG kapcsoló HTTP hívásokhoz ---
 DEBUG_HTTP = os.getenv("DEBUG_HTTP", "0") == "1"
 
@@ -4630,6 +4640,40 @@ def post_bootstrap_cleanup():
     DIAG_LOGGER.log_milestone(f"POST_BOOTSTRAP_CLEANUP_COMPLETE (stale_removed={len(stale_ids) if stale_ids else 0})")
 
 
+def query_tips_ids_from_database():
+    """
+    Lekérdezi az összes aktív tip ID-t közvetlenül az adatbázisból Supabase SDK használatával.
+    
+    Returns:
+        set: Az aktív tip ID-k halmaza, vagy üres halmaz hiba esetén
+    """
+    if not SUPABASE_SDK_AVAILABLE:
+        warn("⚠️ Supabase SDK nem elérhető - használd: pip install supabase")
+        return None
+    
+    try:
+        log("📊 Supabase SDK használata közvetlen adatbázis lekérdezéshez...")
+        
+        # Supabase kliens létrehozása
+        supabase = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+        
+        # Tips tábla lekérdezése - csak az ID oszlop
+        response = supabase.table("tips").select("id").execute()
+        
+        # ID-k kinyerése
+        if response.data:
+            db_ids = set(row["id"] for row in response.data if "id" in row)
+            log(f"✅ Supabase SDK: {len(db_ids)} ID sikeresen lekérdezve")
+            return db_ids
+        else:
+            log("ℹ️ Supabase SDK: üres válasz, nincs tip az adatbázisban")
+            return set()
+            
+    except Exception as e:
+        warn(f"⚠️ Supabase SDK hiba: {e}")
+        return None
+
+
 def reconcile_database_with_active_ids():
     """
     🔄 ADATBÁZIS RECONCILIATION - Extrém biztonságos megoldás crash recovery-re
@@ -4669,14 +4713,22 @@ def reconcile_database_with_active_ids():
     try:
         # 1. Lekérjük az összes adatbázisbeli ID-t
         log("📊 Adatbázis ID-k lekérdezése...")
-        status, data = http_post(LIST_ACTIVE_TIPS_URL, {}, timeout=30)
         
-        if status != 200 or not isinstance(data, dict):
-            warn(f"⚠️ DB RECONCILIATION: nem sikerült lekérni az adatbázis ID-kat (status={status})")
-            DB_RECONCILE_DONE = True
-            return
+        # Először próbáljuk a Supabase SDK-t (közvetlen adatbázis lekérdezés)
+        db_ids = query_tips_ids_from_database()
         
-        db_ids = set(data.get("ids", []))
+        # Ha SDK nem működött, próbáljuk az API endpoint-ot (fallback)
+        if db_ids is None:
+            log("🔄 Fallback: API endpoint használata...")
+            status, data = http_post(LIST_ACTIVE_TIPS_URL, {}, timeout=30)
+            
+            if status != 200 or not isinstance(data, dict):
+                warn(f"⚠️ DB RECONCILIATION: sem SDK, sem API endpoint nem működött (status={status})")
+                DB_RECONCILE_DONE = True
+                return
+            
+            db_ids = set(data.get("ids", []))
+        
         log(f"📊 Adatbázisban {len(db_ids)} aktív tip ID található")
         
         # 2. Betöltjük az active_ids.txt tartalmát (source of truth)
