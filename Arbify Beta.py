@@ -940,9 +940,10 @@ def restart_application():
     # Small delay before restart
     time.sleep(2)
     
-    # Restart script
+    # Restart script with proper path handling (handles spaces in filename)
     warn("🔄 Restarting script...")
-    os.execv(sys.executable, ['python'] + sys.argv)
+    script_path = os.path.abspath(__file__)
+    os.execv(sys.executable, [sys.executable, script_path] + sys.argv[1:])
 
 
 # ---------- URL utilok ----------
@@ -4920,10 +4921,11 @@ def restart_with_account(next_key: str):
     except Exception:
         pass
 
-    # 4) Script újraindítása új accounttal
+    # 4) Script újraindítása új accounttal (proper path handling for spaces in filename)
+    script_path = os.path.abspath(__file__)
     os.execv(
         sys.executable,
-        [sys.executable, sys.argv[0], f"--acc={next_key}"]
+        [sys.executable, script_path, f"--acc={next_key}"]
     )
 
 
