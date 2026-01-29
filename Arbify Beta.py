@@ -122,12 +122,36 @@ for arg in sys.argv:
 # Opcionális: env változóval is válthatsz (SB_ACTIVE_ACCOUNT=acc2)
 env_account = os.getenv("SB_ACTIVE_ACCOUNT")
 
+# Betöltjük a runtime state-et a perzisztens account információért
+runtime_state_for_account = load_runtime_state()
+persisted_account = None
+
+# Ha account rotation volt folyamatban, akkor a next_account-ot használjuk
+if runtime_state_for_account.get("account_rotation_pending"):
+    persisted_account = runtime_state_for_account.get("next_account")
+    print(f"⚠️ Account rotation volt folyamatban - használjuk a tervezett accountot: {persisted_account}")
+# Különben a current_account-ot próbáljuk
+elif runtime_state_for_account.get("current_account"):
+    persisted_account = runtime_state_for_account.get("current_account")
+    print(f"💾 Mentett account betöltve: {persisted_account}")
+
+# Account kiválasztás prioritási sorrendben:
+# 1. Command-line parameter (--acc=)
+# 2. Environment variable (SB_ACTIVE_ACCOUNT)
+# 3. Persisted account (runtime_state.json)
+# 4. Default (acc1)
 if forced_account in ACCOUNTS:
     ACTIVE_ACCOUNT_KEY = forced_account
+    print(f"✅ Account forrás: command-line parameter (--acc={forced_account})")
 elif env_account in ACCOUNTS:
     ACTIVE_ACCOUNT_KEY = env_account
+    print(f"✅ Account forrás: environment variable (SB_ACTIVE_ACCOUNT={env_account})")
+elif persisted_account in ACCOUNTS:
+    ACTIVE_ACCOUNT_KEY = persisted_account
+    print(f"✅ Account forrás: persisted state (mentett állapot)")
 else:
     ACTIVE_ACCOUNT_KEY = "acc1"   # default
+    print(f"✅ Account forrás: default (nincs mentett állapot)")
 
 ACTIVE_ACCOUNT = ACCOUNTS[ACTIVE_ACCOUNT_KEY]
 
@@ -137,9 +161,9 @@ print(f"📂 Profile directory: {ACTIVE_ACCOUNT['profile_dir']}")
 print(f"📧 Email: {ACTIVE_ACCOUNT['email']}")
 print(f"🎯 Command line args: {sys.argv}")
 if forced_account:
-    print(f"✅ Forced account from --acc parameter: {forced_account}")
+    print(f"   Forced account from --acc parameter: {forced_account}")
 if env_account:
-    print(f"🌍 Environment SB_ACTIVE_ACCOUNT: {env_account}")
+    print(f"   Environment SB_ACTIVE_ACCOUNT: {env_account}")
 print("-" * 60)
 
 
@@ -564,14 +588,30 @@ def load_runtime_state():
     Tartalmazza:
     - accumulated_minutes: az összes eddig felhalmozott futási idő percben
     - last_session_start: az utolsó session indítási időpontja (epoch)
+    - current_account: jelenleg aktív account (acc1/acc2)
+    - next_account: következő account váltás célpontja
+    - account_rotation_pending: igaz ha account váltás folyamatban van
     """
+    default_state = {
+        "accumulated_minutes": 0.0,
+        "last_session_start": None,
+        "current_account": None,
+        "next_account": None,
+        "account_rotation_pending": False
+    }
+    
     if os.path.exists(RUNTIME_STATE_FILE):
         try:
             with open(RUNTIME_STATE_FILE, "r", encoding="utf-8") as f:
-                return json.load(f)
+                state = json.load(f)
+                # Ensure all fields exist (backward compatibility)
+                for key, value in default_state.items():
+                    if key not in state:
+                        state[key] = value
+                return state
         except Exception:
-            return {"accumulated_minutes": 0.0, "last_session_start": None}
-    return {"accumulated_minutes": 0.0, "last_session_start": None}
+            return default_state
+    return default_state
 
 def save_runtime_state(state: dict):
     """Elmenti a perzisztens futásidő állapotot."""
@@ -4906,16 +4946,23 @@ def get_next_account_key(current: str) -> str:
 def restart_with_account(next_key: str):
     warn(f"♻️ Account váltás: {ACTIVE_ACCOUNT_KEY} → {next_key} – Chrome + script újraindítás...")
 
-    # Mentjük a jelenlegi akkumulált futásidőt
+    # Mentjük a jelenlegi akkumulált futásidőt ÉS az account információt
     try:
         current_session_minutes = (time.time() - SESSION_START_TIME) / 60.0
         total_runtime = accumulated_runtime_minutes + current_session_minutes
         
-        # Account váltáskor NEM nullázzuk, hanem mentjük a következő indításra
+        # Account váltáskor NEM nullázzuk a runtime-ot, hanem mentjük a következő indításra
         # (a nullázás csak akkor történik, ha elértük a limitet)
         runtime_state["accumulated_minutes"] = total_runtime
         runtime_state["last_session_start"] = time.time()
+        
+        # PERZISZTENS ACCOUNT INFORMÁCIÓ - ez a fő újdonság!
+        runtime_state["current_account"] = ACTIVE_ACCOUNT_KEY
+        runtime_state["next_account"] = next_key
+        runtime_state["account_rotation_pending"] = True
+        
         save_runtime_state(runtime_state)
+        warn(f"💾 Account info mentve: current={ACTIVE_ACCOUNT_KEY}, next={next_key}, pending=True")
     except Exception as e:
         warn(f"⚠️ Runtime state mentés hiba: {e}")
 
@@ -4948,6 +4995,7 @@ def restart_with_account(next_key: str):
     warn(f"📂 Script path: {script_path}")
     warn(f"🐍 Python executable: {sys.executable}")
     warn(f"🎯 Target account: {next_key}")
+    warn(f"💡 TIP: Ha újraindítod manuálisan, már nem kell --acc paraméter!")
     
     os.execv(
         sys.executable,
@@ -4981,7 +5029,18 @@ if __name__ == "__main__":
     
     # Frissítjük az állapotot az új session kezdetével
     runtime_state["last_session_start"] = SESSION_START_TIME
+    
+    # FRISSÍTJÜK AZ ACCOUNT ÁLLAPOTOT - sikeres indítás után
+    # Ha account rotation volt folyamatban, most már kész
+    if runtime_state.get("account_rotation_pending"):
+        log(f"✅ Account rotation sikeres volt: {runtime_state.get('current_account')} → {ACTIVE_ACCOUNT_KEY}")
+    
+    runtime_state["current_account"] = ACTIVE_ACCOUNT_KEY
+    runtime_state["account_rotation_pending"] = False
+    # next_account-ot nem töröljük, csak info célból marad
+    
     save_runtime_state(runtime_state)
+    log(f"💾 Account állapot frissítve: current={ACTIVE_ACCOUNT_KEY}, pending=False")
     
     login()
 
