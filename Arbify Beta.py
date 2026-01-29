@@ -131,6 +131,16 @@ else:
 
 ACTIVE_ACCOUNT = ACCOUNTS[ACTIVE_ACCOUNT_KEY]
 
+# Startup logging for debugging
+print(f"🔑 Starting with account: {ACTIVE_ACCOUNT_KEY}")
+print(f"📂 Profile directory: {ACTIVE_ACCOUNT['profile_dir']}")
+print(f"📧 Email: {ACTIVE_ACCOUNT['email']}")
+print(f"🎯 Command line args: {sys.argv}")
+if forced_account:
+    print(f"✅ Forced account from --acc parameter: {forced_account}")
+if env_account:
+    print(f"🌍 Environment SB_ACTIVE_ACCOUNT: {env_account}")
+print("-" * 60)
 
 
 
@@ -943,7 +953,15 @@ def restart_application():
     # Restart script with proper path handling (handles spaces in filename)
     warn("🔄 Restarting script...")
     script_path = os.path.abspath(__file__)
-    os.execv(sys.executable, [sys.executable, script_path] + sys.argv[1:])
+    restart_command = [sys.executable, script_path] + sys.argv[1:]
+    
+    # Detailed logging for debugging
+    warn(f"🔄 Restart command: {restart_command}")
+    warn(f"📂 Script path: {script_path}")
+    warn(f"🐍 Python executable: {sys.executable}")
+    warn(f"📝 Preserving args: {sys.argv[1:]}")
+    
+    os.execv(sys.executable, restart_command)
 
 
 # ---------- URL utilok ----------
@@ -4923,9 +4941,17 @@ def restart_with_account(next_key: str):
 
     # 4) Script újraindítása új accounttal (proper path handling for spaces in filename)
     script_path = os.path.abspath(__file__)
+    restart_command = [sys.executable, script_path, f"--acc={next_key}"]
+    
+    # Detailed logging for debugging
+    warn(f"🔄 Restart command: {restart_command}")
+    warn(f"📂 Script path: {script_path}")
+    warn(f"🐍 Python executable: {sys.executable}")
+    warn(f"🎯 Target account: {next_key}")
+    
     os.execv(
         sys.executable,
-        [sys.executable, script_path, f"--acc={next_key}"]
+        restart_command
     )
 
 
