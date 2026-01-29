@@ -211,6 +211,11 @@ def in_bootstrap_phase() -> bool:
 ACTIVE_FILE = "active_ids.txt"
 DISAPPEAR_GRACE_SEC = 4.5
 
+# --- ACCOUNT SWITCH TRIGGERS ---
+RUNTIME_STATE_FILE = "runtime_state.json"  # persistent timer state
+CONSECUTIVE_FAILED_SAVES_LIMIT = 55  # switch account after this many consecutive failures
+consecutive_failed_saves = 0  # counter for consecutive failed saves
+
 # --- UPDATE CONFIG ---
 UPDATE_MIN_INTERVAL = 2.0
 UPDATE_DECIMALS = 2
@@ -530,6 +535,29 @@ def save_link_cache(cache: dict):
     try:
         with open(LINK_CACHE_FILE, "w", encoding="utf-8") as f:
             json.dump(cache, f, indent=2, ensure_ascii=False)
+    except Exception:
+        pass
+
+def load_runtime_state():
+    """
+    Betölti a perzisztens futásidő állapotot.
+    Tartalmazza:
+    - accumulated_minutes: az összes eddig felhalmozott futási idő percben
+    - last_session_start: az utolsó session indítási időpontja (epoch)
+    """
+    if os.path.exists(RUNTIME_STATE_FILE):
+        try:
+            with open(RUNTIME_STATE_FILE, "r", encoding="utf-8") as f:
+                return json.load(f)
+        except Exception:
+            return {"accumulated_minutes": 0.0, "last_session_start": None}
+    return {"accumulated_minutes": 0.0, "last_session_start": None}
+
+def save_runtime_state(state: dict):
+    """Elmenti a perzisztens futásidő állapotot."""
+    try:
+        with open(RUNTIME_STATE_FILE, "w", encoding="utf-8") as f:
+            json.dump(state, f, indent=2, ensure_ascii=False)
     except Exception:
         pass
 
@@ -4090,13 +4118,16 @@ _pending_update_buffer = []  # UPDATE payloadok
 _pending_delete_buffer = []  # DELETE ID-k
 
 def process_dispatcher_results(max_items=300):
-    global active_ids, seen
+    global active_ids, seen, consecutive_failed_saves
     results = dispatcher.get_results(max_items=max_items)
     for res in results:
         rtype = res.get("type")
         tid = res.get("id")
 
         if rtype in ("save_ok", "save_dup_updated"):
+            # Sikeres mentés - nullázzuk a hibaszámlálót
+            consecutive_failed_saves = 0
+            
             st = res.get("state_info", {})
             resp = res.get("resp", {})
             cid = resp.get("correlation_id")
@@ -4114,17 +4145,36 @@ def process_dispatcher_results(max_items=300):
             log(f"💾 SAVE kész: {tid} ({'dup→update' if rtype=='save_dup_updated' else 'ok'}) cid={cid}")
 
         elif rtype == "save_duplicate":
+            # Duplikáció is sikeres mentésnek számít
+            consecutive_failed_saves = 0
+            
             resp = res.get("resp", {})
             cid = resp.get("correlation_id")
             log(f"ℹ️ SAVE duplicate (külön UPDATE nem futott automatikusan): {tid} cid={cid}")
 
         elif rtype == "save_dup_update_fail":
+            # Ez hibának számít
+            consecutive_failed_saves += 1
             warn(f"⚠️ SAVE duplicate → UPDATE FAIL id={tid} status={res.get('status')} err={res.get('error')}")
+            
+            # Ellenőrizzük a limitet
+            if consecutive_failed_saves >= CONSECUTIVE_FAILED_SAVES_LIMIT:
+                next_key = get_next_account_key(ACTIVE_ACCOUNT_KEY)
+                warn(f"🔄 {consecutive_failed_saves} egymás utáni hibás SAVE → Account váltás: {ACTIVE_ACCOUNT_KEY} → {next_key}")
+                restart_with_account(next_key)
 
         elif rtype == "save_error":
+            # Ez is hibának számít
+            consecutive_failed_saves += 1
             err = res.get("error")
             cid = (err or {}).get("correlation_id") if isinstance(err, dict) else None
-            warn(f"⚠️ SAVE hiba id={tid} status={res.get('status')} err={err} cid={cid}")
+            warn(f"⚠️ SAVE hiba id={tid} status={res.get('status')} err={err} cid={cid} (consecutive_fails={consecutive_failed_saves})")
+            
+            # Ellenőrizzük a limitet
+            if consecutive_failed_saves >= CONSECUTIVE_FAILED_SAVES_LIMIT:
+                next_key = get_next_account_key(ACTIVE_ACCOUNT_KEY)
+                warn(f"🔄 {consecutive_failed_saves} egymás utáni hibás SAVE → Account váltás: {ACTIVE_ACCOUNT_KEY} → {next_key}")
+                restart_with_account(next_key)
 
         elif rtype == "update_ok":
             p = res.get("payload", {})
@@ -4686,6 +4736,17 @@ def full_resync_and_cleanup(max_groups=None):
 
 # ---------- ACCOUNT ROTATION / RESTART ----------
 
+def check_tbody_for_surebet_com(tbody_element) -> bool:
+    """
+    Ellenőrzi, hogy a tbody elemben szerepel-e a 'surebet.com' szöveg (case-insensitive).
+    Ha igen, akkor account váltás szükséges.
+    """
+    try:
+        tbody_text = tbody_element.text.lower() if tbody_element else ""
+        return "surebet.com" in tbody_text
+    except Exception:
+        return False
+
 def get_next_account_key(current: str) -> str:
     """
     Következő account kulcs:
@@ -4702,6 +4763,19 @@ def get_next_account_key(current: str) -> str:
 
 def restart_with_account(next_key: str):
     warn(f"♻️ Account váltás: {ACTIVE_ACCOUNT_KEY} → {next_key} – Chrome + script újraindítás...")
+
+    # Mentjük a jelenlegi akkumulált futásidőt
+    try:
+        current_session_minutes = (time.time() - SESSION_START_TIME) / 60.0
+        total_runtime = accumulated_runtime_minutes + current_session_minutes
+        
+        # Account váltáskor NEM nullázzuk, hanem mentjük a következő indításra
+        # (a nullázás csak akkor történik, ha elértük a limitet)
+        runtime_state["accumulated_minutes"] = total_runtime
+        runtime_state["last_session_start"] = time.time()
+        save_runtime_state(runtime_state)
+    except Exception as e:
+        warn(f"⚠️ Runtime state mentés hiba: {e}")
 
     # Itt MOST NEM hívunk TAB-RESYNC-et.
     # A folyamatos futás alatt a DISAPPEAR_GRACE_SEC alapú törlés már szépen
@@ -4738,9 +4812,26 @@ last_update_ts = {}
 last_update_attempt_ts = {}
 link_cache = load_link_cache()
 
+# Perzisztens futásidő állapot betöltése
+runtime_state = load_runtime_state()
+accumulated_runtime_minutes = runtime_state.get("accumulated_minutes", 0.0)
+
 # NOTE: A futtatáskor a login() hívás indít. Ha csak importálod, ne fusson automatikusan.
 if __name__ == "__main__":
-    RUN_STARTED_AT = time.time()
+    SESSION_START_TIME = time.time()
+    RUN_STARTED_AT = SESSION_START_TIME
+    
+    # Ha ez nem az első indítás, és az előző session start van mentve,
+    # azt is figyelembe vesszük (ha nem múlt el túl sok idő - pl. max 1 óra)
+    last_session_start = runtime_state.get("last_session_start")
+    if last_session_start and (SESSION_START_TIME - last_session_start) < 3600:
+        # Az előző session időt is hozzáadjuk
+        log(f"📊 Előző akkumulált futásidő: {accumulated_runtime_minutes:.1f} perc")
+    
+    # Frissítjük az állapotot az új session kezdetével
+    runtime_state["last_session_start"] = SESSION_START_TIME
+    save_runtime_state(runtime_state)
+    
     login()
 
     log("🚀 DINAMIKUS BOOTSTRAP fázis: rekurzív MAIN + NEXT + GROUP oldalak megnyitása")
@@ -4919,6 +5010,7 @@ if __name__ == "__main__":
                     const tbodys = document.querySelectorAll('tbody.surebet_record');
                     return Array.from(tbodys).map(tb => ({
                         id: tb.getAttribute('data-id') || tb.getAttribute('dataid'),
+                        text: (tb.textContent || '').toLowerCase(),
                         element: tb
                     })).filter(item => item.id);
                 """)
@@ -4934,6 +5026,12 @@ if __name__ == "__main__":
                         tbody_id = None
                     if not tbody_id:
                         continue
+                    
+                    # Ellenőrizzük, hogy van-e "surebet.com" a tbody szövegében
+                    if check_tbody_for_surebet_com(tbody):
+                        next_key = get_next_account_key(ACTIVE_ACCOUNT_KEY)
+                        warn(f"🚨 'surebet.com' szöveg detektálva tbody-ban (id={tbody_id}) → Account váltás: {ACTIVE_ACCOUNT_KEY} → {next_key}")
+                        restart_with_account(next_key)
 
                     curr_ids_main.add(tbody_id)
                     last_seen_ts[tbody_id] = now_ts
@@ -4959,6 +5057,13 @@ if __name__ == "__main__":
                     tbody_id = item.get('id')
                     if not tbody_id:
                         continue
+                    
+                    # Ellenőrizzük, hogy van-e "surebet.com" a tbody szövegében
+                    tbody_text = item.get('text', '')
+                    if 'surebet.com' in tbody_text:
+                        next_key = get_next_account_key(ACTIVE_ACCOUNT_KEY)
+                        warn(f"🚨 'surebet.com' szöveg detektálva tbody-ban (id={tbody_id}) → Account váltás: {ACTIVE_ACCOUNT_KEY} → {next_key}")
+                        restart_with_account(next_key)
                     
                     curr_ids_main.add(tbody_id)
                     last_seen_ts[tbody_id] = now_ts
@@ -5068,12 +5173,37 @@ if __name__ == "__main__":
             flush_pending_updates()
             flush_pending_deletes()
 
-            # ✅ ACCOUNT ROTÁCIÓ: ha letelt X perc, váltunk acc1 <-> acc2
+            # Periodikusan mentjük a runtime state-et (minden 60 mp-ben)
+            try:
+                if not hasattr(process_dispatcher_results, '_last_state_save'):
+                    process_dispatcher_results._last_state_save = time.time()
+                
+                if (time.time() - process_dispatcher_results._last_state_save) >= 60:
+                    current_session_minutes = (time.time() - SESSION_START_TIME) / 60.0
+                    total_runtime = accumulated_runtime_minutes + current_session_minutes
+                    runtime_state["accumulated_minutes"] = accumulated_runtime_minutes
+                    runtime_state["last_session_start"] = SESSION_START_TIME
+                    save_runtime_state(runtime_state)
+                    process_dispatcher_results._last_state_save = time.time()
+            except Exception:
+                pass
+
+            # ✅ ACCOUNT ROTÁCIÓ: perzisztens időzítéssel
             if ACCOUNT_ROTATE_MIN > 0:
-                elapsed_min = (time.time() - RUN_STARTED_AT) / 60.0
-                if elapsed_min >= ACCOUNT_ROTATE_MIN:
+                # Jelenlegi session futásideje percben
+                current_session_minutes = (time.time() - SESSION_START_TIME) / 60.0
+                # Összes akkumulált futásidő
+                total_runtime_minutes = accumulated_runtime_minutes + current_session_minutes
+                
+                if total_runtime_minutes >= ACCOUNT_ROTATE_MIN:
                     next_key = get_next_account_key(ACTIVE_ACCOUNT_KEY)
-                    log(f"♻️ {ACCOUNT_ROTATE_MIN:.1f} perc letelt, váltás {ACTIVE_ACCOUNT_KEY} → {next_key}")
+                    log(f"♻️ {total_runtime_minutes:.1f} perc akkumulált futásidő (limit: {ACCOUNT_ROTATE_MIN:.1f}) → váltás {ACTIVE_ACCOUNT_KEY} → {next_key}")
+                    
+                    # Nullázzuk a számlálót account váltáskor
+                    runtime_state["accumulated_minutes"] = 0.0
+                    runtime_state["last_session_start"] = None
+                    save_runtime_state(runtime_state)
+                    
                     restart_with_account(next_key)
 
             # 🔴 NAV worker indítása – CSAK BOOTSTRAP UTÁN
