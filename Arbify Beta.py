@@ -148,6 +148,7 @@ UPDATE_TIP_URL  = f"{SUPABASE_URL}/functions/v1/update-tip"
 DELETE_TIP_URL  = f"{SUPABASE_URL}/functions/v1/delete-tip"
 UPDATE_TIPS_BATCH_URL = f"{SUPABASE_URL}/functions/v1/update-tips-batch"
 DELETE_TIPS_BATCH_URL = f"{SUPABASE_URL}/functions/v1/delete-tips-batch"
+LIST_ACTIVE_TIPS_URL = f"{SUPABASE_URL}/functions/v1/list-active-tips"  # Új endpoint az adatbázis ID-k lekéréséhez
 
 HTTP_HEADERS = {
     "Content-Type": "application/json",
@@ -210,6 +211,12 @@ def in_bootstrap_phase() -> bool:
 # --- ACTIVE / GONE ---
 ACTIVE_FILE = "active_ids.txt"
 DISAPPEAR_GRACE_SEC = 4.5
+
+# --- DATABASE RECONCILIATION CONFIG ---
+DB_RECONCILE_ENABLED = True  # adatbázis és active_ids.txt szinkronizálása induláskor
+DB_RECONCILE_MAX_DELETES = 500  # biztonsági limit: max ennyi ID törölhető egy menetben
+DB_RECONCILE_DONE = False  # jelzi, hogy a reconciliation már lefutott
+DB_RECONCILE_HISTORY_FILE = "db_reconcile_history.txt"  # reconciliation történet logolása
 
 # --- ACCOUNT SWITCH TRIGGERS ---
 RUNTIME_STATE_FILE = "runtime_state.json"  # persistent timer state
@@ -4556,6 +4563,114 @@ def post_bootstrap_cleanup():
     DIAG_LOGGER.log_milestone(f"POST_BOOTSTRAP_CLEANUP_COMPLETE (stale_removed={len(stale_ids) if stale_ids else 0})")
 
 
+def reconcile_database_with_active_ids():
+    """
+    🔄 ADATBÁZIS RECONCILIATION - Extrém biztonságos megoldás crash recovery-re
+    
+    PROBLÉMA:
+    - Script crash esetén az adatbázisban maradnak orphan rekordok
+    - active_ids.txt a helyes állapotot tükrözi
+    - Adatbázisban sokkal több rekord van mint kellene
+    
+    MEGOLDÁS:
+    - Induláskor lekérdezzük az összes adatbázis ID-t
+    - Összehasonlítjuk az active_ids.txt tartalmával
+    - Töröljük azt, ami NINCS az active_ids.txt-ben (orphan rekordok)
+    
+    BIZTONSÁGI FUNKCIÓK:
+    1. Maximum törlési limit (DB_RECONCILE_MAX_DELETES)
+    2. Részletes logolás minden műveletről
+    3. Történet mentése fájlba
+    4. Csak egyszer fut induláskor
+    5. active_ids.txt = source of truth (a legbiztonságosabb)
+    
+    Ez minden indításkor lefut, beleértve crash után újraindítást is.
+    """
+    global active_ids, DB_RECONCILE_DONE
+    
+    if DB_RECONCILE_DONE:
+        return  # már lefutott egyszer
+    
+    if not DB_RECONCILE_ENABLED:
+        log("ℹ️ DB RECONCILIATION kikapcsolva (DB_RECONCILE_ENABLED=False)")
+        DB_RECONCILE_DONE = True
+        return
+    
+    log("🔄 DATABASE RECONCILIATION indul: active_ids.txt és adatbázis szinkronizálása...")
+    DIAG_LOGGER.log_milestone("DB_RECONCILIATION_START")
+    
+    try:
+        # 1. Lekérjük az összes adatbázisbeli ID-t
+        log("📊 Adatbázis ID-k lekérdezése...")
+        status, data = http_post(LIST_ACTIVE_TIPS_URL, {}, timeout=30)
+        
+        if status != 200 or not isinstance(data, dict):
+            warn(f"⚠️ DB RECONCILIATION: nem sikerült lekérni az adatbázis ID-kat (status={status})")
+            DB_RECONCILE_DONE = True
+            return
+        
+        db_ids = set(data.get("ids", []))
+        log(f"📊 Adatbázisban {len(db_ids)} aktív tip ID található")
+        
+        # 2. Betöltjük az active_ids.txt tartalmát (source of truth)
+        file_ids = set(active_ids) if active_ids else set()
+        log(f"📄 active_ids.txt-ben {len(file_ids)} ID található")
+        
+        # 3. Azonosítjuk az orphan ID-kat (adatbázisban van, de a fájlban nincs)
+        orphan_ids = db_ids - file_ids
+        
+        if not orphan_ids:
+            log("✨ DB RECONCILIATION: nincs orphan ID – adatbázis és active_ids.txt szinkronban van")
+            DB_RECONCILE_DONE = True
+            DIAG_LOGGER.log_milestone("DB_RECONCILIATION_COMPLETE (orphans=0)")
+            return
+        
+        log(f"🗑️ DB RECONCILIATION: {len(orphan_ids)} orphan ID azonosítva (adatbázisban van, de active_ids.txt-ben nincs)")
+        
+        # 4. Biztonsági limit ellenőrzése
+        if len(orphan_ids) > DB_RECONCILE_MAX_DELETES:
+            warn(f"⚠️ DB RECONCILIATION: BIZTONSÁGI LIMIT! {len(orphan_ids)} orphan ID > limit ({DB_RECONCILE_MAX_DELETES})")
+            warn(f"⚠️ Csak az első {DB_RECONCILE_MAX_DELETES} ID-t töröljük biztonsági okokból")
+            orphan_ids = set(list(orphan_ids)[:DB_RECONCILE_MAX_DELETES])
+        
+        # 5. Orphan ID-k törlése az adatbázisból
+        log(f"🗑️ {len(orphan_ids)} orphan ID törlése az adatbázisból...")
+        deleted_count = 0
+        failed_count = 0
+        
+        for orphan_id in orphan_ids:
+            try:
+                dispatcher.enqueue_delete(orphan_id)
+                deleted_count += 1
+            except Exception as e:
+                warn(f"⚠️ DB RECONCILIATION: DELETE enqueue hiba ({orphan_id}): {e}")
+                failed_count += 1
+        
+        # 6. Azonnal kiküldjük a DELETE-eket
+        try:
+            flush_pending_deletes()
+            process_dispatcher_results(max_items=2000)
+        except Exception as e:
+            warn(f"⚠️ DB RECONCILIATION: dispatcher results hiba: {e}")
+        
+        # 7. Történet logolása
+        try:
+            timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
+            with open(DB_RECONCILE_HISTORY_FILE, "a", encoding="utf-8") as f:
+                f.write(f"{timestamp} | Orphans deleted: {deleted_count} | Failed: {failed_count} | DB IDs: {len(db_ids)} | File IDs: {len(file_ids)}\n")
+        except Exception as e:
+            warn(f"⚠️ DB RECONCILIATION: történet mentés hiba: {e}")
+        
+        log(f"✅ DB RECONCILIATION kész: {deleted_count} orphan ID törölve, {failed_count} hiba")
+        DIAG_LOGGER.log_milestone(f"DB_RECONCILIATION_COMPLETE (orphans_deleted={deleted_count}, failed={failed_count})")
+        
+    except Exception as e:
+        warn(f"⚠️ DB RECONCILIATION: általános hiba: {e}")
+        DIAG_LOGGER.log_event("DB_RECONCILIATION", f"Error: {str(e)[:100]}", "ERROR")
+    finally:
+        DB_RECONCILE_DONE = True
+
+
 def run_dynamic_bootstrap():
     """
     Dinamikus BOOTSTRAP fázis:
@@ -4958,6 +5073,11 @@ if __name__ == "__main__":
             # 🧹 POST-BOOTSTRAP CLEANUP – csak egyszer, amikor a bootstrap vége van
             if not bootstrap and not BOOTSTRAP_CLEANUP_DONE:
                 post_bootstrap_cleanup()
+            
+            # 🔄 DATABASE RECONCILIATION – adatbázis és active_ids.txt szinkronizálása
+            # Ez a post_bootstrap_cleanup UTÁN fut, amikor már biztos hogy minden tab megnyílt
+            if not bootstrap and BOOTSTRAP_CLEANUP_DONE and not DB_RECONCILE_DONE:
+                reconcile_database_with_active_ids()
 
             # --- SUPABASE dispatcher eredmények ---
             if not bootstrap:
