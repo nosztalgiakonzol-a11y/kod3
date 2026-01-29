@@ -4549,7 +4549,8 @@ def run_dynamic_bootstrap():
                 continue
             
             try:
-                open_next_tab_if_needed(next_url)
+                # BOOTSTRAP: szinkron nyitás hogy biztosan megnyíljon mielőtt scanneljük
+                _open_next_tab_sync(next_url)
                 opened_next.add(next_url)
                 
                 # Scan az újonnan megnyitott NEXT oldalon további NEXT linkekért
@@ -4613,30 +4614,19 @@ def run_dynamic_bootstrap():
         group_count = len(group_urls_to_open)
         log(f"🔍 {group_count} GROUP oldal nyitása...")
         
-        # Küldés queue-ba (async nyitás)
+        # BOOTSTRAP: szinkron nyitás hogy biztosan megnyíljanak
         for group_url in group_urls_to_open:
             if (time.time() - bootstrap_start) >= MAX_BOOTSTRAP_TIME:
                 log("⏰ 5 perces timeout – BOOTSTRAP befejezése")
                 break
             try:
-                open_group_tab_if_needed(group_url)
+                _open_group_tab_sync(group_url)
             except Exception as e:
                 warn(f"⚠️ GROUP oldal megnyitás hiba ({group_url}): {e}")
         
-        # Várunk amíg az összes GROUP oldal megnyílik
-        log(f"⏳ Várakozás hogy mind a {group_count} GROUP oldal megnyíljon...")
-        wait_start = time.time()
-        max_wait_for_opens = 30  # max 30s várunk hogy megnyíljanak
-        
-        while (time.time() - wait_start) < max_wait_for_opens:
-            opened_count = len([url for url in group_urls_to_open if url in group_tabs])
-            if opened_count >= group_count:
-                log(f"✅ Mind a {group_count} GROUP oldal megnyílt")
-                break
-            if (time.time() - bootstrap_start) >= MAX_BOOTSTRAP_TIME:
-                log(f"⏰ 5 perces timeout – {opened_count}/{group_count} GROUP oldal megnyílt")
-                break
-            time.sleep(0.5)  # rövid poll intervallum
+        # Ellenőrizzük hány GROUP oldal nyílt meg ténylegesen
+        opened_group_count = len([url for url in group_urls_to_open if url in group_tabs])
+        log(f"✅ {opened_group_count}/{group_count} GROUP oldal megnyílt")
         
         # === FÁZIS 3: Várakozás GROUP oldalak betöltésére ===
         if (time.time() - bootstrap_start) < MAX_BOOTSTRAP_TIME:
