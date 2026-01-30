@@ -128,6 +128,47 @@ ACCOUNTS = {
 }
 
 ACCOUNT_ROTATE_MIN = float(os.getenv("SB_ACCOUNT_ROTATE_MIN", "32"))
+RUNTIME_STATE_FILE = "runtime_state.json"  # persistent timer state
+
+# Runtime state management functions (must be defined before usage below)
+def load_runtime_state():
+    """
+    Betölti a perzisztens futásidő állapotot.
+    Tartalmazza:
+    - accumulated_minutes: az összes eddig felhalmozott futási idő percben
+    - last_session_start: az utolsó session indítási időpontja (epoch)
+    - current_account: jelenleg aktív account (acc1/acc2)
+    - next_account: következő account váltás célpontja
+    - account_rotation_pending: igaz ha account váltás folyamatban van
+    """
+    default_state = {
+        "accumulated_minutes": 0.0,
+        "last_session_start": None,
+        "current_account": None,
+        "next_account": None,
+        "account_rotation_pending": False
+    }
+    
+    if os.path.exists(RUNTIME_STATE_FILE):
+        try:
+            with open(RUNTIME_STATE_FILE, "r", encoding="utf-8") as f:
+                state = json.load(f)
+                # Ensure all fields exist (backward compatibility)
+                for key, value in default_state.items():
+                    if key not in state:
+                        state[key] = value
+                return state
+        except Exception:
+            return default_state
+    return default_state
+
+def save_runtime_state(state: dict):
+    """Elmenti a perzisztens futásidő állapotot."""
+    try:
+        with open(RUNTIME_STATE_FILE, "w", encoding="utf-8") as f:
+            json.dump(state, f, indent=2, ensure_ascii=False)
+    except Exception:
+        pass
 
 # Parancssori argumentum feldolgozás (--acc=acc1 vagy --acc=acc2)
 forced_account = None
@@ -272,46 +313,7 @@ DB_RECONCILE_DONE = False  # jelzi, hogy a reconciliation már lefutott
 DB_RECONCILE_HISTORY_FILE = "db_reconcile_history.txt"  # reconciliation történet logolása
 
 # --- ACCOUNT SWITCH TRIGGERS ---
-RUNTIME_STATE_FILE = "runtime_state.json"  # persistent timer state
-
-def load_runtime_state():
-    """
-    Betölti a perzisztens futásidő állapotot.
-    Tartalmazza:
-    - accumulated_minutes: az összes eddig felhalmozott futási idő percben
-    - last_session_start: az utolsó session indítási időpontja (epoch)
-    - current_account: jelenleg aktív account (acc1/acc2)
-    - next_account: következő account váltás célpontja
-    - account_rotation_pending: igaz ha account váltás folyamatban van
-    """
-    default_state = {
-        "accumulated_minutes": 0.0,
-        "last_session_start": None,
-        "current_account": None,
-        "next_account": None,
-        "account_rotation_pending": False
-    }
-    
-    if os.path.exists(RUNTIME_STATE_FILE):
-        try:
-            with open(RUNTIME_STATE_FILE, "r", encoding="utf-8") as f:
-                state = json.load(f)
-                # Ensure all fields exist (backward compatibility)
-                for key, value in default_state.items():
-                    if key not in state:
-                        state[key] = value
-                return state
-        except Exception:
-            return default_state
-    return default_state
-
-def save_runtime_state(state: dict):
-    """Elmenti a perzisztens futásidő állapotot."""
-    try:
-        with open(RUNTIME_STATE_FILE, "w", encoding="utf-8") as f:
-            json.dump(state, f, indent=2, ensure_ascii=False)
-    except Exception:
-        pass
+# (RUNTIME_STATE_FILE and functions moved to line ~131 for early availability)
 
 CONSECUTIVE_FAILED_SAVES_LIMIT = 55  # switch account after this many consecutive failures
 consecutive_failed_saves = 0  # counter for consecutive failed saves
