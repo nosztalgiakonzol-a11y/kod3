@@ -36,9 +36,15 @@ from selenium.common.exceptions import (
 try:
     from supabase import create_client
     SUPABASE_SDK_AVAILABLE = True
-except ImportError:
+    print("✅ Supabase SDK loaded successfully")
+except ImportError as e:
     SUPABASE_SDK_AVAILABLE = False
-    print("⚠️ Supabase SDK not installed. Run: pip install supabase")
+    print(f"⚠️ Supabase SDK import failed: {e}")
+    print("   Run: pip install supabase")
+    print("   Database reconciliation will use fallback method.")
+except Exception as e:
+    SUPABASE_SDK_AVAILABLE = False
+    print(f"⚠️ Unexpected error importing Supabase SDK: {e}")
     print("   Database reconciliation will use fallback method.")
 
 
