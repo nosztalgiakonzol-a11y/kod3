@@ -233,6 +233,7 @@ LINK_CACHE_FILE = "link_cache.json"
 # Supabase Edge Functions
 SUPABASE_URL = "https://sonudgyyvxncdcganppl.supabase.co"
 SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNvbnVkZ3l5dnhuY2RjZ2FucHBsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjAwMzA5NDMsImV4cCI6MjA3NTYwNjk0M30.QhtBEhUYoZU8dukJ2bNcy95bXW7unxln8NPe_13eBQ4"
+SUPABASE_SERVICE_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InNvbnVkZ3l5dnhuY2RjZ2FucHBsIiwicm9sZSI6InNlcnZpY2Vfcm9sZSIsImlhdCI6MTc2MDAzMDk0MywiZXhwIjoyMDc1NjA2OTQzfQ.6mmHZJ2QS3a4TywxZ-lswdcvwPCF5NCYLe6CuiO8-3A"
 
 SAVE_TIP_URL    = f"{SUPABASE_URL}/functions/v1/save-tip"
 UPDATE_TIP_URL  = f"{SUPABASE_URL}/functions/v1/update-tip"
@@ -4731,8 +4732,8 @@ def query_tips_ids_from_database():
     try:
         log("📊 Supabase SDK használata közvetlen adatbázis lekérdezéshez...")
         
-        # Supabase kliens létrehozása
-        supabase = create_client(SUPABASE_URL, SUPABASE_ANON_KEY)
+        # Supabase kliens létrehozása SERVICE ROLE KEY-jel (teljes hozzáférés)
+        supabase = create_client(SUPABASE_URL, SUPABASE_SERVICE_KEY)
         
         # Tips tábla lekérdezése - csak az ID oszlop
         response = supabase.table("tips").select("id").execute()
