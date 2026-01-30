@@ -5075,15 +5075,12 @@ def get_next_account_key(current: str) -> str:
 def restart_with_account(next_key: str):
     warn(f"♻️ Account váltás: {ACTIVE_ACCOUNT_KEY} → {next_key} – Chrome + script újraindítás...")
 
-    # Mentjük a jelenlegi akkumulált futásidőt ÉS az account információt
+    # Mentjük az account információt ÉS NULLÁZZUK a futásidőt
     try:
-        current_session_minutes = (time.time() - SESSION_START_TIME) / 60.0
-        total_runtime = accumulated_runtime_minutes + current_session_minutes
-        
-        # Account váltáskor NEM nullázzuk a runtime-ot, hanem mentjük a következő indításra
-        # (a nullázás csak akkor történik, ha elértük a limitet)
-        runtime_state["accumulated_minutes"] = total_runtime
-        runtime_state["last_session_start"] = time.time()
+        # Account váltáskor NULLÁZZUK a runtime-ot, hogy a következő account
+        # friss 0 perccel induljon és ismét 32 percet futhasson
+        runtime_state["accumulated_minutes"] = 0.0
+        runtime_state["last_session_start"] = None
         
         # PERZISZTENS ACCOUNT INFORMÁCIÓ - ez a fő újdonság!
         runtime_state["current_account"] = ACTIVE_ACCOUNT_KEY
@@ -5091,7 +5088,7 @@ def restart_with_account(next_key: str):
         runtime_state["account_rotation_pending"] = True
         
         save_runtime_state(runtime_state)
-        warn(f"💾 Account info mentve: current={ACTIVE_ACCOUNT_KEY}, next={next_key}, pending=True")
+        warn(f"💾 Account info mentve: current={ACTIVE_ACCOUNT_KEY}, next={next_key}, pending=True, time=0.0")
     except Exception as e:
         warn(f"⚠️ Runtime state mentés hiba: {e}")
 
@@ -5543,11 +5540,7 @@ if __name__ == "__main__":
                     next_key = get_next_account_key(ACTIVE_ACCOUNT_KEY)
                     log(f"♻️ {total_runtime_minutes:.1f} perc akkumulált futásidő (limit: {ACCOUNT_ROTATE_MIN:.1f}) → váltás {ACTIVE_ACCOUNT_KEY} → {next_key}")
                     
-                    # Nullázzuk a számlálót account váltáskor
-                    runtime_state["accumulated_minutes"] = 0.0
-                    runtime_state["last_session_start"] = None
-                    save_runtime_state(runtime_state)
-                    
+                    # A restart_with_account() fogja nullázni a számlálót
                     restart_with_account(next_key)
 
             # 🔴 NAV worker indítása – CSAK BOOTSTRAP UTÁN
