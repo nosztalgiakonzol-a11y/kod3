@@ -662,6 +662,29 @@ chrome_options.add_argument("--disable-blink-features=AutomationControlled")
 chrome_options.add_argument("--window-size=960,540")
 chrome_options.add_argument("--disable-popup-blocking")
 
+# 🚀 Multi-tab performance optimizations (40-72 tabs)
+# Memory management - increase heap size for JavaScript/V8
+chrome_options.add_argument("--max-old-space-size=4096")  # 4GB heap for JavaScript
+chrome_options.add_argument("--js-flags=--max-old-space-size=4096")  # V8 heap size
+
+# Background tab optimization - aggressive memory management
+chrome_options.add_argument("--aggressive-cache-discard")  # Aggressive cache cleanup
+chrome_options.add_argument("--aggressive-tab-discard")  # Background tab memory release
+chrome_options.add_argument("--disable-background-timer-throttling")  # Timer optimization
+chrome_options.add_argument("--disable-backgrounding-occluded-windows")  # Window optimization
+chrome_options.add_argument("--disable-renderer-backgrounding")  # Renderer optimization
+
+# Process optimization - reduce number of processes
+chrome_options.add_argument("--disable-features=IsolateOrigins,site-per-process")  # Fewer processes
+chrome_options.add_argument("--no-sandbox")  # Disable sandbox (faster, less secure)
+chrome_options.add_argument("--disable-setuid-sandbox")  # Additional sandbox disable
+chrome_options.add_argument("--disable-gpu")  # Disable GPU acceleration
+
+# Resource optimization - disable unnecessary features
+chrome_options.add_argument("--disable-extensions")  # No extension overhead
+chrome_options.add_argument("--disable-plugins")  # Disable Flash, PDF, etc.
+chrome_options.add_argument("--disable-web-security")  # Faster loading (less security)
+
 # Performance optimizations: reduce RAM usage and speed up page loads
 chrome_options.add_argument("--blink-settings=imagesEnabled=false")  # Disable images
 chrome_options.add_argument("--disable-remote-fonts")  # Disable remote fonts
