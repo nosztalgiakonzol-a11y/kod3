@@ -3050,6 +3050,42 @@ last_seen_ts = {}
 
 handle_birth = {}
 
+# ---------- MEMORY LEAK PREVENTION: Periodic cleanup ----------
+def cleanup_old_tracking_data():
+    """
+    Eltávolítja a régi tracking adatokat hogy elkerüljük a memory leak-et.
+    Törli az 1 óránál régebben látott ID-k adatait.
+    Ezt a main loop-ból hívjuk meg periodikusan (5 percenként).
+    """
+    try:
+        cutoff = time.time() - 3600  # 1 óra
+        
+        # Azonosítsuk a régi ID-ket (amik >1 órája nem voltak látva)
+        old_ids = {tid for tid, ts in last_seen_ts.items() if ts < cutoff}
+        
+        if old_ids:
+            # Töröljük minden tracking dict-ből
+            for tid in old_ids:
+                last_sent_state.pop(tid, None)
+                last_update_ts.pop(tid, None)
+                last_update_attempt_ts.pop(tid, None)
+                last_seen_ts.pop(tid, None)
+                id_source.pop(tid, None)
+            
+            log(f"🧹 Memory cleanup: {len(old_ids)} régi tracking bejegyzés törölve")
+        
+        # Tisztítsuk a régi blocked group-okat is (>24 óra)
+        blocked_cutoff = time.time()
+        old_blocked = {url for url, ts in group_blocked_until.items() if ts < blocked_cutoff}
+        if old_blocked:
+            for url in old_blocked:
+                group_blocked_until.pop(url, None)
+            if len(old_blocked) > 5:  # Csak ha sok van
+                log(f"🧹 Memory cleanup: {len(old_blocked)} lejárt blocked group törölve")
+                
+    except Exception as e:
+        warn(f"⚠️ cleanup_old_tracking_data hiba: {e}")
+
 # ---------- GROUP helpers ----------
 def is_group_blocked(url, now_ts):
     return now_ts < group_blocked_until.get(url, 0)
@@ -4276,8 +4312,9 @@ UPDATE_IMMEDIATE_FLUSH_THRESHOLD = 6   # ha ennyi UPDATE+DELETE összejön, azon
 DELETE_IMMEDIATE_FLUSH_THRESHOLD = 6
 
 # Bufferek – ide gyűjtjük, amit még NEM küldtünk el a dispatchernek
-_pending_update_buffer = []  # UPDATE payloadok
-_pending_delete_buffer = []  # DELETE ID-k
+# MEMORY LEAK FIX: Használjunk bounded deque-t unbounded list helyett
+_pending_update_buffer = deque(maxlen=5000)  # UPDATE payloadok, max 5000
+_pending_delete_buffer = deque(maxlen=5000)  # DELETE ID-k, max 5000
 
 def process_dispatcher_results(max_items=300):
     global active_ids, seen, consecutive_failed_saves
@@ -5291,6 +5328,15 @@ if __name__ == "__main__":
                 DIAG_LOGGER.log_event("HEALTH", f"Unexpected: {str(e)[:100]}", "ERROR")
 
             bootstrap = in_bootstrap_phase()
+            
+            # 🧹 MEMORY LEAK PREVENTION: Periodic cleanup of old tracking data (every 5 minutes)
+            # Töröljük a régi (>1 óra) tracking bejegyzéseket hogy ne növekedjen a folyamat a memória
+            current_minute = int(time.time() / 60)
+            if current_minute % 5 == 0:  # Minden 5. percben
+                try:
+                    cleanup_old_tracking_data()
+                except Exception as e:
+                    warn(f"⚠️ Memory cleanup hiba: {e}")
 
             # 🧹 POST-BOOTSTRAP CLEANUP – csak egyszer, amikor a bootstrap vége van
             if not bootstrap and not BOOTSTRAP_CLEANUP_DONE:
