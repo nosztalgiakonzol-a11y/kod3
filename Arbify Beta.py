@@ -669,7 +669,7 @@ chrome_options.add_argument("--js-flags=--max-old-space-size=4096")  # V8 heap s
 
 # Background tab optimization - aggressive memory management
 chrome_options.add_argument("--aggressive-cache-discard")  # Aggressive cache cleanup
-chrome_options.add_argument("--aggressive-tab-discard")  # Background tab memory release
+# chrome_options.add_argument("--aggressive-tab-discard")  # ❌ REMOVED - Breaks tab switching!
 chrome_options.add_argument("--disable-background-timer-throttling")  # Timer optimization
 chrome_options.add_argument("--disable-backgrounding-occluded-windows")  # Window optimization
 chrome_options.add_argument("--disable-renderer-backgrounding")  # Renderer optimization
@@ -678,7 +678,7 @@ chrome_options.add_argument("--disable-renderer-backgrounding")  # Renderer opti
 chrome_options.add_argument("--disable-features=IsolateOrigins,site-per-process")  # Fewer processes
 chrome_options.add_argument("--no-sandbox")  # Disable sandbox (faster, less secure)
 chrome_options.add_argument("--disable-setuid-sandbox")  # Additional sandbox disable
-chrome_options.add_argument("--disable-gpu")  # Disable GPU acceleration
+# chrome_options.add_argument("--disable-gpu")  # ❌ REMOVED - User requested, might slow down
 
 # Resource optimization - disable unnecessary features
 chrome_options.add_argument("--disable-extensions")  # No extension overhead
