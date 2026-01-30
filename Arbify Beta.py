@@ -267,6 +267,46 @@ DB_RECONCILE_HISTORY_FILE = "db_reconcile_history.txt"  # reconciliation törté
 
 # --- ACCOUNT SWITCH TRIGGERS ---
 RUNTIME_STATE_FILE = "runtime_state.json"  # persistent timer state
+
+def load_runtime_state():
+    """
+    Betölti a perzisztens futásidő állapotot.
+    Tartalmazza:
+    - accumulated_minutes: az összes eddig felhalmozott futási idő percben
+    - last_session_start: az utolsó session indítási időpontja (epoch)
+    - current_account: jelenleg aktív account (acc1/acc2)
+    - next_account: következő account váltás célpontja
+    - account_rotation_pending: igaz ha account váltás folyamatban van
+    """
+    default_state = {
+        "accumulated_minutes": 0.0,
+        "last_session_start": None,
+        "current_account": None,
+        "next_account": None,
+        "account_rotation_pending": False
+    }
+    
+    if os.path.exists(RUNTIME_STATE_FILE):
+        try:
+            with open(RUNTIME_STATE_FILE, "r", encoding="utf-8") as f:
+                state = json.load(f)
+                # Ensure all fields exist (backward compatibility)
+                for key, value in default_state.items():
+                    if key not in state:
+                        state[key] = value
+                return state
+        except Exception:
+            return default_state
+    return default_state
+
+def save_runtime_state(state: dict):
+    """Elmenti a perzisztens futásidő állapotot."""
+    try:
+        with open(RUNTIME_STATE_FILE, "w", encoding="utf-8") as f:
+            json.dump(state, f, indent=2, ensure_ascii=False)
+    except Exception:
+        pass
+
 CONSECUTIVE_FAILED_SAVES_LIMIT = 55  # switch account after this many consecutive failures
 consecutive_failed_saves = 0  # counter for consecutive failed saves
 
@@ -592,46 +632,6 @@ def save_link_cache(cache: dict):
     except Exception:
         pass
 
-def load_runtime_state():
-    """
-    Betölti a perzisztens futásidő állapotot.
-    Tartalmazza:
-    - accumulated_minutes: az összes eddig felhalmozott futási idő percben
-    - last_session_start: az utolsó session indítási időpontja (epoch)
-    - current_account: jelenleg aktív account (acc1/acc2)
-    - next_account: következő account váltás célpontja
-    - account_rotation_pending: igaz ha account váltás folyamatban van
-    """
-    default_state = {
-        "accumulated_minutes": 0.0,
-        "last_session_start": None,
-        "current_account": None,
-        "next_account": None,
-        "account_rotation_pending": False
-    }
-    
-    if os.path.exists(RUNTIME_STATE_FILE):
-        try:
-            with open(RUNTIME_STATE_FILE, "r", encoding="utf-8") as f:
-                state = json.load(f)
-                # Ensure all fields exist (backward compatibility)
-                for key, value in default_state.items():
-                    if key not in state:
-                        state[key] = value
-                return state
-        except Exception:
-            return default_state
-    return default_state
-
-def save_runtime_state(state: dict):
-    """Elmenti a perzisztens futásidő állapotot."""
-    try:
-        with open(RUNTIME_STATE_FILE, "w", encoding="utf-8") as f:
-            json.dump(state, f, indent=2, ensure_ascii=False)
-    except Exception:
-        pass
-
-    
 
 # ---------- Chrome init (100% friss profil minden indításnál) ----------
 
