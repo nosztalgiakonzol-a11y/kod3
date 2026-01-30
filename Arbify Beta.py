@@ -2325,49 +2325,144 @@ def resolve_pairs_round_robin(pairs) -> tuple[list[tuple[str | None, str | None]
         handles_before = set()
 
     # 1) Targetek létrehozása (CDP-safe + window handle validation)
-    for idx, p in enumerate(norm):
-        if p is None:
-            continue
-        href1, href2 = p
-        created_any = False
-
-        # Optimization #1: Window handle validation before CDP operations
+    # 🚀 OPTIMALIZÁCIÓ: Batch target creation (biztonságos verzió)
+    # Kis batch-ekben hozza létre a targeteket (5 pár egyszerre)
+    # Fallback: ha bármilyen hiba, visszavált sequential módra
+    BATCH_SIZE = 5  # Konzervatív batch méret
+    batch_mode_failed = False
+    batch_start_time = time.time()
+    
+    try:
+        # Window handle validáció batch előtt
+        if not driver.window_handles:
+            warn("[RR] Nincs window handle batch mode előtt, fallback to sequential")
+            batch_mode_failed = True
+    except Exception:
+        warn("[RR] Window handle validation hiba, fallback to sequential")
+        batch_mode_failed = True
+    
+    if not batch_mode_failed:
+        # Batch mode: kis csoportokban hozzuk létre a targeteket
         try:
-            if not driver.window_handles:
-                warn(f"[RR] Nincs window handle idx={idx} előtt, skip target creation")
+            num_batches = (len([p for p in norm if p is not None]) + BATCH_SIZE - 1) // BATCH_SIZE
+            log(f"[RR] 🚀 Batch target creation: {num_batches} batch, {BATCH_SIZE} pár/batch")
+            
+            for batch_idx in range(num_batches):
+                batch_start_idx = batch_idx * BATCH_SIZE
+                batch_end_idx = min((batch_idx + 1) * BATCH_SIZE, len(norm))
+                
+                # Batch-en belül gyorsan létrehozzuk a targeteket (nem várunk válaszra)
+                batch_targets = []
+                for idx in range(batch_start_idx, batch_end_idx):
+                    if idx >= len(norm) or norm[idx] is None:
+                        continue
+                    href1, href2 = norm[idx]
+                    
+                    # Gyors létrehozás (nem várunk a válaszra)
+                    try:
+                        driver.execute_cdp_cmd("Target.createTarget", {"url": href1, "background": True})
+                        driver.execute_cdp_cmd("Target.createTarget", {"url": href2, "background": True})
+                        batch_targets.append(idx)
+                    except Exception as e:
+                        warn(f"[RR] Batch target creation error idx={idx}: {e}")
+                
+                # Kis késleltetés a batch inicializálásához
+                time.sleep(0.15)
+            
+            # Batch mode sikerült, most gyűjtsük össze az összes targetet
+            time.sleep(0.3)  # Extra idő az összes target inicializálásához
+            
+            # Targetek összegyűjtése egy CDP hívással
+            targets_info = _safe_cdp_cmd("Target.getTargets", {}, label="RR collect batch targets")
+            if isinstance(targets_info, dict):
+                all_targets = targets_info.get("targetInfos", []) or []
+                
+                # Párosítsuk a targeteket a norm párokhoz URL alapján
+                for idx, p in enumerate(norm):
+                    if p is None:
+                        continue
+                    href1, href2 = p
+                    created_any = False
+                    
+                    # Keressük meg a megfelelő targeteket
+                    for t in all_targets:
+                        turl = t.get("url", "")
+                        tid = t.get("targetId")
+                        if not tid:
+                            continue
+                        
+                        # href1 match
+                        if href1 in turl and tid not in tracking:
+                            tracking[tid] = {"pair": idx, "pos": 1}
+                            created_any = True
+                        # href2 match
+                        elif href2 in turl and tid not in tracking:
+                            tracking[tid] = {"pair": idx, "pos": 2}
+                            created_any = True
+                    
+                    if created_any:
+                        num_pairs_to_open += 1
+            
+            batch_elapsed = time.time() - batch_start_time
+            log(f"[RR] ✅ Batch mode siker: {num_pairs_to_open} pár létrehozva {batch_elapsed:.2f}s alatt")
+            
+        except Exception as e:
+            warn(f"[RR] Batch mode hiba: {e}, fallback to sequential")
+            batch_mode_failed = True
+            tracking.clear()  # Töröljük a részleges tracking-et
+            num_pairs_to_open = 0
+    
+    # Fallback: Sequential mode ha batch mode nem működött
+    if batch_mode_failed:
+        log("[RR] Sequential target creation (fallback)")
+        sequential_start = time.time()
+        
+        for idx, p in enumerate(norm):
+            if p is None:
                 continue
-        except Exception:
-            warn(f"[RR] Window handle validation hiba idx={idx}, skip target creation")
-            continue
+            href1, href2 = p
+            created_any = False
 
-        # első oldal
-        res1 = _safe_cdp_cmd(
-            "Target.createTarget",
-            {"url": href1, "background": True},
-            label=f"RR href1 idx={idx}",
-        )
-        tid1 = res1.get("targetId") if isinstance(res1, dict) else None
-        if tid1:
-            tracking[tid1] = {"pair": idx, "pos": 1}
-            created_any = True
-        else:
-            warn(f"[RR] Target.createTarget sikertelen (href1) idx={idx}")
+            # Optimization #1: Window handle validation before CDP operations
+            try:
+                if not driver.window_handles:
+                    warn(f"[RR] Nincs window handle idx={idx} előtt, skip target creation")
+                    continue
+            except Exception:
+                warn(f"[RR] Window handle validation hiba idx={idx}, skip target creation")
+                continue
 
-        # második oldal
-        res2 = _safe_cdp_cmd(
-            "Target.createTarget",
-            {"url": href2, "background": True},
-            label=f"RR href2 idx={idx}",
-        )
-        tid2 = res2.get("targetId") if isinstance(res2, dict) else None
-        if tid2:
-            tracking[tid2] = {"pair": idx, "pos": 2}
-            created_any = True
-        else:
-            warn(f"[RR] Target.createTarget sikertelen (href2) idx={idx}")
+            # első oldal
+            res1 = _safe_cdp_cmd(
+                "Target.createTarget",
+                {"url": href1, "background": True},
+                label=f"RR href1 idx={idx}",
+            )
+            tid1 = res1.get("targetId") if isinstance(res1, dict) else None
+            if tid1:
+                tracking[tid1] = {"pair": idx, "pos": 1}
+                created_any = True
+            else:
+                warn(f"[RR] Target.createTarget sikertelen (href1) idx={idx}")
 
-        if created_any:
-            num_pairs_to_open += 1
+            # második oldal
+            res2 = _safe_cdp_cmd(
+                "Target.createTarget",
+                {"url": href2, "background": True},
+                label=f"RR href2 idx={idx}",
+            )
+            tid2 = res2.get("targetId") if isinstance(res2, dict) else None
+            if tid2:
+                tracking[tid2] = {"pair": idx, "pos": 2}
+                created_any = True
+            else:
+                warn(f"[RR] Target.createTarget sikertelen (href2) idx={idx}")
+
+            if created_any:
+                num_pairs_to_open += 1
+        
+        sequential_elapsed = time.time() - sequential_start
+        log(f"[RR] Sequential mode: {num_pairs_to_open} pár létrehozva {sequential_elapsed:.2f}s alatt")
 
     if not tracking:
         log("resolve_pairs_round_robin: nincs nyitható target (tracking üres / CDP skip)")
