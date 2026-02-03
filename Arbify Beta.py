@@ -3086,6 +3086,84 @@ def cleanup_old_tracking_data():
     except Exception as e:
         warn(f"⚠️ cleanup_old_tracking_data hiba: {e}")
 
+# ---------- SERVER OUTAGE PROTECTION ----------
+def is_surebet_server_available():
+    """
+    Ellenőrzi hogy a surebet.com szerver elérhető-e.
+    Háromszor próbálkozik 5 másodperc várakozással hogy 100% biztos legyen.
+    Csak ha mind a 3 kísérlet sikertelen, akkor jelzi hogy a szerver leállt.
+    
+    Returns:
+        True if server available
+        False if confirmed down (all 3 attempts failed)
+    """
+    test_url = "https://www.surebet.com"
+    max_attempts = 3
+    attempt_delay = 5  # seconds between attempts
+    
+    for attempt in range(1, max_attempts + 1):
+        try:
+            log(f"🔍 Szerver elérhetőség ellenőrzése (kísérlet {attempt}/{max_attempts})...")
+            response = requests.get(test_url, timeout=10)
+            
+            # Success if status < 500 (even 404 means server is responding)
+            if response.status_code < 500:
+                log(f"✅ Szerver elérhető (status: {response.status_code})")
+                return True
+            else:
+                warn(f"⚠️ Szerver hiba (status: {response.status_code})")
+                
+        except requests.exceptions.ConnectionError as e:
+            warn(f"❌ Connection hiba (kísérlet {attempt}/{max_attempts}): {e}")
+        except requests.exceptions.Timeout as e:
+            warn(f"⏱️ Timeout (kísérlet {attempt}/{max_attempts}): {e}")
+        except Exception as e:
+            warn(f"⚠️ Egyéb hiba (kísérlet {attempt}/{max_attempts}): {e}")
+        
+        # Wait before next attempt (except after last attempt)
+        if attempt < max_attempts:
+            log(f"⏳ Várakozás {attempt_delay}s következő próba előtt...")
+            time.sleep(attempt_delay)
+    
+    # All attempts failed
+    log("❌ SZERVER MEGERŐSÍTVE ELÉRHETETLEN (3/3 próba sikertelen)")
+    return False
+
+def wait_for_server_recovery():
+    """
+    Megáll és vár amíg a surebet.com szerver újra elérhető lesz.
+    5 percenként újrapróbálkozik.
+    
+    A script TELJESEN LEÁLL ebben a módban - nem végez semmilyen munkát.
+    """
+    retry_interval = 300  # 5 minutes
+    
+    log("=" * 80)
+    log("🛑 KRITIKUS: SUREBET.COM SZERVER NEM ELÉRHETŐ")
+    log("=" * 80)
+    log("⏸️  Script LEÁLLT - várakozás a szerver visszatérésére")
+    log(f"🔄 Újrapróbálkozás {retry_interval // 60} percenként")
+    log("=" * 80)
+    
+    while True:
+        log(f"⏳ Várakozás {retry_interval}s ({retry_interval // 60} perc)...")
+        time.sleep(retry_interval)
+        
+        log("")
+        log("🔄 Szerver elérhetőség újraellenőrzése...")
+        
+        if is_surebet_server_available():
+            log("=" * 80)
+            log("✅ SZERVER ÚJRA ELÉRHETŐ!")
+            log("=" * 80)
+            log("▶️  Script folytatódik...")
+            log("")
+            return True
+        else:
+            log("❌ Szerver még mindig nem elérhető")
+            log("⏸️  Várakozás folytatódik...")
+            # Loop continues - wait another 5 minutes
+
 # ---------- GROUP helpers ----------
 def is_group_blocked(url, now_ts):
     return now_ts < group_blocked_until.get(url, 0)
@@ -5220,6 +5298,12 @@ if __name__ == "__main__":
     groupnext_thread.start()
     log("🚀 Group/NEXT opener worker elindítva (BOOTSTRAP előtt)")
 
+    # 🛡️ KRITIKUS: Ellenőrzés hogy a surebet.com szerver elérhető-e
+    log("🔍 Ellenőrzés: surebet.com szerver elérhető-e...")
+    if not is_surebet_server_available():
+        wait_for_server_recovery()
+    log("✅ Szerver elérhető, bootstrap indul...")
+
     # Dinamikus BOOTSTRAP futtatása
     run_dynamic_bootstrap()
 
@@ -5302,6 +5386,11 @@ if __name__ == "__main__":
                 warn("💀 WebDriver kapcsolat meghalt (DRIVER_DEAD=True) – kilépek a fő ciklusból.")
                 DIAG_LOGGER.log_crash_context(Exception("DRIVER_DEAD"), "DRIVER_DEATH")
                 break
+
+            # 🛡️ KRITIKUS: Ellenőrzés hogy a surebet.com szerver elérhető-e
+            # Ha nem elérhető, a script teljesen leáll és vár a visszatérésre
+            if not is_surebet_server_available():
+                wait_for_server_recovery()
 
             # 🏥 Session health check: gyors window_handles check
             try:
