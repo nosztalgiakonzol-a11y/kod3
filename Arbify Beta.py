@@ -3103,24 +3103,30 @@ def cleanup_old_tracking_data():
         warn(f"⚠️ cleanup_old_tracking_data hiba: {e}")
 
 # ---------- SERVER OUTAGE PROTECTION ----------
+# Server check throttling (10 perc intervallum az első check után)
+last_server_check_time = 0
+SERVER_CHECK_INTERVAL = 600  # 10 minutes in seconds
+
 def is_surebet_server_available():
     """
     Ellenőrzi hogy a surebet.com szerver elérhető-e.
-    Háromszor próbálkozik 5 másodperc várakozással hogy 100% biztos legyen.
-    Csak ha mind a 3 kísérlet sikertelen, akkor jelzi hogy a szerver leállt.
+    HEAD request használata (gyorsabb és kevésbé gyanús mint GET).
+    Csak 2 próbálkozás (elég a megbízhatósághoz, kevésbé agresszív).
     
     Returns:
         True if server available
-        False if confirmed down (all 3 attempts failed)
+        False if confirmed down (all 2 attempts failed)
     """
     test_url = "https://www.surebet.com"
-    max_attempts = 3
-    attempt_delay = 5  # seconds between attempts
+    max_attempts = 2  # Reduced from 3 (still reliable, less aggressive)
+    attempt_delay = 3  # Reduced from 5 (faster checks)
     
     for attempt in range(1, max_attempts + 1):
         try:
             log(f"🔍 Szerver elérhetőség ellenőrzése (kísérlet {attempt}/{max_attempts})...")
-            response = requests.get(test_url, timeout=10)
+            log(f"  ↳ HEAD request használata (gyorsabb, kevésbé gyanús)")
+            # Use HEAD instead of GET - faster, less data, less suspicious
+            response = requests.head(test_url, timeout=10)
             
             # Success if status < 500 (even 404 means server is responding)
             if response.status_code < 500:
@@ -3142,7 +3148,7 @@ def is_surebet_server_available():
             time.sleep(attempt_delay)
     
     # All attempts failed
-    log("❌ SZERVER MEGERŐSÍTVE ELÉRHETETLEN (3/3 próba sikertelen)")
+    log(f"❌ SZERVER MEGERŐSÍTVE ELÉRHETETLEN ({max_attempts}/{max_attempts} próba sikertelen)")
     return False
 
 def wait_for_server_recovery():
@@ -5320,6 +5326,9 @@ if __name__ == "__main__":
     log("=" * 80)
     log("")
     
+    # Initialize server check timer (for 10-minute throttling)
+    last_server_check_time = time.time()
+    
     login()
 
     log("🚀 DINAMIKUS BOOTSTRAP fázis: rekurzív MAIN + NEXT + GROUP oldalak megnyitása")
@@ -5417,10 +5426,18 @@ if __name__ == "__main__":
                 DIAG_LOGGER.log_crash_context(Exception("DRIVER_DEAD"), "DRIVER_DEATH")
                 break
 
-            # 🛡️ KRITIKUS: Ellenőrzés hogy a surebet.com szerver elérhető-e
-            # Ha nem elérhető, a script teljesen leáll és vár a visszatérésre
-            if not is_surebet_server_available():
-                wait_for_server_recovery()
+            # 🛡️ PERIODIKUS szerver check (10 percenként, nem minden loop-ban!)
+            # Ez csökkenti a bot detection kockázatát
+            current_time = time.time()
+            if current_time - last_server_check_time > SERVER_CHECK_INTERVAL:
+                minutes_since_last = int((current_time - last_server_check_time) / 60)
+                log(f"🔍 Periodikus szerver check (utolsó: {minutes_since_last} perc)")
+                
+                if not is_surebet_server_available():
+                    wait_for_server_recovery()
+                
+                last_server_check_time = current_time
+            # else: Skip check - not time yet (reduces bot detection risk)
 
             # 🏥 Session health check: gyors window_handles check
             try:
