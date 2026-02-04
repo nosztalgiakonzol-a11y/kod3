@@ -255,6 +255,14 @@ RESOLVE_POLL_INTERVAL = 0
 HANDLE_WAIT_TIMEOUT = 0.5
 HEADLESS = False
 
+# ============================================================================
+# 🎨 CSS BETÖLTÉS KIKAPCSOLÁSA (Speed optimization teszt)
+# ============================================================================
+# Ha True: CSS nem töltődik be (gyorsabb, de csúnya)
+# Ha False: CSS töltődik be (lassabb, de szép)
+# Könnyen visszaállítható ha problémát okoz!
+DISABLE_CSS = True  # Set to False to re-enable CSS if causes problems
+
 FIX_URL_WAIT_SEC = 17
 NAV_HARD_LIMIT_SEC = 20.0
 
@@ -721,10 +729,18 @@ prefs1 = {
 chrome_options.add_experimental_option("prefs", prefs1)
 
 # Performance optimizations: disable images, CSS, geolocation, etc.
+# 🎨 CSS kikapcsolás/bekapcsolás (DISABLE_CSS változó alapján)
+if DISABLE_CSS:
+    log("🎨 CSS betöltés KIKAPCSOLVA (DISABLE_CSS=True) - Gyorsabb de csúnya")
+    css_setting = 2  # 2 = Block CSS
+else:
+    log("🎨 CSS betöltés BEKAPCSOLVA (DISABLE_CSS=False) - Lassabb de szép")
+    css_setting = 1  # 1 = Allow CSS
+
 prefs2 = {
     "profile.default_content_setting_values.popups": 1,
     "profile.managed_default_content_settings.images": 2,  # Disable images
-    "profile.managed_default_content_settings.stylesheet": 2,  # Disable CSS
+    "profile.managed_default_content_settings.stylesheet": css_setting,  # CSS: configurable!
     "profile.managed_default_content_settings.geolocation": 2,
     "profile.managed_default_content_settings.notifications": 2,
     "profile.managed_default_content_settings.media_stream": 2,
@@ -5284,6 +5300,26 @@ if __name__ == "__main__":
     save_runtime_state(runtime_state)
     log(f"💾 Account állapot frissítve: current={ACTIVE_ACCOUNT_KEY}, pending=False")
     
+    # ============================================================================
+    # 🛡️ KRITIKUS ELLENŐRZÉS: SZERVER ELÉRHETŐ-E? (LEGELSŐ!)
+    # ============================================================================
+    # Ezt MINDENNEL ELŐBB kell csinálni, mert:
+    # - Ha szerver nem elérhető, úgysem lehet bejelentkezni
+    # - Nem pazaroljuk az időt Chrome inicializálással és login-nal
+    # - Azonnal látható ha szerver leáll
+    log("")
+    log("=" * 80)
+    log("🔍 KRITIKUS ELLENŐRZÉS: surebet.com szerver elérhető-e?")
+    log("=" * 80)
+    
+    if not is_surebet_server_available():
+        log("❌ Szerver nem elérhető - nem lehet bejelentkezni!")
+        wait_for_server_recovery()
+    
+    log("✅ Szerver elérhető, folytatás...")
+    log("=" * 80)
+    log("")
+    
     login()
 
     log("🚀 DINAMIKUS BOOTSTRAP fázis: rekurzív MAIN + NEXT + GROUP oldalak megnyitása")
@@ -5297,12 +5333,6 @@ if __name__ == "__main__":
     groupnext_thread = threading.Thread(target=group_next_opener_worker, daemon=True)
     groupnext_thread.start()
     log("🚀 Group/NEXT opener worker elindítva (BOOTSTRAP előtt)")
-
-    # 🛡️ KRITIKUS: Ellenőrzés hogy a surebet.com szerver elérhető-e
-    log("🔍 Ellenőrzés: surebet.com szerver elérhető-e...")
-    if not is_surebet_server_available():
-        wait_for_server_recovery()
-    log("✅ Szerver elérhető, bootstrap indul...")
 
     # Dinamikus BOOTSTRAP futtatása
     run_dynamic_bootstrap()
