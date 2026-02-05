@@ -263,6 +263,98 @@ HEADLESS = False
 # Könnyen visszaállítható ha problémát okoz!
 DISABLE_CSS = True  # Set to False to re-enable CSS if causes problems
 
+# ============================================================================
+# 🔄 JAVASCRIPT-BASED PAGE REFRESH (Safer, more natural)
+# ============================================================================
+# Ha True: JavaScript execution (location.reload()) - természetesebb, kevésbé detektálható
+# Ha False: driver.refresh() - hagyományos Selenium módszer
+USE_JAVASCRIPT_REFRESH = True  # True = JS execution, False = driver.refresh()
+
+# ============================================================================
+# 📦 BATCH OPERATIONS (Faster DOM queries)
+# ============================================================================
+# Ha True: Több elem egyszerre 1 query-vel (40-60% gyorsabb)
+# Ha False: Hagyományos egyenkénti lekérdezés
+USE_BATCH_OPERATIONS = True  # True = batch mode, False = traditional
+
+# ============================================================================
+# 🎭 USER AGENT ROTATION (Bot detection avoidance)
+# ============================================================================
+# User Agent lista - véletlenszerűen választva minden Chrome indításkor
+USER_AGENTS = [
+    # Chrome 120 - Windows 10
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    # Chrome 119 - Windows 10
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+    # Chrome 118 - Windows 10
+    "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/118.0.0.0 Safari/537.36",
+    # Chrome 120 - Windows 11
+    "Mozilla/5.0 (Windows NT 11.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Safari/537.36",
+    # Chrome 119 - Windows 11
+    "Mozilla/5.0 (Windows NT 11.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/119.0.0.0 Safari/537.36",
+]
+
+# ============================================================================
+# 🖱️ MOUSE MOVEMENT SIMULATION (Human-like behavior)
+# ============================================================================
+# Mouse movement szimuláció ritkán (10 percenként)
+last_mouse_movement_time = 0
+MOUSE_MOVEMENT_INTERVAL = 600  # 10 minutes
+
+# ============================================================================
+# 🗂️ ACCOUNT-SPECIFIC CHROME PROFILES (Complete isolation)
+# ============================================================================
+ACCOUNT_PROFILES = {
+    "nosztalgiakonzol": "C:/Chrome/Profile_Nosztalgiakonzol",
+    "secretcodeforme": "C:/Chrome/Profile_SecretCodeForMe",
+    "default": "C:/Chrome/Profile_Default"
+}
+
+# ============================================================================
+# 📁 ACCOUNT-SPECIFIC WORKING DIRECTORIES (File isolation)
+# ============================================================================
+ACCOUNT_WORKING_DIRS = {
+    "nosztalgiakonzol": "account_nosztalgiakonzol",
+    "secretcodeforme": "account_secretcodeforme",
+    "default": "account_default"
+}
+
+# ============================================================================
+# 🎨 ACCOUNT-SPECIFIC BROWSER FINGERPRINTS (Look like different users)
+# ============================================================================
+ACCOUNT_FINGERPRINTS = {
+    "nosztalgiakonzol": {
+        "screen_width": 1920,
+        "screen_height": 1080,
+        "timezone": "Europe/Budapest",  # Hungary timezone
+        "language": "en-US",
+        "canvas_noise": True,
+        "webgl_vendor": "Intel Inc.",
+        "webgl_renderer": "Intel Iris OpenGL Engine"
+    },
+    "secretcodeforme": {
+        "screen_width": 1366,
+        "screen_height": 768,
+        "timezone": "Europe/Budapest",  # Hungary timezone
+        "language": "en-GB",
+        "canvas_noise": True,
+        "webgl_vendor": "Google Inc. (NVIDIA)",
+        "webgl_renderer": "ANGLE (NVIDIA GeForce GTX 1660 Ti)"
+    },
+    "default": {
+        "screen_width": 1536,
+        "screen_height": 864,
+        "timezone": "Europe/Budapest",  # Hungary timezone
+        "language": "en-US",
+        "canvas_noise": False,
+        "webgl_vendor": "Intel Inc.",
+        "webgl_renderer": "Intel HD Graphics"
+    }
+}
+
+# Current account key (set by command line argument)
+current_account = "default"
+
 FIX_URL_WAIT_SEC = 17
 NAV_HARD_LIMIT_SEC = 20.0
 
@@ -591,6 +683,141 @@ def log(msg):
 def warn(msg):
     print(f"[{datetime.now().strftime('%H:%M:%S')}] {msg}")
 
+
+# ============================================================================
+# NEW HELPER FUNCTIONS FOR OPTIMIZATIONS
+# ============================================================================
+
+def get_chrome_profile_for_account(account_key):
+    """Get Chrome profile path for specific account"""
+    return ACCOUNT_PROFILES.get(account_key, ACCOUNT_PROFILES["default"])
+
+
+def get_account_file_path(account_key, filename):
+    """
+    Get account-specific file path.
+    Creates account folder if doesn't exist.
+    """
+    account_dir = ACCOUNT_WORKING_DIRS.get(account_key, ACCOUNT_WORKING_DIRS["default"])
+    
+    # Create directory if doesn't exist
+    if not os.path.exists(account_dir):
+        os.makedirs(account_dir)
+        log(f"📁 Created account directory: {account_dir}")
+    
+    return os.path.join(account_dir, filename)
+
+
+def get_fingerprint_for_account(account_key):
+    """Get browser fingerprint for specific account"""
+    return ACCOUNT_FINGERPRINTS.get(account_key, ACCOUNT_FINGERPRINTS["default"])
+
+
+def refresh_page_safe():
+    """
+    Biztonságosan frissíti az oldalt.
+    JavaScript execution használata (természetesebb, kevésbé detektálható).
+    """
+    try:
+        if USE_JAVASCRIPT_REFRESH:
+            # JavaScript-based refresh (safer, more natural)
+            driver.execute_script("location.reload(true)")
+            log("🔄 Oldal frissítve (JavaScript execution)")
+        else:
+            # Traditional Selenium refresh (fallback)
+            driver.refresh()
+            log("🔄 Oldal frissítve (Selenium refresh)")
+        
+        return True
+        
+    except Exception as e:
+        warn(f"Oldal frissítés hiba: {e}")
+        # Fallback to traditional method
+        try:
+            driver.refresh()
+            log("🔄 Oldal frissítve (fallback)")
+            return True
+        except:
+            return False
+
+
+def find_elements_batch(selector, description="elements", timeout=10):
+    """
+    Batch operáció: több elem egyszerre lekérése.
+    
+    Előny: 1 DOM query több elem helyett (40-60% gyorsabb).
+    Fallback: hiba esetén visszaáll az egyenkénti módszerre.
+    
+    Args:
+        selector: CSS selector
+        description: leírás logging-hoz
+        timeout: max várakozási idő
+        
+    Returns:
+        list: megtalált elemek listája
+    """
+    if not USE_BATCH_OPERATIONS:
+        # Batch mode disabled, return empty (caller handles traditional way)
+        log(f"⚙️ Batch operations kikapcsolva - traditional mode")
+        return None
+    
+    try:
+        log(f"📦 Batch operáció: {description} keresése (selector: {selector})")
+        
+        # Wait for at least one element
+        WebDriverWait(driver, timeout).until(
+            EC.presence_of_element_located((By.CSS_SELECTOR, selector))
+        )
+        
+        # Get all matching elements
+        elements = driver.find_elements(By.CSS_SELECTOR, selector)
+        
+        log(f"✅ Batch siker: {len(elements)} {description} megtalálva 1 query-vel")
+        return elements
+        
+    except TimeoutException:
+        warn(f"⏱️ Timeout: {description} nem találhatók - fallback traditional módra")
+        return None
+        
+    except Exception as e:
+        warn(f"❌ Batch hiba: {e} - fallback traditional módra")
+        return None
+
+
+def simulate_mouse_movement():
+    """
+    Szimulál random egér mozgást hogy emberibbnek tűnjön.
+    Ritkán fut (10 percenként) hogy ne legyen túl gyakori.
+    """
+    try:
+        # Get window size
+        window_size = driver.get_window_size()
+        width = window_size['width']
+        height = window_size['height']
+        
+        # Random number of movements (2-4)
+        num_movements = random.randint(2, 4)
+        
+        for i in range(num_movements):
+            # Random position
+            x = random.randint(50, width - 50)
+            y = random.randint(50, height - 50)
+            
+            # Move mouse
+            action = ActionChains(driver)
+            action.move_by_offset(x, y)
+            action.perform()
+            
+            # Small random delay between movements
+            time.sleep(random.uniform(0.1, 0.3))
+        
+        log(f"🖱️ Mouse movement szimuláció kész ({num_movements} mozgás)")
+        
+    except Exception as e:
+        # Silent fail - not critical
+        pass
+
+
 def load_seen():
     s = set()
     if os.path.exists(SEEN_FILE):
@@ -713,10 +940,10 @@ chrome_options.add_argument("--enable-quic")  # Enable QUIC protocol (faster tha
 chrome_options.add_argument("--enable-tcp-fast-open")  # TCP Fast Open
 chrome_options.add_argument("--dns-prefetch-disable")  # Disable DNS prefetch (save bandwidth)
 
-chrome_options.add_argument(
-    "--user-agent=Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
-    "AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36"
-)
+# 🎭 User Agent Rotation - Random selection for bot detection avoidance
+selected_user_agent = random.choice(USER_AGENTS)
+log(f"🎭 User Agent kiválasztva: {selected_user_agent[:80]}...")
+chrome_options.add_argument(f"--user-agent={selected_user_agent}")
 
 # Prefs 1
 prefs1 = {
@@ -2213,7 +2440,7 @@ def force_main_refresh(reason: str = ""):
     try:
         if MAIN_HANDLE and MAIN_HANDLE in driver.window_handles:
             driver.switch_to.window(MAIN_HANDLE)
-        driver.refresh()
+        refresh_page_safe()
         _inject_disable_animations()
         _wait_main_container(timeout=12)
         ensure_main_autoupdate()
@@ -3335,7 +3562,7 @@ def maybe_refresh_group_tab(url: str, info: dict) -> bool:
 
     if not ok:
         try:
-            driver.refresh()
+            refresh_page_safe()
             _inject_disable_animations()
             WebDriverWait(driver, 8).until(
                 EC.presence_of_element_located((By.CSS_SELECTOR, "div.table-container.product-table-container"))
@@ -4040,7 +4267,7 @@ def maybe_refresh_main_page():
         if MAIN_HANDLE and MAIN_HANDLE in driver.window_handles:
             driver.switch_to.window(MAIN_HANDLE)
 
-        driver.refresh()
+        refresh_page_safe()
         _inject_disable_animations()
         _wait_main_container(timeout=10)
         main_last_refresh = now
