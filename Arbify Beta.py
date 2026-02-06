@@ -387,6 +387,16 @@ NAV_MIN_WAIT = 0.0         # en.surebet.com/nav-on minimum türelmi idő
 RESOLVE_TIMEOUT_NAV = 3   # NAV-on hosszabb plafon
 NAV_STABLE_AFTER_EXIT = 0.42 # ha kimentünk NAV-ról, ennyit várunk stabilan
 
+# =============================================================================
+# 🚀 PERFORMANCE & SAFETY IMPROVEMENTS (4 NEW FEATURES)
+# =============================================================================
+# These features improve stability, performance, and bot detection avoidance
+ENABLE_RESOURCE_LEAK_FIX = True        # Tab cleanup guarantee (finally blocks)
+ENABLE_WEBDRIVER_REMOVAL = True        # Bot detection bypass (navigator.webdriver)
+ENABLE_CANVAS_RANDOMIZATION = True     # Fingerprint randomization
+ENABLE_EFFICIENT_POLLING = True        # Event-driven (less CPU, faster reaction)
+# =============================================================================
+
 # --- BOOTSTRAP FÁZIS: indulás után X másodpercig csak tabnyitás + ID-gyűjtés ---
 RUN_STARTED_AT = 0.0        # induláskor beállítjuk __main__-ben
 BOOTSTRAP_SEC = 50.0        # legacy, not used in dynamic mode
@@ -876,6 +886,81 @@ def save_link_cache(cache: dict):
     except Exception:
         pass
 
+# =============================================================================
+# 🚀 NEW HELPER FUNCTIONS FOR 4 IMPROVEMENTS
+# =============================================================================
+
+def remove_webdriver_flag(driver_instance):
+    """
+    Eltávolítja a navigator.webdriver flag-et CDP injection-nel.
+    Bot detection bypass - a böngésző nem jelzi hogy automatizált.
+    """
+    if not ENABLE_WEBDRIVER_REMOVAL:
+        return
+    
+    try:
+        driver_instance.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
+            "source": """
+                Object.defineProperty(navigator, 'webdriver', {
+                    get: () => undefined
+                });
+            """
+        })
+        log("🎭 WebDriver flag eltávolítva (bot detection bypass)")
+    except Exception as e:
+        warn(f"WebDriver flag removal hiba: {e}")
+
+def inject_canvas_noise(driver_instance):
+    """
+    Canvas fingerprint randomization - minden session egyedi fingerprint.
+    Követhetetlen, privacy védelem.
+    """
+    if not ENABLE_CANVAS_RANDOMIZATION:
+        return
+    
+    try:
+        driver_instance.execute_cdp_cmd("Page.addScriptToEvaluateOnNewDocument", {
+            "source": """
+                const originalToDataURL = HTMLCanvasElement.prototype.toDataURL;
+                const originalToBlob = HTMLCanvasElement.prototype.toBlob;
+                
+                const noise = () => Math.random() * 0.1 - 0.05;
+                
+                HTMLCanvasElement.prototype.toDataURL = function() {
+                    const context = this.getContext('2d');
+                    if (context) {
+                        const imageData = context.getImageData(0, 0, this.width, this.height);
+                        for (let i = 0; i < imageData.data.length; i += 4) {
+                            imageData.data[i] = Math.min(255, Math.max(0, imageData.data[i] + noise()));
+                            imageData.data[i+1] = Math.min(255, Math.max(0, imageData.data[i+1] + noise()));
+                            imageData.data[i+2] = Math.min(255, Math.max(0, imageData.data[i+2] + noise()));
+                        }
+                        context.putImageData(imageData, 0, 0);
+                    }
+                    return originalToDataURL.apply(this, arguments);
+                };
+                
+                HTMLCanvasElement.prototype.toBlob = function() {
+                    const context = this.getContext('2d');
+                    if (context) {
+                        const imageData = context.getImageData(0, 0, this.width, this.height);
+                        for (let i = 0; i < imageData.data.length; i += 4) {
+                            imageData.data[i] = Math.min(255, Math.max(0, imageData.data[i] + noise()));
+                            imageData.data[i+1] = Math.min(255, Math.max(0, imageData.data[i+1] + noise()));
+                            imageData.data[i+2] = Math.min(255, Math.max(0, imageData.data[i+2] + noise()));
+                        }
+                        context.putImageData(imageData, 0, 0);
+                    }
+                    return originalToBlob.apply(this, arguments);
+                };
+            """
+        })
+        log("🎨 Canvas fingerprint randomization aktiválva")
+    except Exception as e:
+        warn(f"Canvas noise injection hiba: {e}")
+
+# =============================================================================
+
 
 # ---------- Chrome init (100% friss profil minden indításnál) ----------
 
@@ -993,6 +1078,14 @@ except Exception as e:
         raise SystemExit(1)
 
 uc.Chrome.__del__ = lambda self: None
+
+# =============================================================================
+# 🚀 Apply WebDriver & Canvas improvements after driver creation
+# =============================================================================
+if ENABLE_WEBDRIVER_REMOVAL or ENABLE_CANVAS_RANDOMIZATION:
+    remove_webdriver_flag(driver)
+    inject_canvas_noise(driver)
+# =============================================================================
 
 
 
