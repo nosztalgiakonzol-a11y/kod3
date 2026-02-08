@@ -1230,6 +1230,12 @@ def check_content_changed(url, last_signature=None, last_hash=None):
             _log_hash_check("⚠️ Signature check failed, assuming changed", verbose_only=True)
             return True, None, last_hash, "signature_error"
         
+        # ✅ CRITICAL FIX: Detect empty pages (zero tbody)
+        if current_signature.get('tbody_count', 0) == 0:
+            _log_hash_check("🚨 CRITICAL: No tbody elements found on page!", verbose_only=False)
+            _log_hash_check("🔥 Forcing change detection (empty page)", verbose_only=False)
+            return True, current_signature, None, "zero_tbody_critical"
+        
         # Convert to string for comparison
         sig_str = json.dumps(current_signature, sort_keys=True)
         last_sig_str = json.dumps(last_signature, sort_keys=True) if last_signature else None
