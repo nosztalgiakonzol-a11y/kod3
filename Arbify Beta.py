@@ -1540,7 +1540,7 @@ else:
 prefs2 = {
     "profile.default_content_setting_values.popups": 1,
     "profile.managed_default_content_settings.images": 2,  # Disable images
-    "profile.managed_default_content_settings.stylesheet": css_setting,  # CSS: configurable!
+    "profile.default_content_setting_values.stylesheets": css_setting,  # CSS: configurable! (FIXED: was "stylesheet" singular)
     "profile.managed_default_content_settings.geolocation": 2,
     "profile.managed_default_content_settings.notifications": 2,
     "profile.managed_default_content_settings.media_stream": 2,
