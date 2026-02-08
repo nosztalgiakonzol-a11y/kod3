@@ -1187,12 +1187,14 @@ def get_content_hash():
 def check_content_changed(url, last_signature=None, last_hash=None):
     """
     Check if page content has actually changed
-    ENHANCED: Now includes periodic full check as safety net
+    ULTRA-AGGRESSIVE: 5-layer detection system to NEVER miss changes!
     
-    Uses multi-layer approach:
-    1. Quick signature check (fast)
-    2. Full hash check if signature changed (accurate)
-    3. Periodic full check every N quick checks (safety net)
+    Layers:
+    1. Pre-check: Immediate tbody count (catches zero immediately)
+    2. Decrease detection: Compare with last count (catches deletions)
+    3. Signature check: Quick comparison (fast detection)
+    4. Full hash check: Complete verification (accurate)
+    5. Post-check: Final verification (catches changes during check)
     
     Args:
         url: Page URL (for logging)
@@ -1209,56 +1211,128 @@ def check_content_changed(url, last_signature=None, last_hash=None):
     content_hash_metrics['periodic_check_counter'] += 1
     check_start = time.time()
     
-    # Check if it's time for periodic full check
-    force_full_check = (
-        CONTENT_HASH_ENHANCED_MODE and 
-        content_hash_metrics['periodic_check_counter'] >= CONTENT_HASH_PERIODIC_FULL_CHECK
-    )
-    
-    if force_full_check:
-        content_hash_metrics['periodic_check_counter'] = 0
-        _log_hash_check(
-            f"🔍 Periodic full check #{CONTENT_HASH_PERIODIC_FULL_CHECK} (safety net)",
-            verbose_only=True
-        )
-    
     try:
-        # Layer 1: Quick signature check
+        # ═══════════════════════════════════════════════════════════
+        # LAYER 1: PRE-CHECK - Immediate tbody count
+        # ═══════════════════════════════════════════════════════════
+        _log_hash_check("🔍 LAYER 1: Pre-check tbody count", verbose_only=True)
+        
+        try:
+            initial_count = driver.execute_script("""
+                return document.querySelectorAll('tbody').length;
+            """)
+            
+            # CRITICAL: If zero, force refresh IMMEDIATELY!
+            if initial_count == 0:
+                _log_hash_check("🚨 LAYER 1: ZERO TBODY DETECTED!", verbose_only=False)
+                _log_hash_check("🔥 FORCING IMMEDIATE REFRESH!", verbose_only=False)
+                return True, None, None, "zero_tbody_layer1"
+                
+            _log_hash_check(f"✓ Layer 1: {initial_count} tbody found", verbose_only=True)
+            
+        except Exception as e:
+            _log_hash_check(f"⚠️ Layer 1 failed: {e}", verbose_only=True)
+            initial_count = None
+        
+        # ═══════════════════════════════════════════════════════════
+        # LAYER 2: DECREASE DETECTION - Compare with last count
+        # ═══════════════════════════════════════════════════════════
+        if initial_count is not None and last_signature and 'tbody_count' in last_signature:
+            _log_hash_check("🔍 LAYER 2: Comparing tbody count", verbose_only=True)
+            
+            last_count = last_signature.get('tbody_count', 0)
+            
+            if initial_count < last_count:
+                _log_hash_check("🚨 LAYER 2: COUNT DECREASED!", verbose_only=False)
+                _log_hash_check(f"   Was: {last_count}, Now: {initial_count}", verbose_only=False)
+                _log_hash_check("🔥 FORCING REFRESH (deletion detected)!", verbose_only=False)
+                return True, None, None, "count_decreased_layer2"
+            
+            _log_hash_check(f"✓ Layer 2: Count stable ({last_count} → {initial_count})", verbose_only=True)
+        
+        # ═══════════════════════════════════════════════════════════
+        # LAYER 3: SIGNATURE CHECK - Quick comparison
+        # ═══════════════════════════════════════════════════════════
+        _log_hash_check("🔍 LAYER 3: Signature check", verbose_only=True)
+        
         current_signature = get_page_signature()
         
         if current_signature is None:
-            _log_hash_check("⚠️ Signature check failed, assuming changed", verbose_only=True)
+            _log_hash_check("⚠️ Layer 3: Signature check failed, assuming changed", verbose_only=True)
             return True, None, last_hash, "signature_error"
         
-        # ✅ CRITICAL FIX: Detect empty pages (zero tbody)
+        # Additional zero check in signature
         if current_signature.get('tbody_count', 0) == 0:
-            _log_hash_check("🚨 CRITICAL: No tbody elements found on page!", verbose_only=False)
-            _log_hash_check("🔥 Forcing change detection (empty page)", verbose_only=False)
-            return True, current_signature, None, "zero_tbody_critical"
+            _log_hash_check("🚨 LAYER 3: ZERO TBODY in signature!", verbose_only=False)
+            _log_hash_check("🔥 FORCING REFRESH!", verbose_only=False)
+            return True, current_signature, None, "zero_tbody_layer3"
+        
+        # Check for count decrease in signature
+        if last_signature and 'tbody_count' in last_signature:
+            if current_signature.get('tbody_count', 0) < last_signature.get('tbody_count', 0):
+                _log_hash_check("🚨 LAYER 3: Signature count decreased!", verbose_only=False)
+                _log_hash_check("🔥 FORCING REFRESH!", verbose_only=False)
+                return True, current_signature, None, "signature_decreased_layer3"
         
         # Convert to string for comparison
         sig_str = json.dumps(current_signature, sort_keys=True)
         last_sig_str = json.dumps(last_signature, sort_keys=True) if last_signature else None
         
+        # Check if it's time for periodic full check
+        force_full_check = (
+            CONTENT_HASH_ENHANCED_MODE and 
+            content_hash_metrics['periodic_check_counter'] >= CONTENT_HASH_PERIODIC_FULL_CHECK
+        )
+        
+        if force_full_check:
+            content_hash_metrics['periodic_check_counter'] = 0
+            _log_hash_check("🔍 LAYER 5: PERIODIC CHECK (safety net)", verbose_only=True)
+        
         # Skip quick check if it's time for periodic full check
         if CONTENT_HASH_USE_QUICK_CHECK and sig_str == last_sig_str and not force_full_check:
-            # Quick check says no change
+            _log_hash_check("✓ Layer 3: Signature unchanged", verbose_only=True)
+            
+            # ═══════════════════════════════════════════════════════════
+            # LAYER 4: POST-CHECK - Final verification
+            # ═══════════════════════════════════════════════════════════
+            _log_hash_check("🔍 LAYER 4: Post-check verification", verbose_only=True)
+            
+            try:
+                final_count = driver.execute_script("""
+                    return document.querySelectorAll('tbody').length;
+                """)
+                
+                if final_count == 0:
+                    _log_hash_check("🚨 LAYER 4: ZERO TBODY in final check!", verbose_only=False)
+                    _log_hash_check("🔥 FORCING REFRESH!", verbose_only=False)
+                    return True, current_signature, last_hash, "zero_tbody_layer4"
+                
+                if initial_count is not None and final_count != initial_count:
+                    _log_hash_check(f"🚨 LAYER 4: Count changed during check!", verbose_only=False)
+                    _log_hash_check(f"   Start: {initial_count}, End: {final_count}", verbose_only=False)
+                    _log_hash_check("🔥 FORCING REFRESH!", verbose_only=False)
+                    return True, current_signature, last_hash, "count_drift_layer4"
+                
+                _log_hash_check(f"✓ Layer 4: Final count stable ({final_count})", verbose_only=True)
+                
+            except Exception as e:
+                _log_hash_check(f"⚠️ Layer 4 failed: {e}", verbose_only=True)
+            
+            # All layers passed, no change
             elapsed_ms = (time.time() - check_start) * 1000
             content_hash_metrics['refreshes_skipped'] += 1
             
             _log_hash_check(
-                f"✅ Quick check: NO CHANGE detected ({elapsed_ms:.1f}ms) - Refresh SKIPPED",
-                verbose_only=False  # Always show skips
+                f"✅ All layers passed: NO CHANGE ({elapsed_ms:.1f}ms) - Refresh SKIPPED",
+                verbose_only=False
             )
             
-            return False, current_signature, last_hash, "quick_no_change"
+            return False, current_signature, last_hash, "all_layers_no_change"
         
-        # Layer 2: Full hash check (signature changed, first check, or periodic check)
-        if CONTENT_HASH_USE_QUICK_CHECK and last_signature and not force_full_check:
-            _log_hash_check(
-                f"🔄 Signature changed, verifying with full hash...",
-                verbose_only=True
-            )
+        # ═══════════════════════════════════════════════════════════
+        # FULL HASH CHECK - Signature changed or periodic check
+        # ═══════════════════════════════════════════════════════════
+        _log_hash_check("🔍 Full hash check (signature changed or periodic)", verbose_only=True)
         
         current_hash = get_content_hash()
         
@@ -1268,6 +1342,27 @@ def check_content_changed(url, last_signature=None, last_hash=None):
         
         if current_hash == last_hash:
             # False positive from signature check OR periodic check found no change
+            
+            # ═══════════════════════════════════════════════════════════
+            # LAYER 4: POST-CHECK - Final verification
+            # ═══════════════════════════════════════════════════════════
+            _log_hash_check("🔍 LAYER 4: Post-check verification", verbose_only=True)
+            
+            try:
+                final_count = driver.execute_script("""
+                    return document.querySelectorAll('tbody').length;
+                """)
+                
+                if final_count == 0:
+                    _log_hash_check("🚨 LAYER 4: ZERO TBODY in final check!", verbose_only=False)
+                    _log_hash_check("🔥 FORCING REFRESH!", verbose_only=False)
+                    return True, current_signature, current_hash, "zero_tbody_layer4"
+                
+                _log_hash_check(f"✓ Layer 4: Final count = {final_count}", verbose_only=True)
+                
+            except Exception as e:
+                _log_hash_check(f"⚠️ Layer 4 failed: {e}", verbose_only=True)
+            
             elapsed_ms = (time.time() - check_start) * 1000
             content_hash_metrics['refreshes_skipped'] += 1
             
@@ -1280,7 +1375,9 @@ def check_content_changed(url, last_signature=None, last_hash=None):
             
             return False, current_signature, current_hash, reason
         
-        # Real change detected!
+        # ═══════════════════════════════════════════════════════════
+        # CHANGE DETECTED!
+        # ═══════════════════════════════════════════════════════════
         elapsed_ms = (time.time() - check_start) * 1000
         content_hash_metrics['changes_detected'] += 1
         
@@ -1292,8 +1389,6 @@ def check_content_changed(url, last_signature=None, last_hash=None):
         if CONTENT_HASH_VERBOSE_LOGGING:
             _log_hash_check(f"   Old hash: {last_hash[:12] if last_hash else 'none'}...", verbose_only=True)
             _log_hash_check(f"   New hash: {current_hash[:12]}...", verbose_only=True)
-            if last_signature and current_signature:
-                _log_hash_check(f"   Signature: {last_signature} → {current_signature}", verbose_only=True)
         
         return True, current_signature, current_hash, "content_changed"
         
