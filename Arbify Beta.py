@@ -397,6 +397,17 @@ ENABLE_CANVAS_RANDOMIZATION = True     # Fingerprint randomization
 ENABLE_EFFICIENT_POLLING = True        # Event-driven (less CPU, faster reaction)
 # =============================================================================
 
+# =============================================================================
+# 🎯 CONTENT HASH CHECKING (Smart Refresh Detection)
+# =============================================================================
+# Detects real content changes before refreshing pages
+# Prevents unnecessary refreshes when content hasn't actually changed
+# Works even when server headers (ETag/Last-Modified) are unreliable
+ENABLE_CONTENT_HASH_CHECKING = True    # Enable smart refresh detection
+CONTENT_HASH_VERBOSE_LOGGING = True    # Detailed logging (easily toggleable)
+CONTENT_HASH_USE_QUICK_CHECK = True    # Use fast signature check before full hash
+# =============================================================================
+
 # --- BOOTSTRAP FÁZIS: indulás után X másodpercig csak tabnyitás + ID-gyűjtés ---
 RUN_STARTED_AT = 0.0        # induláskor beállítjuk __main__-ben
 BOOTSTRAP_SEC = 50.0        # legacy, not used in dynamic mode
@@ -958,6 +969,241 @@ def inject_canvas_noise(driver_instance):
         log("🎨 Canvas fingerprint randomization aktiválva")
     except Exception as e:
         warn(f"Canvas noise injection hiba: {e}")
+
+# =============================================================================
+# 🎯 CONTENT HASH CHECKING - Smart Refresh Detection
+# =============================================================================
+# These functions detect real content changes to avoid unnecessary page refreshes
+# Works even when server headers (ETag/Last-Modified) are unreliable
+
+import hashlib
+
+# Content hash checking metrics
+content_hash_metrics = {
+    'checks_performed': 0,
+    'quick_checks': 0,
+    'full_hashes': 0,
+    'changes_detected': 0,
+    'refreshes_skipped': 0,
+    'total_check_time_ms': 0
+}
+
+def _log_hash_check(msg, verbose_only=False):
+    """
+    Log content hash checking messages
+    
+    Args:
+        msg: Message to log
+        verbose_only: Only log if CONTENT_HASH_VERBOSE_LOGGING is True
+    """
+    if not verbose_only or CONTENT_HASH_VERBOSE_LOGGING:
+        log(f"[HASH] {msg}")
+
+def get_page_signature():
+    """
+    Get quick page signature (fast structure check)
+    
+    Returns:
+        dict: Quick signature with tbody/row counts and first/last IDs
+    
+    Speed: ~0.5-1ms
+    """
+    if not ENABLE_CONTENT_HASH_CHECKING:
+        return None
+    
+    try:
+        start_time = time.time()
+        
+        signature = driver.execute_script("""
+            const tbodys = document.querySelectorAll('tbody');
+            const rows = document.querySelectorAll('tbody tr');
+            
+            let firstId = '';
+            let lastId = '';
+            
+            if (rows.length > 0) {
+                firstId = rows[0].id || rows[0].className || '';
+                lastId = rows[rows.length - 1].id || rows[rows.length - 1].className || '';
+            }
+            
+            return {
+                tbody_count: tbodys.length,
+                row_count: rows.length,
+                first_id: firstId.substring(0, 50),
+                last_id: lastId.substring(0, 50)
+            };
+        """)
+        
+        elapsed_ms = (time.time() - start_time) * 1000
+        content_hash_metrics['quick_checks'] += 1
+        content_hash_metrics['total_check_time_ms'] += elapsed_ms
+        
+        _log_hash_check(
+            f"Quick signature: {signature['tbody_count']} tbodys, {signature['row_count']} rows ({elapsed_ms:.1f}ms)",
+            verbose_only=True
+        )
+        
+        return signature
+        
+    except Exception as e:
+        warn(f"[HASH] Page signature error: {e}")
+        return None
+
+def get_content_hash():
+    """
+    Get full content hash of tbody elements
+    
+    Returns:
+        str: MD5 hash of tbody content, or None if error
+    
+    Speed: ~2-5ms
+    """
+    if not ENABLE_CONTENT_HASH_CHECKING:
+        return None
+    
+    try:
+        start_time = time.time()
+        
+        # Extract tbody content (HTML)
+        tbody_content = driver.execute_script("""
+            const tbodys = document.querySelectorAll('tbody');
+            return Array.from(tbodys).map(t => t.innerHTML).join('');
+        """)
+        
+        # Create hash
+        content_hash = hashlib.md5(tbody_content.encode('utf-8')).hexdigest()
+        
+        elapsed_ms = (time.time() - start_time) * 1000
+        content_hash_metrics['full_hashes'] += 1
+        content_hash_metrics['total_check_time_ms'] += elapsed_ms
+        
+        _log_hash_check(
+            f"Full hash: {content_hash[:12]}... ({len(tbody_content)} chars, {elapsed_ms:.1f}ms)",
+            verbose_only=True
+        )
+        
+        return content_hash
+        
+    except Exception as e:
+        warn(f"[HASH] Content hash error: {e}")
+        return None
+
+def check_content_changed(url, last_signature=None, last_hash=None):
+    """
+    Check if page content has actually changed
+    
+    Uses two-layer approach:
+    1. Quick signature check (fast)
+    2. Full hash check only if signature changed (accurate)
+    
+    Args:
+        url: Page URL (for logging)
+        last_signature: Previous page signature
+        last_hash: Previous content hash
+    
+    Returns:
+        tuple: (changed: bool, new_signature: dict, new_hash: str, reason: str)
+    """
+    if not ENABLE_CONTENT_HASH_CHECKING:
+        return True, None, None, "hash_checking_disabled"
+    
+    content_hash_metrics['checks_performed'] += 1
+    check_start = time.time()
+    
+    try:
+        # Layer 1: Quick signature check
+        current_signature = get_page_signature()
+        
+        if current_signature is None:
+            _log_hash_check("⚠️ Signature check failed, assuming changed", verbose_only=True)
+            return True, None, last_hash, "signature_error"
+        
+        # Convert to string for comparison
+        sig_str = json.dumps(current_signature, sort_keys=True)
+        last_sig_str = json.dumps(last_signature, sort_keys=True) if last_signature else None
+        
+        if CONTENT_HASH_USE_QUICK_CHECK and sig_str == last_sig_str:
+            # Quick check says no change
+            elapsed_ms = (time.time() - check_start) * 1000
+            content_hash_metrics['refreshes_skipped'] += 1
+            
+            _log_hash_check(
+                f"✅ Quick check: NO CHANGE detected ({elapsed_ms:.1f}ms) - Refresh SKIPPED",
+                verbose_only=False  # Always show skips
+            )
+            
+            return False, current_signature, last_hash, "quick_no_change"
+        
+        # Layer 2: Full hash check (signature changed or first check)
+        if CONTENT_HASH_USE_QUICK_CHECK and last_signature:
+            _log_hash_check(
+                f"🔄 Signature changed, verifying with full hash...",
+                verbose_only=True
+            )
+        
+        current_hash = get_content_hash()
+        
+        if current_hash is None:
+            _log_hash_check("⚠️ Hash calculation failed, assuming changed", verbose_only=True)
+            return True, current_signature, last_hash, "hash_error"
+        
+        if current_hash == last_hash:
+            # False positive from signature check
+            elapsed_ms = (time.time() - check_start) * 1000
+            content_hash_metrics['refreshes_skipped'] += 1
+            
+            _log_hash_check(
+                f"✅ Full hash: NO CHANGE ({elapsed_ms:.1f}ms) - Refresh SKIPPED",
+                verbose_only=False
+            )
+            
+            return False, current_signature, current_hash, "hash_no_change"
+        
+        # Real change detected!
+        elapsed_ms = (time.time() - check_start) * 1000
+        content_hash_metrics['changes_detected'] += 1
+        
+        _log_hash_check(
+            f"🔥 CHANGE DETECTED ({elapsed_ms:.1f}ms) - Will REFRESH",
+            verbose_only=False
+        )
+        
+        if CONTENT_HASH_VERBOSE_LOGGING:
+            _log_hash_check(f"   Old hash: {last_hash[:12] if last_hash else 'none'}...", verbose_only=True)
+            _log_hash_check(f"   New hash: {current_hash[:12]}...", verbose_only=True)
+            if last_signature and current_signature:
+                _log_hash_check(f"   Signature: {last_signature} → {current_signature}", verbose_only=True)
+        
+        return True, current_signature, current_hash, "content_changed"
+        
+    except Exception as e:
+        warn(f"[HASH] Content check error: {e}")
+        return True, last_signature, last_hash, f"error_{str(e)[:20]}"
+
+def log_content_hash_metrics():
+    """Log content hash checking statistics"""
+    if not ENABLE_CONTENT_HASH_CHECKING:
+        return
+    
+    m = content_hash_metrics
+    
+    if m['checks_performed'] == 0:
+        return
+    
+    avg_time = m['total_check_time_ms'] / m['checks_performed'] if m['checks_performed'] > 0 else 0
+    skip_rate = (m['refreshes_skipped'] / m['checks_performed'] * 100) if m['checks_performed'] > 0 else 0
+    
+    log("=" * 70)
+    log("📊 CONTENT HASH CHECKING STATISTICS")
+    log("=" * 70)
+    log(f"  Total checks performed: {m['checks_performed']}")
+    log(f"  Quick checks: {m['quick_checks']}")
+    log(f"  Full hashes: {m['full_hashes']}")
+    log(f"  Changes detected: {m['changes_detected']}")
+    log(f"  Refreshes skipped: {m['refreshes_skipped']} ({skip_rate:.1f}%)")
+    log(f"  Avg check time: {avg_time:.2f}ms")
+    log(f"  Total time spent: {m['total_check_time_ms']:.1f}ms")
+    log("=" * 70)
 
 # =============================================================================
 
@@ -3626,6 +3872,35 @@ def maybe_refresh_group_tab(url: str, info: dict) -> bool:
     if handle and handle not in driver.window_handles:
         return False
 
+    # 🎯 CONTENT HASH CHECKING - Check if content actually changed before refreshing
+    if ENABLE_CONTENT_HASH_CHECKING:
+        _log_hash_check(f"📋 Checking GROUP page content: {url[:60]}...", verbose_only=False)
+        
+        # Switch to the group tab
+        try:
+            driver.switch_to.window(handle)
+        except Exception as e:
+            warn(f"[HASH] Could not switch to group tab: {e}")
+            # Continue with refresh anyway
+        
+        # Check if content changed
+        last_signature = info.get("content_signature")
+        last_hash = info.get("content_hash")
+        
+        changed, new_signature, new_hash, reason = check_content_changed(url, last_signature, last_hash)
+        
+        # Update stored hash/signature
+        info["content_signature"] = new_signature
+        info["content_hash"] = new_hash
+        
+        if not changed:
+            # Content hasn't changed, skip refresh!
+            _log_hash_check(f"⏭️ GROUP refresh SKIPPED (reason: {reason})", verbose_only=False)
+            info["next_refresh"] = now + _rand_group_refresh_interval()
+            return False
+        else:
+            _log_hash_check(f"🔄 GROUP will refresh (reason: {reason})", verbose_only=False)
+
     ok = False
     try:
         result = _safe_execute_async_script(r"""
@@ -3669,6 +3944,18 @@ def maybe_refresh_group_tab(url: str, info: dict) -> bool:
     info["next_refresh"] = now + _rand_group_refresh_interval()
     if ok:
         info["needs_scan"] = True
+        
+        # 🎯 Update hash after successful refresh
+        if ENABLE_CONTENT_HASH_CHECKING:
+            try:
+                new_signature = get_page_signature()
+                new_hash = get_content_hash()
+                info["content_signature"] = new_signature
+                info["content_hash"] = new_hash
+                _log_hash_check(f"✅ GROUP refreshed, new hash stored", verbose_only=True)
+            except Exception as e:
+                warn(f"[HASH] Could not update hash after refresh: {e}")
+    
     return ok
 
 # ---------- NEXT helpers ----------
@@ -3785,6 +4072,41 @@ def maybe_refresh_next_tab(url: str, info: dict) -> bool:
     if now < info.get("next_refresh", 0):
         return False
 
+    handle = info.get("handle")
+    
+    # 🎯 CONTENT HASH CHECKING - Check if content actually changed before refreshing
+    if ENABLE_CONTENT_HASH_CHECKING and handle:
+        _log_hash_check(f"📋 Checking NEXT page content: {url[:60]}...", verbose_only=False)
+        
+        # Switch to the next tab
+        try:
+            if handle in driver.window_handles:
+                driver.switch_to.window(handle)
+            else:
+                warn(f"[HASH] Next tab handle not in window_handles, will refresh anyway")
+                # Continue with refresh
+        except Exception as e:
+            warn(f"[HASH] Could not switch to next tab: {e}")
+            # Continue with refresh anyway
+        
+        # Check if content changed
+        last_signature = info.get("content_signature")
+        last_hash = info.get("content_hash")
+        
+        changed, new_signature, new_hash, reason = check_content_changed(url, last_signature, last_hash)
+        
+        # Update stored hash/signature
+        info["content_signature"] = new_signature
+        info["content_hash"] = new_hash
+        
+        if not changed:
+            # Content hasn't changed, skip refresh!
+            _log_hash_check(f"⏭️ NEXT refresh SKIPPED (reason: {reason})", verbose_only=False)
+            info["next_refresh"] = now + _rand_next_refresh_interval()
+            return False
+        else:
+            _log_hash_check(f"🔄 NEXT will refresh (reason: {reason})", verbose_only=False)
+
     ok = False
     try:
         result = _safe_execute_async_script(r"""
@@ -3816,6 +4138,18 @@ def maybe_refresh_next_tab(url: str, info: dict) -> bool:
     info["next_refresh"] = now + _rand_next_refresh_interval()
     if ok:
         info["needs_scan"] = True
+        
+        # 🎯 Update hash after successful refresh
+        if ENABLE_CONTENT_HASH_CHECKING:
+            try:
+                new_signature = get_page_signature()
+                new_hash = get_content_hash()
+                info["content_signature"] = new_signature
+                info["content_hash"] = new_hash
+                _log_hash_check(f"✅ NEXT refreshed, new hash stored", verbose_only=True)
+            except Exception as e:
+                warn(f"[HASH] Could not update hash after refresh: {e}")
+    
     return ok
     
     
@@ -5793,6 +6127,13 @@ if __name__ == "__main__":
                     cleanup_old_tracking_data()
                 except Exception as e:
                     warn(f"⚠️ Memory cleanup hiba: {e}")
+                
+                # 📊 CONTENT HASH STATISTICS - Log every 5 minutes
+                if ENABLE_CONTENT_HASH_CHECKING:
+                    try:
+                        log_content_hash_metrics()
+                    except Exception as e:
+                        warn(f"⚠️ Hash metrics logging hiba: {e}")
 
             # 🧹 POST-BOOTSTRAP CLEANUP – csak egyszer, amikor a bootstrap vége van
             if not bootstrap and not BOOTSTRAP_CLEANUP_DONE:
