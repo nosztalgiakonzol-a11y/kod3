@@ -1124,10 +1124,32 @@ def get_page_signature():
         content_hash_metrics['quick_checks'] += 1
         content_hash_metrics['total_check_time_ms'] += elapsed_ms
         
-        _log_hash_check(
-            f"Quick signature: {signature['tbody_count']} tbodys, {signature['row_count']} rows ({elapsed_ms:.1f}ms)",
-            verbose_only=True
-        )
+        # Add text_count to signature if text verification is enabled
+        if HASH_USE_TEXT_VERIFICATION:
+            try:
+                text_count = get_surebet_count_from_text()
+                signature['text_count'] = text_count
+                if text_count is not None:
+                    _log_hash_check(
+                        f"Quick signature: {signature['tbody_count']} tbodys, {signature['row_count']} rows, text={text_count} ({elapsed_ms:.1f}ms)",
+                        verbose_only=True
+                    )
+                else:
+                    _log_hash_check(
+                        f"Quick signature: {signature['tbody_count']} tbodys, {signature['row_count']} rows (text not found) ({elapsed_ms:.1f}ms)",
+                        verbose_only=True
+                    )
+            except Exception as e:
+                signature['text_count'] = None
+                _log_hash_check(
+                    f"Quick signature: {signature['tbody_count']} tbodys, {signature['row_count']} rows (text error) ({elapsed_ms:.1f}ms)",
+                    verbose_only=True
+                )
+        else:
+            _log_hash_check(
+                f"Quick signature: {signature['tbody_count']} tbodys, {signature['row_count']} rows ({elapsed_ms:.1f}ms)",
+                verbose_only=True
+            )
         
         return signature
         
