@@ -403,7 +403,7 @@ ENABLE_EFFICIENT_POLLING = True        # Event-driven (less CPU, faster reaction
 # Detects real content changes before refreshing pages
 # Prevents unnecessary refreshes when content hasn't actually changed
 # Works even when server headers (ETag/Last-Modified) are unreliable
-ENABLE_CONTENT_HASH_CHECKING = True    # Enable smart refresh detection
+ENABLE_CONTENT_HASH_CHECKING = False   # Disabled - using simple time-based refresh with bot-proofing instead
 CONTENT_HASH_VERBOSE_LOGGING = True    # Detailed logging (easily toggleable)
 CONTENT_HASH_USE_QUICK_CHECK = True    # Use fast signature check before full hash
 CONTENT_HASH_ENHANCED_MODE = True      # Enhanced detection (IDs, classes, deletion detection)
@@ -4048,7 +4048,19 @@ def find_group_link_in_tbody(tbody):
         return None
 
 def _rand_group_refresh_interval():
-    return random.uniform(GROUP_REFRESH_MIN, GROUP_REFRESH_MAX)
+    """
+    Enhanced random interval with larger variance for bot-proofing
+    """
+    base = (GROUP_REFRESH_MIN + GROUP_REFRESH_MAX) / 2
+    # Larger jitter: ±30% for more unpredictability
+    jitter = random.uniform(-0.3, 0.3) * base
+    
+    # Occasional longer breaks (10% chance) to avoid patterns
+    if random.random() < 0.1:
+        jitter += random.uniform(10, 30)  # Extra 10-30 seconds
+    
+    interval = max(base + jitter, 15)  # Minimum 15 seconds
+    return interval
 
 def open_group_tab_if_needed(group_url):
     now_ts = time.time()
@@ -4107,6 +4119,37 @@ def open_group_tab_if_needed(group_url):
         except Exception:
             pass
 
+def simulate_human_behavior():
+    """
+    Simulate human-like behavior to avoid bot detection
+    Includes random mouse movements, scrolling, and pauses
+    """
+    try:
+        # Random mouse movement (30% chance)
+        if random.random() < 0.3:
+            try:
+                from selenium.webdriver.common.action_chains import ActionChains
+                action = ActionChains(driver)
+                x_offset = random.randint(-100, 100)
+                y_offset = random.randint(-50, 50)
+                action.move_by_offset(x_offset, y_offset).perform()
+            except Exception:
+                pass
+        
+        # Random scroll (20% chance)
+        if random.random() < 0.2:
+            try:
+                scroll_amount = random.randint(-200, 200)
+                driver.execute_script(f"window.scrollBy(0, {scroll_amount});")
+            except Exception:
+                pass
+        
+        # Random short pause (always)
+        time.sleep(random.uniform(0.1, 0.5))
+    except Exception:
+        # If anything fails, just continue silently
+        pass
+
 def maybe_refresh_group_tab(url: str, info: dict) -> bool:
     now = time.time()
     if now - info.get("created_at", now) < GROUP_REFRESH_SKIP_ON_NEW_SEC:
@@ -4154,6 +4197,9 @@ def maybe_refresh_group_tab(url: str, info: dict) -> bool:
             return False
         else:
             _log_hash_check(f"🔄 GROUP will refresh (reason: {reason})", verbose_only=False)
+
+    # 🤖 BOT-PROOFING: Simulate human behavior before refresh
+    simulate_human_behavior()
 
     ok = False
     try:
@@ -4372,6 +4418,9 @@ def maybe_refresh_next_tab(url: str, info: dict) -> bool:
             return False
         else:
             _log_hash_check(f"🔄 NEXT will refresh (reason: {reason})", verbose_only=False)
+
+    # 🤖 BOT-PROOFING: Simulate human behavior before refresh
+    simulate_human_behavior()
 
     ok = False
     try:
