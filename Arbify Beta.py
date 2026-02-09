@@ -4048,19 +4048,37 @@ def find_group_link_in_tbody(tbody):
         return None
 
 def _rand_group_refresh_interval():
+    """Simple random interval between min and max"""
+    return random.uniform(GROUP_REFRESH_MIN, GROUP_REFRESH_MAX)
+
+def calculate_group_refresh_interval(info: dict, found_new_element: bool) -> float:
     """
-    Enhanced random interval with larger variance for bot-proofing
+    Calculate adaptive refresh interval based on page state.
+    
+    States:
+    - FRESH_PAGE: First refresh after opening (145-170s)
+    - SECOND_REFRESH: Second refresh (85-110s)
+    - NORMAL: 3rd+ refresh with regular updates (60-75s)
+    - STALE: 7+ refreshes without new elements (70-85s)
+    - BOOST: Just found new element (85-110s)
     """
-    base = (GROUP_REFRESH_MIN + GROUP_REFRESH_MAX) / 2
-    # Larger jitter: ±30% for more unpredictability
-    jitter = random.uniform(-0.3, 0.3) * base
+    state = info.get('state', 'FRESH_PAGE')
+    refresh_count = info.get('refresh_count', 0)
+    no_update_count = info.get('no_update_count', 0)
     
-    # Occasional longer breaks (10% chance) to avoid patterns
-    if random.random() < 0.1:
-        jitter += random.uniform(10, 30)  # Extra 10-30 seconds
-    
-    interval = max(base + jitter, 15)  # Minimum 15 seconds
-    return interval
+    if found_new_element:
+        # Boost mode after finding new element
+        return random.uniform(85, 110)
+    elif state == 'FRESH_PAGE':
+        return random.uniform(145, 170)
+    elif state == 'SECOND_REFRESH':
+        return random.uniform(85, 110)
+    elif no_update_count >= 7:
+        # Stale - slow down
+        return random.uniform(70, 85)
+    else:
+        # Normal refresh
+        return random.uniform(60, 75)
 
 def open_group_tab_if_needed(group_url):
     now_ts = time.time()
@@ -4105,6 +4123,10 @@ def open_group_tab_if_needed(group_url):
             "last_refresh": now,
             "next_refresh": now + _rand_group_refresh_interval(),
             "needs_scan": True,
+            "state": "FRESH_PAGE",
+            "refresh_count": 0,
+            "no_update_count": 0,
+            "has_new_element": False,
         }
         if original and original in driver.window_handles:
             driver.switch_to.window(original)
@@ -4118,37 +4140,6 @@ def open_group_tab_if_needed(group_url):
                 driver.switch_to.window(original)
         except Exception:
             pass
-
-def simulate_human_behavior():
-    """
-    Simulate human-like behavior to avoid bot detection
-    Includes random mouse movements, scrolling, and pauses
-    """
-    try:
-        # Random mouse movement (30% chance)
-        if random.random() < 0.3:
-            try:
-                from selenium.webdriver.common.action_chains import ActionChains
-                action = ActionChains(driver)
-                x_offset = random.randint(-100, 100)
-                y_offset = random.randint(-50, 50)
-                action.move_by_offset(x_offset, y_offset).perform()
-            except Exception:
-                pass
-        
-        # Random scroll (20% chance)
-        if random.random() < 0.2:
-            try:
-                scroll_amount = random.randint(-200, 200)
-                driver.execute_script(f"window.scrollBy(0, {scroll_amount});")
-            except Exception:
-                pass
-        
-        # Random short pause (always)
-        time.sleep(random.uniform(0.1, 0.5))
-    except Exception:
-        # If anything fails, just continue silently
-        pass
 
 def maybe_refresh_group_tab(url: str, info: dict) -> bool:
     now = time.time()
@@ -4198,9 +4189,6 @@ def maybe_refresh_group_tab(url: str, info: dict) -> bool:
         else:
             _log_hash_check(f"🔄 GROUP will refresh (reason: {reason})", verbose_only=False)
 
-    # 🤖 BOT-PROOFING: Simulate human behavior before refresh
-    simulate_human_behavior()
-
     ok = False
     try:
         result = _safe_execute_async_script(r"""
@@ -4240,9 +4228,39 @@ def maybe_refresh_group_tab(url: str, info: dict) -> bool:
             warn(f"⚠️ Group teljes reload hiba: {e}")
             ok = False
 
+    # Update state tracking after refresh attempt
     info["last_refresh"] = now
-    info["next_refresh"] = now + _rand_group_refresh_interval()
+    info["refresh_count"] = info.get("refresh_count", 0) + 1
+    
     if ok:
+        # Check if new elements were found since last refresh
+        found_new_element = info.get("has_new_element", False)
+        
+        # Update no_update_count based on whether new elements were found
+        if found_new_element:
+            info["no_update_count"] = 0
+        else:
+            info["no_update_count"] = info.get("no_update_count", 0) + 1
+        
+        # Update state machine
+        refresh_count = info["refresh_count"]
+        no_update_count = info["no_update_count"]
+        
+        if refresh_count == 1:
+            info["state"] = "SECOND_REFRESH"
+        elif no_update_count >= 7:
+            info["state"] = "STALE"
+        elif found_new_element:
+            info["state"] = "BOOST"
+        else:
+            info["state"] = "NORMAL"
+        
+        # Calculate next refresh interval based on state
+        info["next_refresh"] = now + calculate_group_refresh_interval(info, found_new_element)
+        
+        # Reset the new element flag
+        info["has_new_element"] = False
+        
         info["needs_scan"] = True
         
         # 🎯 CONDITIONAL SCRAPING - Mark tab for scraping after refresh
@@ -4260,6 +4278,9 @@ def maybe_refresh_group_tab(url: str, info: dict) -> bool:
                 _log_hash_check(f"✅ GROUP refreshed, new hash stored", verbose_only=True)
             except Exception as e:
                 warn(f"[HASH] Could not update hash after refresh: {e}")
+    else:
+        # Failed refresh - use simple interval
+        info["next_refresh"] = now + _rand_group_refresh_interval()
     
     return ok
 
@@ -4418,9 +4439,6 @@ def maybe_refresh_next_tab(url: str, info: dict) -> bool:
             return False
         else:
             _log_hash_check(f"🔄 NEXT will refresh (reason: {reason})", verbose_only=False)
-
-    # 🤖 BOT-PROOFING: Simulate human behavior before refresh
-    simulate_human_behavior()
 
     ok = False
     try:
@@ -5299,6 +5317,10 @@ def group_scan_tab(url: str, info: dict, higher_ids: set):
                 handle_update_for_id(tid)
             else:
                 new_ids_for_save.append(tid)
+
+        # Mark group if new elements were found
+        if new_ids_for_save:
+            info["has_new_element"] = True
 
         batch_save_new_ids(new_ids_for_save, higher_ids=higher_ids)
 
