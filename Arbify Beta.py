@@ -412,16 +412,7 @@ CONTENT_HASH_TRACK_IDS = True          # Track element IDs for better detection
 # =============================================================================
 
 # =============================================================================
-# 📝 TEXT VERIFICATION (Layer 6 - Ultimate Truth Check)
-# =============================================================================
-# Uses website's own "Found X surebets" text as verification
-# This is the ultimate truth - the website explicitly tells us the count!
-HASH_USE_TEXT_VERIFICATION = True         # Enable text-based verification
-HASH_TEXT_VERIFY_GROUP_PAGES = True       # Apply to GROUP pages
-HASH_TEXT_VERIFY_NEXT_PAGES = True        # Apply to NEXT pages
-HASH_FORCE_REFRESH_ON_NO_RESULTS = True   # Always refresh when "No results" (conservative)
-HASH_TEXT_VERIFICATION_PRIORITY = 1       # High priority (runs early)
-HASH_LOG_TEXT_INDICATORS = True           # Log text indicators found
+# TEXT VERIFICATION REMOVED - Using enhanced content-based hash instead
 # =============================================================================
 
 # =============================================================================
@@ -1124,30 +1115,9 @@ def get_page_signature():
         content_hash_metrics['quick_checks'] += 1
         content_hash_metrics['total_check_time_ms'] += elapsed_ms
         
-        # Add text_count to signature if text verification is enabled
-        if HASH_USE_TEXT_VERIFICATION:
-            try:
-                text_count = get_surebet_count_from_text()
-                signature['text_count'] = text_count
-                if text_count is not None:
-                    _log_hash_check(
-                        f"Quick signature: {signature['tbody_count']} tbodys, {signature['row_count']} rows, text={text_count} ({elapsed_ms:.1f}ms)",
-                        verbose_only=True
-                    )
-                else:
-                    _log_hash_check(
-                        f"Quick signature: {signature['tbody_count']} tbodys, {signature['row_count']} rows (text not found) ({elapsed_ms:.1f}ms)",
-                        verbose_only=True
-                    )
-            except Exception as e:
-                signature['text_count'] = None
-                _log_hash_check(
-                    f"Quick signature: {signature['tbody_count']} tbodys, {signature['row_count']} rows (text error) ({elapsed_ms:.1f}ms)",
-                    verbose_only=True
-                )
-        else:
-            _log_hash_check(
-                f"Quick signature: {signature['tbody_count']} tbodys, {signature['row_count']} rows ({elapsed_ms:.1f}ms)",
+        # Log signature
+        _log_hash_check(
+            f"Quick signature: {signature['tbody_count']} tbodys, {signature['row_count']} rows ({elapsed_ms:.1f}ms)",
                 verbose_only=True
             )
         
@@ -1219,55 +1189,6 @@ def get_content_hash():
         warn(f"[HASH] Content hash error: {e}")
         return None
 
-def get_surebet_count_from_text():
-    """
-    Parse page text to get expected surebet count from website's own indicator.
-    
-    This is Layer 6 - the ULTIMATE truth check!
-    The website explicitly tells us how many surebets there should be.
-    
-    Returns:
-        int: Expected count (0 for "No results", X for "Found X surebets")
-        None: If text indicator not found
-    """
-    try:
-        import re
-        
-        # Method 1: Look for "Found X surebets" or similar
-        try:
-            elements = driver.find_elements(By.XPATH, 
-                "//*[contains(text(), 'Found') or contains(text(), 'found')]")
-            
-            for elem in elements:
-                text = elem.text
-                # Try to match patterns like "Found 5 surebets", "Found 5 surebet", etc.
-                match = re.search(r'[Ff]ound\s+(\d+)\s+surebet', text, re.IGNORECASE)
-                if match:
-                    count = int(match.group(1))
-                    log(f"[TEXT] Found indicator: '{text}' → {count} surebets")
-                    return count
-        except Exception as e:
-            pass  # Try other methods
-        
-        # Method 2: Look for "No results were found" or similar
-        try:
-            no_results_elements = driver.find_elements(By.XPATH,
-                "//*[contains(text(), 'No result') or contains(text(), 'no result')]")
-            
-            if no_results_elements:
-                for elem in no_results_elements:
-                    text = elem.text.lower()
-                    if 'no result' in text:
-                        log(f"[TEXT] Found 'No results' indicator → 0 surebets")
-                        return 0
-        except Exception as e:
-            pass
-            
-    except Exception as e:
-        log(f"[TEXT] ⚠️ Could not parse text: {e}")
-    
-    return None
-
 def check_content_changed(url, last_signature=None, last_hash=None):
     """
     Check if page content has actually changed
@@ -1333,41 +1254,6 @@ def check_content_changed(url, last_signature=None, last_hash=None):
                 return True, None, None, "count_decreased_layer2"
             
             _log_hash_check(f"✓ Layer 2: Count stable ({last_count} → {initial_count})", verbose_only=True)
-        
-        # ═══════════════════════════════════════════════════════════
-        # LAYER 6: TEXT VERIFICATION - Ultimate truth check!
-        # ═══════════════════════════════════════════════════════════
-        # This is THE ultimate verification - the website tells us the truth!
-        _log_hash_check("🔍 LAYER 6: Text verification (website truth)", verbose_only=True)
-        
-        try:
-            text_count = get_surebet_count_from_text()
-            
-            if text_count is not None:
-                _log_hash_check(f"[LAYER6] Text verification:", verbose_only=False)
-                _log_hash_check(f"[LAYER6]   Text says: {text_count} surebets", verbose_only=False)
-                _log_hash_check(f"[LAYER6]   tbody count: {initial_count if initial_count is not None else '?'}", verbose_only=False)
-                
-                # SPECIAL CASE: "No results" ALWAYS forces refresh (conservative approach)
-                if text_count == 0:
-                    _log_hash_check("[LAYER6] 🚨 NO RESULTS DETECTED!", verbose_only=False)
-                    _log_hash_check("[LAYER6] 💯 BYPASSING ALL HASH CHECKS", verbose_only=False)
-                    _log_hash_check("[LAYER6] 🔄 FORCING REFRESH (to be certain!)", verbose_only=False)
-                    return True, None, None, "no_results_force_refresh"
-                
-                # Compare text count with actual tbody count
-                if initial_count is not None and initial_count != text_count:
-                    _log_hash_check(f"[LAYER6] 🚨 MISMATCH DETECTED!", verbose_only=False)
-                    _log_hash_check(f"[LAYER6] 🔥 Text says {text_count}, we have {initial_count}", verbose_only=False)
-                    _log_hash_check("[LAYER6] 🔄 FORCING REFRESH!", verbose_only=False)
-                    return True, None, None, "text_mismatch_layer6"
-                else:
-                    _log_hash_check(f"[LAYER6] ✅ Text matches tbody count ({text_count} = {initial_count})", verbose_only=True)
-            else:
-                _log_hash_check("[LAYER6] Text indicator not found (continuing)", verbose_only=True)
-                
-        except Exception as e:
-            _log_hash_check(f"[LAYER6] ⚠️ Text verification failed: {e}", verbose_only=True)
         
         # ═══════════════════════════════════════════════════════════
         # LAYER 3: SIGNATURE CHECK - Quick comparison
