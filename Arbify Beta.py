@@ -719,6 +719,78 @@ def _cdp_dump_nav_targets(label: str = ""):
         warn(f"[NAVCDP] Target.getTargets hiba: {e}")
         return
 
+# --- NETWORK LOGGING FOR API DISCOVERY ---
+ENABLE_NETWORK_LOGGING = True
+NETWORK_LOG_DIR = "./network_logs"
+last_network_log_save = 0
+
+def save_network_logs_to_file():
+    """
+    Save captured network requests to log files for API endpoint discovery
+    """
+    if not ENABLE_NETWORK_LOGGING:
+        return
+        
+    try:
+        # Create logs directory
+        os.makedirs(NETWORK_LOG_DIR, exist_ok=True)
+        
+        # Get performance logs from Chrome
+        logs = driver.get_log('performance')
+        
+        # Open log files
+        all_log = os.path.join(NETWORK_LOG_DIR, "all_requests.txt")
+        xhr_log = os.path.join(NETWORK_LOG_DIR, "xhr_requests.txt")
+        json_log = os.path.join(NETWORK_LOG_DIR, "json_requests.txt")
+        
+        with open(all_log, "a", encoding="utf-8") as f_all, \
+             open(xhr_log, "a", encoding="utf-8") as f_xhr, \
+             open(json_log, "a", encoding="utf-8") as f_json:
+            
+            for entry in logs:
+                try:
+                    log_entry = json.loads(entry['message'])
+                    message = log_entry.get('message', {})
+                    
+                    if message.get('method') == 'Network.responseReceived':
+                        params = message.get('params', {})
+                        response = params.get('response', {})
+                        url = response.get('url', '')
+                        status = response.get('status', 0)
+                        mime_type = response.get('mimeType', '')
+                        request_id = params.get('requestId', '')
+                        
+                        # Skip data URIs and chrome extensions
+                        if url.startswith('data:') or url.startswith('chrome-extension:'):
+                            continue
+                        
+                        # Log all requests
+                        f_all.write(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] {url}\n")
+                        f_all.write(f"  Status: {status}\n")
+                        f_all.write(f"  Type: {mime_type}\n\n")
+                        
+                        # Log XHR/Fetch requests
+                        resource_type = params.get('type', '')
+                        if resource_type in ['XHR', 'Fetch'] or 'XMLHttpRequest' in str(response):
+                            f_xhr.write(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] XHR/Fetch: {url}\n")
+                            f_xhr.write(f"  Status: {status}\n")
+                            f_xhr.write(f"  Type: {mime_type}\n\n")
+                        
+                        # Log JSON requests
+                        if 'json' in url.lower() or 'json' in mime_type.lower():
+                            f_json.write(f"[{datetime.now().strftime('%Y-%m-%d %H:%M:%S')}] JSON: {url}\n")
+                            f_json.write(f"  Status: {status}\n")
+                            f_json.write(f"  Mime: {mime_type}\n\n")
+                            
+                except Exception as e:
+                    # Skip malformed log entries
+                    continue
+                    
+        log(f"[NETWORK-LOG] Saved network logs to {NETWORK_LOG_DIR}")
+                    
+    except Exception as e:
+        warn(f"[NETWORK-LOG] Error saving logs: {e}")
+
     lines = []
     for t in targets:
         try:
@@ -6604,6 +6676,12 @@ if __name__ == "__main__":
                     cleanup_old_tracking_data()
                 except Exception as e:
                     warn(f"⚠️ Memory cleanup hiba: {e}")
+                
+                # 📡 NETWORK LOGGING: Save network logs for API discovery (every 5 minutes)
+                try:
+                    save_network_logs_to_file()
+                except Exception as e:
+                    warn(f"⚠️ Network logging hiba: {e}")
                 
                 # 📊 CONTENT HASH STATISTICS - Log every 5 minutes
                 if ENABLE_CONTENT_HASH_CHECKING:
