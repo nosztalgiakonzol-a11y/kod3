@@ -125,6 +125,11 @@ ACCOUNTS = {
         "password": "Pankix123!",
         "profile_dir": os.path.abspath("./profile_surebet_acc2"),
     },
+    "acc3": {  # harmadik account
+        "email": "bodabeni2@gmail.com",
+        "password": "Pankix123!",
+        "profile_dir": os.path.abspath("./profile_surebet_acc3"),
+    },
 }
 
 ACCOUNT_ROTATE_MIN = float(os.getenv("SB_ACCOUNT_ROTATE_MIN", "32"))
@@ -6196,12 +6201,15 @@ def get_next_account_key(current: str) -> str:
     """
     Következő account kulcs:
     - acc1 -> acc2
-    - acc2 -> acc1
+    - acc2 -> acc3
+    - acc3 -> acc1
     - minden más -> acc1
     """
     if current == "acc1":
         return "acc2"
     if current == "acc2":
+        return "acc3"
+    if current == "acc3":
         return "acc1"
     return "acc1"
 
