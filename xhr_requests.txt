@@ -1,0 +1,563 @@
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/report/error
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] XHR/Fetch: https://region1.google-analytics.com/g/collect?v=2&tid=G-4H2DFG8NDS&gtm=45je6291v9135678315za20g&_p=1770808265972&gcd=13l3l3l2l1l1&npa=1&dma_cps=syphamo&dma=1&cid=1577220263.1770376246&ul=hu-hu&sr=1920x1080&uaa=&uab=&uafvl=&uamb=0&uam=&uap=Windows&uapv=&uaw=0&are=1&frm=0&pscdl=noapi&_eu=AAAIAAQ&_s=1&tag_exp=103116026~103200004~104527907~104528500~104684208~104684211~115616985~115938466~115938468~116185181~116185182~116988315&sid=1770808266&sct=9&seg=0&dl=https%3A%2F%2Fen.surebet.com%2Fusers%2Fsign_in&dt=SureBet%20-%20Professional%20betting&_tu=QA&en=page_view&_ss=1&tfd=2121
+  Status: 204
+  Type: text/plain
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/users/sign_in/check_account?utf8=%E2%9C%93&authenticity_token=xc5AkY4WYbTFRcppnmAH3vwrKyDG8gg9ee_MM7mi2i0EXjbg015V1jnNbi8ZRkqM84GCj8gFlAdUnp_pHyVMQQ&user%5Bjs%5D=enabled&user%5Bemail%5D=secretcodeforme%40gmail.com&user%5Bpassword%5D=Pankix123!&button=&user%5Bremember_me%5D=1&user%5Bdesirable_plan_id%5D=1&commit=Continue%20with%20e-mail
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/users/sign_in/check_password?utf8=%E2%9C%93&authenticity_token=xc5AkY4WYbTFRcppnmAH3vwrKyDG8gg9ee_MM7mi2i0EXjbg015V1jnNbi8ZRkqM84GCj8gFlAdUnp_pHyVMQQ&user%5Bjs%5D=enabled&user%5Bemail%5D=secretcodeforme%40gmail.com&user%5Bpassword%5D=Pankix123!&button=&user%5Bremember_me%5D=1&user%5Bdesirable_plan_id%5D=1&commit=Log%20in
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/report/error
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/webpush/subscriptions/count
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/report/error
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/webpush/subscriptions/count
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/report/error
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/webpush/subscriptions/count
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/surebets?signature=&product=surebets&autoupdate=1&cursor=4613756399922587858:V081v1pwBwc%2B&format=json
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/report/error
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/surebets?product=surebets&autoupdate=1&cursor=4613756399922587858:V081v1pwBwc%2B&format=json
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/report/error
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] XHR/Fetch: https://region1.google-analytics.com/g/collect?v=2&tid=G-4H2DFG8NDS&gtm=45je6291v9135678315za20g&_p=1770808275078&gcd=13l3l3l2l1l1&npa=1&dma_cps=syphamo&dma=1&cid=1577220263.1770376246&ul=hu-hu&sr=1920x1080&uaa=&uab=&uafvl=&uamb=0&uam=&uap=Windows&uapv=&uaw=0&are=1&frm=0&pscdl=noapi&_eu=AAAIAAQ&tag_exp=103116026~103200004~104527907~104528501~104684208~104684211~115616985~115938465~115938468~116185181~116185182~116988315&uid=63c323e5-6a06-0ec6-ffb7-e085fd460c21&sid=1770808266&sct=9&seg=1&dl=https%3A%2F%2Fen.surebet.com%2Fsurebets&dr=https%3A%2F%2Fen.surebet.com%2Fusers%2Fsign_in&dt=Found%20surebets%20%2F%20SureBet%20-%20Professional%20betting&_tu=QA&_s=1&tfd=7147
+  Status: 204
+  Type: text/plain
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/report/error
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] XHR/Fetch: https://region1.google-analytics.com/g/collect?v=2&tid=G-4H2DFG8NDS&gtm=45je6291v9135678315za20g&_p=1770808276277&gcd=13l3l3l2l1l1&npa=1&dma_cps=syphamo&dma=1&cid=1577220263.1770376246&ul=hu-hu&sr=1920x1080&uaa=&uab=&uafvl=&uamb=0&uam=&uap=Windows&uapv=&uaw=0&are=1&frm=0&pscdl=noapi&_eu=AAAIAAQ&_s=1&tag_exp=103116026~103200004~104527907~104528501~104684208~104684211~115938465~115938469~116185181~116185182~116988315&uid=63c323e5-6a06-0ec6-ffb7-e085fd460c21&sid=1770808266&sct=9&seg=1&dl=https%3A%2F%2Fen.surebet.com%2Fsurebets%3Fcursor%3D4613756399922587858%253AV081v1pwBwc%252B&dt=Found%20surebets%20%2F%20SureBet%20-%20Professional%20betting&_tu=QA&en=page_view&tfd=5615
+  Status: 204
+  Type: text/plain
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/report/error
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/surebets?product=surebets&autoupdate=1&cursor=4613756399922587858:V081v1pwBwc%2B&format=json
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/report/error
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] XHR/Fetch: https://region1.google-analytics.com/g/collect?v=2&tid=G-4H2DFG8NDS&gtm=45je6291v9135678315za20g&_p=1770808279219&gcd=13l3l3l2l1l1&npa=1&dma_cps=syphamo&dma=1&cid=1577220263.1770376246&ul=hu-hu&sr=1920x1080&uaa=&uab=&uafvl=&uamb=0&uam=&uap=Windows&uapv=&uaw=0&are=1&frm=0&pscdl=noapi&_eu=AAAIAAQ&_s=1&tag_exp=103116026~103200004~104527907~104528501~104684208~104684211~115938465~115938469~116185181~116185182~116988315&uid=63c323e5-6a06-0ec6-ffb7-e085fd460c21&sid=1770808266&sct=9&seg=1&dl=https%3A%2F%2Fen.surebet.com%2Fsurebets%2Fgroup%3Fgroup_title%3DCeltic%2B%25E2%2580%2593%2BLivingston%26like%3DELlqVw&dt=SureBet%20-%20Professional%20betting&_tu=QA&en=page_view&tfd=6017
+  Status: 204
+  Type: text/plain
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/surebets?product=surebets&autoupdate=1&cursor=4613756399922587858:V081v1pwBwc%2B&format=json
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:18] XHR/Fetch: https://region1.google-analytics.com/g/collect?v=2&tid=G-4H2DFG8NDS&gtm=45je6291v9135678315za20g&_p=1770808279993&gcd=13l3l3l2l1l1&npa=1&dma_cps=syphamo&dma=1&cid=1577220263.1770376246&ul=hu-hu&sr=1920x1080&uaa=&uab=&uafvl=&uamb=0&uam=&uap=Windows&uapv=&uaw=0&are=1&frm=0&pscdl=noapi&_eu=AAAIAAQ&_s=1&tag_exp=103116026~103200004~104527906~104528501~104684208~104684211~115616985~115938465~115938468~116185181~116185182~116988315~117485608&uid=63c323e5-6a06-0ec6-ffb7-e085fd460c21&sid=1770808266&sct=9&seg=1&dl=https%3A%2F%2Fen.surebet.com%2Fsurebets%2Fgroup%3Fgroup_title%3DDEAC%2B%25E2%2580%2593%2BSoroksar%26like%3Dj5gsVw&dt=SureBet%20-%20Professional%20betting&_tu=QA&en=page_view&tfd=5594
+  Status: 204
+  Type: text/plain
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/report/error
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] XHR/Fetch: https://region1.google-analytics.com/g/collect?v=2&tid=G-4H2DFG8NDS&gtm=45je6291v9135678315za20g&_p=1770808280720&gcd=13l3l3l2l1l1&npa=1&dma_cps=syphamo&dma=1&cid=1577220263.1770376246&ul=hu-hu&sr=1920x1080&uaa=&uab=&uafvl=&uamb=0&uam=&uap=Windows&uapv=&uaw=0&are=1&frm=0&pscdl=noapi&_eu=AAAIAAQ&_s=1&tag_exp=103116026~103200004~104527907~104528501~104684208~104684211~115616985~115938465~115938469~116185181~116185182~116988315&uid=63c323e5-6a06-0ec6-ffb7-e085fd460c21&sid=1770808266&sct=9&seg=1&dl=https%3A%2F%2Fen.surebet.com%2Fsurebets%2Fgroup%3Fgroup_title%3DAl%2BTadamun%2BHadramaut%2B%25E2%2580%2593%2BAl%2BRayyan%2BSC%26like%3DbOpdWQ&dt=SureBet%20-%20Professional%20betting&_tu=QA&en=page_view&tfd=5621
+  Status: 204
+  Type: text/plain
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/report/error
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/surebets?product=surebets&autoupdate=1&cursor=4613756399922587858:V081v1pwBwc%2B&format=json
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:18] XHR/Fetch: https://region1.google-analytics.com/g/collect?v=2&tid=G-4H2DFG8NDS&gtm=45je6291v9135678315za20g&_p=1770808281571&gcd=13l3l3l2l1l1&npa=1&dma_cps=syphamo&dma=1&cid=1577220263.1770376246&ul=hu-hu&sr=1920x1080&uaa=&uab=&uafvl=&uamb=0&uam=&uap=Windows&uapv=&uaw=0&are=1&frm=0&pscdl=noapi&_eu=AAAIAAQ&_s=1&tag_exp=103116026~103200004~104527907~104528501~104684208~104684211~115616986~115938465~115938468~116185181~116185182~116988315&uid=63c323e5-6a06-0ec6-ffb7-e085fd460c21&sid=1770808266&sct=9&seg=1&dl=https%3A%2F%2Fen.surebet.com%2Fsurebets%2Fgroup%3Fgroup_title%3DJastrzebie%2B%25E2%2580%2593%2BPGE%2BSkra%2BBelchatow%26like%3DmGD9WA&dt=SureBet%20-%20Professional%20betting&_tu=QA&en=page_view&tfd=5661
+  Status: 204
+  Type: text/plain
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/report/error
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/report/error
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/surebets?product=surebets&autoupdate=1&cursor=4613756399922587858:V081v1pwBwc%2B&format=json
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:18] XHR/Fetch: https://region1.google-analytics.com/g/collect?v=2&tid=G-4H2DFG8NDS&gtm=45je6291v9135678315za20g&_p=1770808283856&gcd=13l3l3l2l1l1&npa=1&dma_cps=syphamo&dma=1&cid=1577220263.1770376246&ul=hu-hu&sr=1920x1080&uaa=&uab=&uafvl=&uamb=0&uam=&uap=Windows&uapv=&uaw=0&are=1&frm=0&pscdl=noapi&_eu=AAAIAAQ&_s=1&tag_exp=103116026~103200004~104527906~104528500~104684208~104684211~115938466~115938468~116185181~116185182~116988315&uid=63c323e5-6a06-0ec6-ffb7-e085fd460c21&sid=1770808266&sct=9&seg=1&dl=https%3A%2F%2Fen.surebet.com%2Fsurebets%2Fgroup%3Fgroup_title%3DOvarense%2BBasquetebol%2BB%2B%25E2%2580%2593%2BCb%2BPenafiel%2B2012%26like%3DCLQ_WA&dt=SureBet%20-%20Professional%20betting&_tu=QA&en=page_view&tfd=7198
+  Status: 204
+  Type: text/plain
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/report/error
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/surebets?product=surebets&autoupdate=1&cursor=4613756399922587858:V081v1pwBwc%2B&format=json
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/report/error
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] XHR/Fetch: https://region1.google-analytics.com/g/collect?v=2&tid=G-4H2DFG8NDS&gtm=45je6291v9135678315za20g&_p=1770808285252&gcd=13l3l3l2l1l1&npa=1&dma_cps=syphamo&dma=1&cid=1577220263.1770376246&ul=hu-hu&sr=1920x1080&uaa=&uab=&uafvl=&uamb=0&uam=&uap=Windows&uapv=&uaw=0&are=1&frm=0&pscdl=noapi&_eu=AAAIAAQ&_s=1&tag_exp=103116026~103200004~104527907~104528501~104684208~104684211~115616985~115938466~115938468~116185181~116185182~116988315&uid=63c323e5-6a06-0ec6-ffb7-e085fd460c21&sid=1770808266&sct=9&seg=1&dl=https%3A%2F%2Fen.surebet.com%2Fsurebets%2Fgroup%3Fgroup_title%3DPAOK%2BFC%2B%25E2%2580%2593%2BPanathinaikos%26like%3D6eE1Wg&dt=SureBet%20-%20Professional%20betting&_tu=QA&en=page_view&tfd=6244
+  Status: 204
+  Type: text/plain
+
+[2026-02-11 12:15:18] XHR/Fetch: https://region1.google-analytics.com/g/collect?v=2&tid=G-4H2DFG8NDS&gtm=45je6291v9135678315za20g&_p=1770808286144&gcd=13l3l3l2l1l1&npa=1&dma_cps=syphamo&dma=1&cid=1577220263.1770376246&ul=hu-hu&sr=1920x1080&uaa=&uab=&uafvl=&uamb=0&uam=&uap=Windows&uapv=&uaw=0&are=1&frm=0&pscdl=noapi&_eu=AAAIAAQ&_s=1&tag_exp=103116026~103200004~104527907~104528501~104684208~104684211~115938465~115938468~116185181~116185182~116988315&uid=63c323e5-6a06-0ec6-ffb7-e085fd460c21&sid=1770808266&sct=9&seg=1&dl=https%3A%2F%2Fen.surebet.com%2Fsurebets%2Fgroup%3Fgroup_title%3DRoman%2BKonkulovskyi%2B%25E2%2580%2593%2BSergey%2BMaximiv%26like%3DbtyeWg&dt=SureBet%20-%20Professional%20betting&_tu=QA&en=page_view&tfd=5861
+  Status: 204
+  Type: text/plain
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/surebets?product=surebets&autoupdate=1&cursor=4613756399922587858:V081v1pwBwc%2B&format=json
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:18] XHR/Fetch: https://region1.google-analytics.com/g/collect?v=2&tid=G-4H2DFG8NDS&gtm=45je6291v9135678315za20g&_p=1770808287010&gcd=13l3l3l2l1l1&npa=1&dma_cps=syphamo&dma=1&cid=1577220263.1770376246&ul=hu-hu&sr=1920x1080&uaa=&uab=&uafvl=&uamb=0&uam=&uap=Windows&uapv=&uaw=0&are=1&frm=0&pscdl=noapi&_eu=AAAIAAQ&_s=1&tag_exp=103116026~103200004~104527907~104528501~104684208~104684211~115938466~115938469~116185181~116185182~116988315&uid=63c323e5-6a06-0ec6-ffb7-e085fd460c21&sid=1770808266&sct=9&seg=1&dl=https%3A%2F%2Fen.surebet.com%2Fsurebets%2Fgroup%3Fgroup_title%3DDmytro%2BYurkov%2B%25E2%2580%2593%2BSergey%2BPonomarenko%26like%3D7Y0DWg&dt=SureBet%20-%20Professional%20betting&_tu=QA&en=page_view&tfd=5761
+  Status: 204
+  Type: text/plain
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/report/error
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] XHR/Fetch: https://region1.google-analytics.com/g/collect?v=2&tid=G-4H2DFG8NDS&gtm=45je6291v9135678315za20g&_p=1770808288309&gcd=13l3l3l2l1l1&npa=1&dma_cps=syphamo&dma=1&cid=1577220263.1770376246&ul=hu-hu&sr=1920x1080&uaa=&uab=&uafvl=&uamb=0&uam=&uap=Windows&uapv=&uaw=0&are=1&frm=0&pscdl=noapi&_eu=AAAIAAQ&_s=1&tag_exp=103116026~103200004~104527906~104528500~104684208~104684211~115938465~115938468~116185181~116185182~116988315&uid=63c323e5-6a06-0ec6-ffb7-e085fd460c21&sid=1770808266&sct=9&seg=1&dl=https%3A%2F%2Fen.surebet.com%2Fsurebets%2Fgroup%3Fgroup_title%3DUMECIT%2BII%2B%25E2%2580%2593%2BChampions%2BAcademy%26like%3DE1h-Wg&dt=SureBet%20-%20Professional%20betting&_tu=QA&en=page_view&tfd=6033
+  Status: 204
+  Type: text/plain
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/surebets?product=surebets&autoupdate=1&cursor=4613756399922587858:V081v1pwBwc%2B&format=json
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:18] XHR/Fetch: https://region1.google-analytics.com/g/collect?v=2&tid=G-4H2DFG8NDS&gtm=45je6291v9135678315za20g&_p=1770808289395&gcd=13l3l3l2l1l1&npa=1&dma_cps=syphamo&dma=1&cid=1577220263.1770376246&ul=hu-hu&sr=1920x1080&uaa=&uab=&uafvl=&uamb=0&uam=&uap=Windows&uapv=&uaw=0&are=1&frm=0&pscdl=noapi&_eu=AAAIAAQ&_s=1&tag_exp=103116026~103200004~104527906~104528501~104684208~104684211~115938465~115938468~116185181~116185182~116988315&uid=63c323e5-6a06-0ec6-ffb7-e085fd460c21&sid=1770808266&sct=9&seg=1&dl=https%3A%2F%2Fen.surebet.com%2Fsurebets%2Fgroup%3Fgroup_title%3DCairns%2BTaipans%2B%25E2%2580%2593%2BMelbourne%2BUnited%26like%3DvzVPVw&dt=SureBet%20-%20Professional%20betting&_tu=QA&en=page_view&tfd=5926
+  Status: 204
+  Type: text/plain
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/report/error
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] XHR/Fetch: https://region1.google-analytics.com/g/collect?v=2&tid=G-4H2DFG8NDS&gtm=45je6291v9135678315za20g&_p=1770808290212&gcd=13l3l3l2l1l1&npa=1&dma_cps=syphamo&dma=1&cid=1577220263.1770376246&ul=hu-hu&sr=1920x1080&uaa=&uab=&uafvl=&uamb=0&uam=&uap=Windows&uapv=&uaw=0&are=1&frm=0&pscdl=noapi&_eu=AAAIAAQ&_s=1&tag_exp=103116026~103200004~104527907~104528501~104684208~104684211~115616985~115938465~115938468~116185181~116185182~116988315&uid=63c323e5-6a06-0ec6-ffb7-e085fd460c21&sid=1770808266&sct=9&seg=1&dl=https%3A%2F%2Fen.surebet.com%2Fsurebets%2Fgroup%3Fgroup_title%3DCS%2BRapid%2BBucuresti%2B%2528Women%2529%2B%25E2%2580%2593%2BAgronomia%2BBucuresti%2B%2528Women%2529%26like%3DWPi3Wg&dt=SureBet%20-%20Professional%20betting&_tu=QA&en=page_view&tfd=5649
+  Status: 204
+  Type: text/plain
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/report/error
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/surebets?product=surebets&autoupdate=1&cursor=4613756399922587858:V081v1pwBwc%2B&format=json
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/report/error
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] XHR/Fetch: https://region1.google-analytics.com/g/collect?v=2&tid=G-4H2DFG8NDS&gtm=45je6291v9135678315za20g&_p=1770808292750&gcd=13l3l3l2l1l1&npa=1&dma_cps=syphamo&dma=1&cid=1577220263.1770376246&ul=hu-hu&sr=1920x1080&uaa=&uab=&uafvl=&uamb=0&uam=&uap=Windows&uapv=&uaw=0&are=1&frm=0&pscdl=noapi&_eu=AAAIAAQ&_s=1&tag_exp=103116026~103200004~104527906~104528500~104684208~104684211~115938465~115938469~116185181~116185182~116988315&uid=63c323e5-6a06-0ec6-ffb7-e085fd460c21&sid=1770808266&sct=9&seg=1&dl=https%3A%2F%2Fen.surebet.com%2Fsurebets%2Fgroup%3Fgroup_title%3DArsenal%2B%25E2%2580%2593%2BWigan%2BAthletic%26like%3DYY5jWg&dt=SureBet%20-%20Professional%20betting&_tu=QA&en=page_view&tfd=5781
+  Status: 204
+  Type: text/plain
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/report/error
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/surebets?product=surebets&autoupdate=1&cursor=4613756399922587858:V081v1pwBwc%2B&format=json
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:18] XHR/Fetch: https://region1.google-analytics.com/g/collect?v=2&tid=G-4H2DFG8NDS&gtm=45je6291v9135678315za20g&_p=1770808294790&gcd=13l3l3l2l1l1&npa=1&dma_cps=syphamo&dma=1&cid=1577220263.1770376246&ul=hu-hu&sr=1920x1080&uaa=&uab=&uafvl=&uamb=0&uam=&uap=Windows&uapv=&uaw=0&are=1&frm=0&pscdl=noapi&_eu=AAAIAAQ&_s=1&tag_exp=103116026~103200004~104527907~104528501~104684208~104684211~115616985~115938465~115938468~116185181~116185182~116988315&uid=63c323e5-6a06-0ec6-ffb7-e085fd460c21&sid=1770808266&sct=9&seg=1&dl=https%3A%2F%2Fen.surebet.com%2Fsurebets%2Fgroup%3Fgroup_title%3DAthletic%2BBilbao%2B%25E2%2580%2593%2BReal%2BSociedad%26like%3Dk1tHSQ&dt=SureBet%20-%20Professional%20betting&_tu=QA&en=page_view&tfd=7020
+  Status: 204
+  Type: text/plain
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/report/error
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/report/error
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/surebets?product=surebets&autoupdate=1&cursor=4613756399922587858:V081v1pwBwc%2B&format=json
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:18] XHR/Fetch: https://region1.google-analytics.com/g/collect?v=2&tid=G-4H2DFG8NDS&gtm=45je6291v9135678315za20g&_p=1770808296141&gcd=13l3l3l2l1l1&npa=1&dma_cps=syphamo&dma=1&cid=1577220263.1770376246&ul=hu-hu&sr=1920x1080&uaa=&uab=&uafvl=&uamb=0&uam=&uap=Windows&uapv=&uaw=0&are=1&frm=0&pscdl=noapi&_eu=AAAIAAQ&_s=1&tag_exp=103116026~103200004~104527907~104528501~104684208~104684211~115938465~115938469~116185181~116185182~116988315&uid=63c323e5-6a06-0ec6-ffb7-e085fd460c21&sid=1770808266&sct=9&seg=1&dl=https%3A%2F%2Fen.surebet.com%2Fsurebets%2Fgroup%3Fgroup_title%3DMUKS%2BPoznan%2B%2528Women%2529%2B%25E2%2580%2593%2BTecza%2BLeszno%2B%2528Women%2529%26like%3DSVNLWg&dt=SureBet%20-%20Professional%20betting&_tu=QA&en=page_view&tfd=6128
+  Status: 204
+  Type: text/plain
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/report/error
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] XHR/Fetch: https://region1.google-analytics.com/g/collect?v=2&tid=G-4H2DFG8NDS&gtm=45je6291v9135678315za20g&_p=1770808297648&gcd=13l3l3l2l1l1&npa=1&dma_cps=syphamo&dma=1&cid=1577220263.1770376246&ul=hu-hu&sr=1920x1080&uaa=&uab=&uafvl=&uamb=0&uam=&uap=Windows&uapv=&uaw=0&are=1&frm=0&pscdl=noapi&_eu=AAAIAAQ&_s=1&tag_exp=103116026~103200004~104527907~104528501~104684208~104684211~115938465~115938468~116185181~116185182~116988315&uid=63c323e5-6a06-0ec6-ffb7-e085fd460c21&sid=1770808266&sct=9&seg=1&dl=https%3A%2F%2Fen.surebet.com%2Fsurebets%2Fgroup%3Fgroup_title%3DBayern%2BM%25C3%25BCnchen%2B%25E2%2580%2593%2BRB%2BLeipzig%26like%3D-bX3Vw&dt=SureBet%20-%20Professional%20betting&_tu=QA&en=page_view&tfd=6347
+  Status: 204
+  Type: text/plain
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/report/error
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] XHR/Fetch: https://region1.google-analytics.com/g/collect?v=2&tid=G-4H2DFG8NDS&gtm=45je6291v9135678315za20g&_p=1770808299234&gcd=13l3l3l2l1l1&npa=1&dma_cps=syphamo&dma=1&cid=1577220263.1770376246&ul=hu-hu&sr=1920x1080&uaa=&uab=&uafvl=&uamb=0&uam=&uap=Windows&uapv=&uaw=0&are=1&frm=0&pscdl=noapi&_eu=AAAIAAQ&_s=1&tag_exp=103116026~103200004~104527907~104528500~104684208~104684211~115938465~115938468~116185181~116185182~116988315&uid=63c323e5-6a06-0ec6-ffb7-e085fd460c21&sid=1770808266&sct=9&seg=1&dl=https%3A%2F%2Fen.surebet.com%2Fsurebets%2Fgroup%3Fgroup_title%3DRijeka%2B%25E2%2580%2593%2BNK%2BVarazdin%26like%3D7o-aWA&dt=SureBet%20-%20Professional%20betting&_tu=QA&en=page_view&tfd=6407
+  Status: 204
+  Type: text/plain
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/report/error
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/surebets?product=surebets&autoupdate=1&cursor=4613756399922587858:V081v1pwBwc%2B&format=json
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/report/error
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] XHR/Fetch: https://region1.google-analytics.com/g/collect?v=2&tid=G-4H2DFG8NDS&gtm=45je6291v9135678315za20g&_p=1770808300245&gcd=13l3l3l2l1l1&npa=1&dma_cps=syphamo&dma=1&cid=1577220263.1770376246&ul=hu-hu&sr=1920x1080&uaa=&uab=&uafvl=&uamb=0&uam=&uap=Windows&uapv=&uaw=0&are=1&frm=0&pscdl=noapi&_eu=AAAIAAQ&_s=1&tag_exp=103116026~103200004~104527906~104528500~104684208~104684211~115616985~115938465~115938468~116185181~116185182~116988315&uid=63c323e5-6a06-0ec6-ffb7-e085fd460c21&sid=1770808266&sct=9&seg=1&dl=https%3A%2F%2Fen.surebet.com%2Fsurebets%2Fgroup%3Fgroup_title%3DMan%2BCity%2B%25E2%2580%2593%2BFulham%26like%3D61MCUw&dt=SureBet%20-%20Professional%20betting&_tu=QA&en=page_view&tfd=6006
+  Status: 204
+  Type: text/plain
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/report/error
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/surebets?product=surebets&autoupdate=1&cursor=4613756399922587858:V081v1pwBwc%2B&format=json
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:18] XHR/Fetch: https://region1.google-analytics.com/g/collect?v=2&tid=G-4H2DFG8NDS&gtm=45je6291v9135678315za20g&_p=1770808301231&gcd=13l3l3l2l1l1&npa=1&dma_cps=syphamo&dma=1&cid=1577220263.1770376246&ul=hu-hu&sr=1920x1080&uaa=&uab=&uafvl=&uamb=0&uam=&uap=Windows&uapv=&uaw=0&are=1&frm=0&pscdl=noapi&_eu=AAAIAAQ&_s=1&tag_exp=103116026~103200004~104527907~104528501~104684208~104684211~115938465~115938469~116185181~116185182~116988315&uid=63c323e5-6a06-0ec6-ffb7-e085fd460c21&sid=1770808266&sct=9&seg=1&dl=https%3A%2F%2Fen.surebet.com%2Fsurebets%2Fgroup%3Fgroup_title%3DLeuven%2B%2528W%2529%2B%25E2%2580%2593%2BArsenal%2B%2528W%2529%26like%3D7nKsVg&dt=SureBet%20-%20Professional%20betting&_tu=QA&en=page_view&tfd=5800
+  Status: 204
+  Type: text/plain
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/report/error
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] XHR/Fetch: https://region1.google-analytics.com/g/collect?v=2&tid=G-4H2DFG8NDS&gtm=45je6291v9135678315za20g&_p=1770808302075&gcd=13l3l3l2l1l1&npa=1&dma_cps=syphamo&dma=1&cid=1577220263.1770376246&ul=hu-hu&sr=1920x1080&uaa=&uab=&uafvl=&uamb=0&uam=&uap=Windows&uapv=&uaw=0&are=1&frm=0&pscdl=noapi&_eu=AAAIAAQ&_s=1&tag_exp=103116026~103200004~104527907~104528501~104684208~104684211~115938466~115938469~116185181~116185182~116988315&uid=63c323e5-6a06-0ec6-ffb7-e085fd460c21&sid=1770808266&sct=9&seg=1&dl=https%3A%2F%2Fen.surebet.com%2Fsurebets%2Fgroup%3Fgroup_title%3DBologna%2B1909%2B%25E2%2580%2593%2BLazio%26like%3D99SLWg&dt=SureBet%20-%20Professional%20betting&_tu=QA&en=page_view&tfd=5702
+  Status: 204
+  Type: text/plain
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/report/error
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/surebets?product=surebets&autoupdate=1&cursor=4613756399922587858:V081v1pwBwc%2B&format=json
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/report/error
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] XHR/Fetch: https://region1.google-analytics.com/g/collect?v=2&tid=G-4H2DFG8NDS&gtm=45je6291v9135678315za20g&_p=1770808303582&gcd=13l3l3l2l1l1&npa=1&dma_cps=syphamo&dma=1&cid=1577220263.1770376246&ul=hu-hu&sr=1920x1080&uaa=&uab=&uafvl=&uamb=0&uam=&uap=Windows&uapv=&uaw=0&are=1&frm=0&pscdl=noapi&_eu=AAAIAAQ&_s=1&tag_exp=103116026~103200004~104527906~104528500~104684208~104684211~115938466~115938468~116185181~116185182~116988315~117447491&uid=63c323e5-6a06-0ec6-ffb7-e085fd460c21&sid=1770808266&sct=9&seg=1&dl=https%3A%2F%2Fen.surebet.com%2Fsurebets%2Fgroup%3Fgroup_title%3DPohang%2BSteelers%2B%25E2%2580%2593%2BGamba%2BOsaka%26like%3DLA4eWg&dt=SureBet%20-%20Professional%20betting&_tu=QA&en=page_view&tfd=6360
+  Status: 204
+  Type: text/plain
+
+[2026-02-11 12:15:18] XHR/Fetch: https://region1.google-analytics.com/g/collect?v=2&tid=G-4H2DFG8NDS&gtm=45je6291v9135678315za20g&_p=1770808304526&gcd=13l3l3l2l1l1&npa=1&dma_cps=syphamo&dma=1&cid=1577220263.1770376246&ul=hu-hu&sr=1920x1080&uaa=&uab=&uafvl=&uamb=0&uam=&uap=Windows&uapv=&uaw=0&are=1&frm=0&pscdl=noapi&_eu=AAAIAAQ&_s=1&tag_exp=103116026~103200004~104527906~104528500~104684208~104684211~115938465~115938469~116185181~116185182~116988315&uid=63c323e5-6a06-0ec6-ffb7-e085fd460c21&sid=1770808266&sct=9&seg=1&dl=https%3A%2F%2Fen.surebet.com%2Fsurebets%2Fgroup%3Fgroup_title%3DTigres%2Bde%2Bla%2BUANL%2B%2528Women%2529%2B%25E2%2580%2593%2BPuebla%2B%2528Women%2529%26like%3D9UfMVg&dt=SureBet%20-%20Professional%20betting&_tu=QA&en=page_view&tfd=5811
+  Status: 204
+  Type: text/plain
+
+[2026-02-11 12:15:18] XHR/Fetch: https://region1.google-analytics.com/g/collect?v=2&tid=G-4H2DFG8NDS&gtm=45je6291v9135678315za20g&_p=1770808305391&gcd=13l3l3l2l1l1&npa=1&dma_cps=syphamo&dma=1&cid=1577220263.1770376246&ul=hu-hu&sr=1920x1080&uaa=&uab=&uafvl=&uamb=0&uam=&uap=Windows&uapv=&uaw=0&are=1&frm=0&pscdl=noapi&_eu=AAAIAAQ&_s=1&tag_exp=103116026~103200004~104527907~104528500~104684208~104684211~115938466~115938469~116185181~116185182~116988315&uid=63c323e5-6a06-0ec6-ffb7-e085fd460c21&sid=1770808266&sct=9&seg=1&dl=https%3A%2F%2Fen.surebet.com%2Fsurebets%2Fgroup%3Fgroup_title%3DGo%2BAhead%2BEagles%2B%25E2%2580%2593%2BSC%2BHeerenveen%26like%3DyH2QUw&dt=SureBet%20-%20Professional%20betting&_tu=QA&en=page_view&tfd=5789
+  Status: 204
+  Type: text/plain
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/surebets?product=surebets&autoupdate=1&cursor=4613756399922587858:V081v1pwBwc%2B&format=json
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/report/error
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] XHR/Fetch: https://region1.google-analytics.com/g/collect?v=2&tid=G-4H2DFG8NDS&gtm=45je6291v9135678315za20g&_p=1770808306270&gcd=13l3l3l2l1l1&npa=1&dma_cps=syphamo&dma=1&cid=1577220263.1770376246&ul=hu-hu&sr=1920x1080&uaa=&uab=&uafvl=&uamb=0&uam=&uap=Windows&uapv=&uaw=0&are=1&frm=0&pscdl=noapi&_eu=AAAIAAQ&_s=1&tag_exp=103116026~103200004~104527906~104528501~104684208~104684211~115938465~115938468~116185181~116185182~116988315~117485608&uid=63c323e5-6a06-0ec6-ffb7-e085fd460c21&sid=1770808266&sct=9&seg=1&dl=https%3A%2F%2Fen.surebet.com%2Fsurebets%2Fgroup%3Fgroup_title%3DAC%2BOmonia%2B%25E2%2580%2593%2BEnosis%2BNeon%2BParalimni%26like%3DxcB3Ug&dt=SureBet%20-%20Professional%20betting&_tu=QA&en=page_view&tfd=5632
+  Status: 204
+  Type: text/plain
+
+[2026-02-11 12:15:18] XHR/Fetch: https://region1.google-analytics.com/g/collect?v=2&tid=G-4H2DFG8NDS&gtm=45je6291v9135678315za20g&_p=1770808307116&gcd=13l3l3l2l1l1&npa=1&dma_cps=syphamo&dma=1&cid=1577220263.1770376246&ul=hu-hu&sr=1920x1080&uaa=&uab=&uafvl=&uamb=0&uam=&uap=Windows&uapv=&uaw=0&are=1&frm=0&pscdl=noapi&_eu=AAAIAAQ&_s=1&tag_exp=103116026~103200004~104527906~104528501~104684208~104684211~115938466~115938469~116185181~116185182~116988315&uid=63c323e5-6a06-0ec6-ffb7-e085fd460c21&sid=1770808266&sct=9&seg=1&dl=https%3A%2F%2Fen.surebet.com%2Fsurebets%2Fgroup%3Fgroup_title%3DBudapest%2BHonved%2B%25E2%2580%2593%2BSzentlorinc%26like%3Dv-1sWg&dt=SureBet%20-%20Professional%20betting&_tu=QA&en=page_view&tfd=5568
+  Status: 204
+  Type: text/plain
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/report/error
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/surebets?product=surebets&autoupdate=1&cursor=4613756399922587858:V081v1pwBwc%2B&format=json
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:18] XHR/Fetch: https://region1.google-analytics.com/g/collect?v=2&tid=G-4H2DFG8NDS&gtm=45je6291v9135678315za20g&_p=1770808307864&gcd=13l3l3l2l1l1&npa=1&dma_cps=syphamo&dma=1&cid=1577220263.1770376246&ul=hu-hu&sr=1920x1080&uaa=&uab=&uafvl=&uamb=0&uam=&uap=Windows&uapv=&uaw=0&are=1&frm=0&pscdl=noapi&_eu=AAAIAAQ&_s=1&tag_exp=103116026~103200004~104527906~104528500~104684208~104684211~115938466~115938468~116185181~116185182~116988315&uid=63c323e5-6a06-0ec6-ffb7-e085fd460c21&sid=1770808266&sct=9&seg=1&dl=https%3A%2F%2Fen.surebet.com%2Fsurebets%2Fgroup%3Fgroup_title%3DPeru%2BU20%2BWomen%2B%25E2%2580%2593%2BBrazil%2BU20%2BWomen%26like%3DsHRzWg&dt=SureBet%20-%20Professional%20betting&_tu=QA&en=page_view&tfd=5619
+  Status: 204
+  Type: text/plain
+
+[2026-02-11 12:15:18] XHR/Fetch: https://region1.google-analytics.com/g/collect?v=2&tid=G-4H2DFG8NDS&gtm=45je6291v9135678315za20g&_p=1770808308648&gcd=13l3l3l2l1l1&npa=1&dma_cps=syphamo&dma=1&cid=1577220263.1770376246&ul=hu-hu&sr=1920x1080&uaa=&uab=&uafvl=&uamb=0&uam=&uap=Windows&uapv=&uaw=0&are=1&frm=0&pscdl=noapi&_eu=AAAIAAQ&_s=1&tag_exp=103116026~103200004~104527906~104528501~104684208~104684211~115938466~115938469~116185181~116185182~116988315&uid=63c323e5-6a06-0ec6-ffb7-e085fd460c21&sid=1770808266&sct=9&seg=1&dl=https%3A%2F%2Fen.surebet.com%2Fsurebets%2Fgroup%3Fgroup_title%3DRatchaburi%2B%25E2%2580%2593%2BPersib%2BBandung%26like%3Do61bWg&dt=SureBet%20-%20Professional%20betting&_tu=QA&en=page_view&tfd=5640
+  Status: 204
+  Type: text/plain
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/surebets?product=surebets&autoupdate=1&cursor=4613756399922587858:V081v1pwBwc%2B&format=json
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:18] XHR/Fetch: https://region1.google-analytics.com/g/collect?v=2&tid=G-4H2DFG8NDS&gtm=45je6291v9135678315za20g&_p=1770808310875&gcd=13l3l3l2l1l1&npa=1&dma_cps=syphamo&dma=1&cid=1577220263.1770376246&ul=hu-hu&sr=1920x1080&uaa=&uab=&uafvl=&uamb=0&uam=&uap=Windows&uapv=&uaw=0&are=1&frm=0&pscdl=noapi&_eu=AAAIAAQ&_s=1&tag_exp=103116026~103200004~104527906~104528500~104684208~104684211~115938466~115938469~116185181~116185182~116988315&uid=63c323e5-6a06-0ec6-ffb7-e085fd460c21&sid=1770808266&sct=9&seg=1&dl=https%3A%2F%2Fen.surebet.com%2Fsurebets%2Fgroup%3Fgroup_title%3DBudowlani%2BLodz%2BW%2B%25E2%2580%2593%2BWroclaw%2BW%26like%3DEaF6WA&dt=SureBet%20-%20Professional%20betting&_tu=QA&en=page_view&tfd=7104
+  Status: 204
+  Type: text/plain
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/surebets?product=surebets&autoupdate=1&cursor=4613756399922587858:V081v1pwBwc%2B&format=json
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:18] XHR/Fetch: https://region1.google-analytics.com/g/collect?v=2&tid=G-4H2DFG8NDS&gtm=45je6291v9135678315za20g&_p=1770808312315&gcd=13l3l3l2l1l1&npa=1&dma_cps=syphamo&dma=1&cid=1577220263.1770376246&ul=hu-hu&sr=1920x1080&uaa=&uab=&uafvl=&uamb=0&uam=&uap=Windows&uapv=&uaw=0&are=1&frm=0&pscdl=noapi&_eu=AAAIAAQ&_s=1&tag_exp=103116026~103200004~104527906~104528500~104684208~104684211~115938466~115938469~116185181~116185182~116988315&uid=63c323e5-6a06-0ec6-ffb7-e085fd460c21&sid=1770808266&sct=9&seg=1&dl=https%3A%2F%2Fen.surebet.com%2Fsurebets%2Fgroup%3Fgroup_title%3DUniversitario%2Bde%2BDeportes%2B%25E2%2580%2593%2BCienciano%26like%3DH-N4WA&dt=SureBet%20-%20Professional%20betting&_tu=QA&en=page_view&tfd=6310
+  Status: 204
+  Type: text/plain
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/surebets?product=surebets&autoupdate=1&cursor=4613756399922587858:V081v1pwBwc%2B&format=json
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/surebets?product=surebets&autoupdate=1&cursor=4613756399922587858:V081v1pwBwc%2B&format=json
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/surebets?product=surebets&autoupdate=1&cursor=4613756399922587858:V081v1pwBwc%2B&format=json
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/surebets?product=surebets&autoupdate=1&cursor=4613756399922587858:V081v1pwBwc%2B&format=json
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/surebets?product=surebets&autoupdate=1&cursor=4613756399922587858:V081v1pwBwc%2B&format=json
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/surebets?cursor=4613756399922587858%3AV081v1pwBwc%2B
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/surebets/group?group_title=Celtic+%E2%80%93+Livingston&like=ELlqVw
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/surebets?signature=&product=surebets&autoupdate=1&format=json
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/surebets/group?group_title=DEAC+%E2%80%93+Soroksar&like=j5gsVw
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/surebets/group?group_title=Al+Tadamun+Hadramaut+%E2%80%93+Al+Rayyan+SC&like=bOpdWQ
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/surebets/group?group_title=Ovarense+Basquetebol+B+%E2%80%93+Cb+Penafiel+2012&like=CLQ_WA
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/surebets?product=surebets&autoupdate=1&format=json
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/surebets/group?group_title=Dmytro+Yurkov+%E2%80%93+Sergey+Ponomarenko&like=7Y0DWg
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/surebets/group?group_title=Cairns+Taipans+%E2%80%93+Melbourne+United&like=vzVPVw
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/surebets/group?group_title=CS+Rapid+Bucuresti+%28Women%29+%E2%80%93+Agronomia+Bucuresti+%28Women%29&like=WPi3Wg
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/surebets?product=surebets&autoupdate=1&format=json
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:18] XHR/Fetch: https://parimatch.kz/cdn-cgi/challenge-platform/h/b/flow/ov1/1422784131:1770806174:B6SVuz2JROVmkd1S03PpR_nBab_hWD7rJMKacf_Od78/9cc368fe2ecc5b21/.gEmXUsCkJr886LkdgQS_Y2m4GjNGkv_Pe7DpIir8Ak-1770808335-1.2.1.1-A8kmuiUqedyHPNqrdyZW1TwnIos._ek9_SHIXGgsoeU16dKtqrPH_GPqk39ONgUy
+  Status: 200
+  Type: text/plain
+
+[2026-02-11 12:15:18] XHR/Fetch: https://parimatch.kz/cdn-cgi/challenge-platform/h/b/flow/ov1/1422784131:1770806174:B6SVuz2JROVmkd1S03PpR_nBab_hWD7rJMKacf_Od78/9cc368ff1f775b21/hmf6mr57ha697bcvGxTn68X6TI514jCzcxee6tnnhQw-1770808335-1.2.1.1-YhH2fcJ6C4hwgwnISsLog90SsgxYo5nUJ_hp7bfGMfYA.g9EyebiMbhTnEEb3nMS
+  Status: 200
+  Type: text/plain
+
+[2026-02-11 12:15:18] XHR/Fetch: https://consentcdn.cookiebot.com/consentconfig/bd2cdca7-6947-4c6f-b872-97d282ae2a8d/settings.json
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:18] XHR/Fetch: https://consentcdn.cookiebot.com/consentconfig/bd2cdca7-6947-4c6f-b872-97d282ae2a8d/settings.json
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:18] XHR/Fetch: https://consentcdn.cookiebot.com/consentconfig/bd2cdca7-6947-4c6f-b872-97d282ae2a8d/settings.json
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:18] XHR/Fetch: https://consentcdn.cookiebot.com/consentconfig/bd2cdca7-6947-4c6f-b872-97d282ae2a8d/settings.json
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:18] XHR/Fetch: https://consentcdn.cookiebot.com/consentconfig/bd2cdca7-6947-4c6f-b872-97d282ae2a8d/settings.json
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:18] XHR/Fetch: https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/b/flow/ov1/1080406125:1770806174:hiHiGxy9Onvw72C7jIE8MYWUbNWvMATlNC2SJ7SxUFM/9cc36903bd6b5a78/5ZtgBYHVcLSDJUg7_1Ie1vfOp3cnsDmaylmudhRcMsQ-1770808335-1.2.1.1-AtzwGRb2bKm7mtk3VePC.J4Tc2C5wvGv5sRIOH_LGiNd_A9zfJlD5RzrgUtrbfc0
+  Status: 200
+  Type: text/plain
+
+[2026-02-11 12:15:18] XHR/Fetch: https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/b/flow/ov1/1080406125:1770806174:hiHiGxy9Onvw72C7jIE8MYWUbNWvMATlNC2SJ7SxUFM/9cc36903bd695a78/n9FM_aBLjku7cgb6.KbOsVb2p0kAyy39hU..i4f.nMI-1770808335-1.2.1.1-g5oJMlt6dZyrYzeB4HcHH7ONYC9846qa3YZE7fxROcMhpJdj5Dvf1cNiK256bkGq
+  Status: 200
+  Type: text/plain
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/report/error
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] XHR/Fetch: https://consentcdn.cookiebot.com/consentconfig/bd2cdca7-6947-4c6f-b872-97d282ae2a8d/settings.json
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:18] XHR/Fetch: https://en.surebet.com/surebets?product=surebets&autoupdate=1&format=json
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:18] XHR/Fetch: https://parimatch.kz/cdn-cgi/challenge-platform/h/b/flow/ov1/1422784131:1770806174:B6SVuz2JROVmkd1S03PpR_nBab_hWD7rJMKacf_Od78/9cc369087ed75b21/AtvIjJ2DY21jzp.ZGc6I8s6trU6H1CzaqNTg2q9Idsw-1770808336-1.2.1.1-tzswOESZY77zAZjIwsFvVmPToT3lHDQoJpIxWEjIq.3MJ8kSHtJdqmIdgW0vky8s
+  Status: 200
+  Type: text/plain
+
+[2026-02-11 12:15:19] XHR/Fetch: https://challenges.cloudflare.com/cdn-cgi/challenge-platform/h/b/pat/9cc36903bd6b5a78/1770808336558/5dc715080df6e1a9b27a4dd26e822aab2ea71783ed78d6833f10b62cfa90dd02/vAYCOnzQ8-xcpwd
+  Status: 401
+  Type: text/plain
+
+[2026-02-11 12:15:19] XHR/Fetch: https://platform.20bet.com/api/data/get-countries-list?acceptLanguage=en-GB&p=0
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:19] XHR/Fetch: https://platform.20bet.com/api/v2/currency-variables?acceptLanguage=en-GB&p=0
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:19] XHR/Fetch: https://platform.20bet.com/api/data/get-currencies?acceptLanguage=en-GB&p=0&orderField=displayOrder&orderDirection=DESC
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:19] XHR/Fetch: https://platform.20bet.com/api/v2/rev2/configurations
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:19] XHR/Fetch: https://vegas.hu/api/config/settings
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:19] XHR/Fetch: https://vegas.hu/api/menu?gameIdsOnly=true
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:19] XHR/Fetch: https://vegas.hu/api/config/protected
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:19] XHR/Fetch: https://vegas.hu/api/config/country
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:19] XHR/Fetch: https://platform.20bet.com/api/v2/configurations?acceptLanguage=en-GB&p=0
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:19] XHR/Fetch: https://platform.20bet.com/api/v2/ip-data?acceptLanguage=en-GB&p=0
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:19] XHR/Fetch: https://20bet.com/api/v2/translation/get?acceptLanguage=en-GB&p=0&pageUrl=%2Fprematch%2Fbasketball%2F1075283-romania-liga-nationala-women%2F9162708-cs-rapid-bucuresti-women-agronomia-bucuresti-women&classificationsStrategy=2&classifications=db+column
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:19] XHR/Fetch: https://platform.20bet.com/api/data/provinces?acceptLanguage=en-GB&p=0
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:19] XHR/Fetch: https://20bet.com/api/config/bootstrap?acceptLanguage=en-GB&p=0&pageUrl=%2Fprematch%2Fbasketball%2F1075283-romania-liga-nationala-women%2F9162708-cs-rapid-bucuresti-women-agronomia-bucuresti-women
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:19] XHR/Fetch: https://20bet.com/api/v2/page/availability?acceptLanguage=en-GB&p=0&pageUrl=%2Fprematch%2Fbasketball%2F1075283-romania-liga-nationala-women%2F9162708-cs-rapid-bucuresti-women-agronomia-bucuresti-women
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:19] XHR/Fetch: https://vegas.hu/api/config/settings
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:19] XHR/Fetch: https://vegas.hu/api/menu?gameIdsOnly=true
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:19] XHR/Fetch: https://vegas.hu/cms/event-listener.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:19] XHR/Fetch: https://vegas.hu/api/config/protected
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:19] XHR/Fetch: https://vegas.hu/api/config/country
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:19] XHR/Fetch: https://vegas.hu/api/payment/providers
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:19] XHR/Fetch: https://vegas.hu/cms/event-listener.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:19] XHR/Fetch: https://vegas.hu/api/menu?gameIdsOnly=true
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:19] XHR/Fetch: https://vegas.hu/api/config/protected
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:19] XHR/Fetch: https://vegas.hu/api/config/settings
+  Status: 200
+  Type: application/json

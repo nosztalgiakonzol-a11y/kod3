@@ -1,0 +1,339 @@
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/base/manifest.webmanifest
+  Status: 200
+  Mime: application/manifest+json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/webpush/subscriptions/count
+  Status: 200
+  Mime: application/json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/base/manifest.webmanifest
+  Status: 200
+  Mime: application/manifest+json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/webpush/subscriptions/count
+  Status: 200
+  Mime: application/json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/base/manifest.webmanifest
+  Status: 200
+  Mime: application/manifest+json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/webpush/subscriptions/count
+  Status: 200
+  Mime: application/json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/base/manifest.webmanifest
+  Status: 200
+  Mime: application/manifest+json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/surebets?signature=&product=surebets&autoupdate=1&cursor=4613756399922587858:V081v1pwBwc%2B&format=json
+  Status: 200
+  Mime: application/json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/base/manifest.webmanifest
+  Status: 200
+  Mime: application/manifest+json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/surebets?product=surebets&autoupdate=1&cursor=4613756399922587858:V081v1pwBwc%2B&format=json
+  Status: 200
+  Mime: application/json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/base/manifest.webmanifest
+  Status: 200
+  Mime: application/manifest+json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/base/manifest.webmanifest
+  Status: 200
+  Mime: application/manifest+json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/base/manifest.webmanifest
+  Status: 200
+  Mime: application/manifest+json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/surebets?product=surebets&autoupdate=1&cursor=4613756399922587858:V081v1pwBwc%2B&format=json
+  Status: 200
+  Mime: application/json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/base/manifest.webmanifest
+  Status: 200
+  Mime: application/manifest+json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/surebets?product=surebets&autoupdate=1&cursor=4613756399922587858:V081v1pwBwc%2B&format=json
+  Status: 200
+  Mime: application/json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/base/manifest.webmanifest
+  Status: 200
+  Mime: application/manifest+json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/base/manifest.webmanifest
+  Status: 200
+  Mime: application/manifest+json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/surebets?product=surebets&autoupdate=1&cursor=4613756399922587858:V081v1pwBwc%2B&format=json
+  Status: 200
+  Mime: application/json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/base/manifest.webmanifest
+  Status: 200
+  Mime: application/manifest+json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/surebets?product=surebets&autoupdate=1&cursor=4613756399922587858:V081v1pwBwc%2B&format=json
+  Status: 200
+  Mime: application/json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/base/manifest.webmanifest
+  Status: 200
+  Mime: application/manifest+json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/base/manifest.webmanifest
+  Status: 200
+  Mime: application/manifest+json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/surebets?product=surebets&autoupdate=1&cursor=4613756399922587858:V081v1pwBwc%2B&format=json
+  Status: 200
+  Mime: application/json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/base/manifest.webmanifest
+  Status: 200
+  Mime: application/manifest+json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/base/manifest.webmanifest
+  Status: 200
+  Mime: application/manifest+json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/surebets?product=surebets&autoupdate=1&cursor=4613756399922587858:V081v1pwBwc%2B&format=json
+  Status: 200
+  Mime: application/json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/base/manifest.webmanifest
+  Status: 200
+  Mime: application/manifest+json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/surebets?product=surebets&autoupdate=1&cursor=4613756399922587858:V081v1pwBwc%2B&format=json
+  Status: 200
+  Mime: application/json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/base/manifest.webmanifest
+  Status: 200
+  Mime: application/manifest+json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/base/manifest.webmanifest
+  Status: 200
+  Mime: application/manifest+json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/surebets?product=surebets&autoupdate=1&cursor=4613756399922587858:V081v1pwBwc%2B&format=json
+  Status: 200
+  Mime: application/json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/base/manifest.webmanifest
+  Status: 200
+  Mime: application/manifest+json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/surebets?product=surebets&autoupdate=1&cursor=4613756399922587858:V081v1pwBwc%2B&format=json
+  Status: 200
+  Mime: application/json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/base/manifest.webmanifest
+  Status: 200
+  Mime: application/manifest+json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/base/manifest.webmanifest
+  Status: 200
+  Mime: application/manifest+json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/surebets?product=surebets&autoupdate=1&cursor=4613756399922587858:V081v1pwBwc%2B&format=json
+  Status: 200
+  Mime: application/json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/base/manifest.webmanifest
+  Status: 200
+  Mime: application/manifest+json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/base/manifest.webmanifest
+  Status: 200
+  Mime: application/manifest+json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/base/manifest.webmanifest
+  Status: 200
+  Mime: application/manifest+json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/surebets?product=surebets&autoupdate=1&cursor=4613756399922587858:V081v1pwBwc%2B&format=json
+  Status: 200
+  Mime: application/json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/base/manifest.webmanifest
+  Status: 200
+  Mime: application/manifest+json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/base/manifest.webmanifest
+  Status: 200
+  Mime: application/manifest+json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/base/manifest.webmanifest
+  Status: 200
+  Mime: application/manifest+json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/surebets?product=surebets&autoupdate=1&cursor=4613756399922587858:V081v1pwBwc%2B&format=json
+  Status: 200
+  Mime: application/json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/base/manifest.webmanifest
+  Status: 200
+  Mime: application/manifest+json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/base/manifest.webmanifest
+  Status: 200
+  Mime: application/manifest+json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/surebets?product=surebets&autoupdate=1&cursor=4613756399922587858:V081v1pwBwc%2B&format=json
+  Status: 200
+  Mime: application/json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/base/manifest.webmanifest
+  Status: 200
+  Mime: application/manifest+json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/surebets?product=surebets&autoupdate=1&cursor=4613756399922587858:V081v1pwBwc%2B&format=json
+  Status: 200
+  Mime: application/json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/base/manifest.webmanifest
+  Status: 200
+  Mime: application/manifest+json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/base/manifest.webmanifest
+  Status: 200
+  Mime: application/manifest+json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/surebets?product=surebets&autoupdate=1&cursor=4613756399922587858:V081v1pwBwc%2B&format=json
+  Status: 200
+  Mime: application/json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/surebets?product=surebets&autoupdate=1&cursor=4613756399922587858:V081v1pwBwc%2B&format=json
+  Status: 200
+  Mime: application/json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/surebets?product=surebets&autoupdate=1&cursor=4613756399922587858:V081v1pwBwc%2B&format=json
+  Status: 200
+  Mime: application/json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/surebets?product=surebets&autoupdate=1&cursor=4613756399922587858:V081v1pwBwc%2B&format=json
+  Status: 200
+  Mime: application/json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/surebets?product=surebets&autoupdate=1&cursor=4613756399922587858:V081v1pwBwc%2B&format=json
+  Status: 200
+  Mime: application/json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/surebets?product=surebets&autoupdate=1&cursor=4613756399922587858:V081v1pwBwc%2B&format=json
+  Status: 200
+  Mime: application/json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/surebets?product=surebets&autoupdate=1&cursor=4613756399922587858:V081v1pwBwc%2B&format=json
+  Status: 200
+  Mime: application/json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/surebets?product=surebets&autoupdate=1&cursor=4613756399922587858:V081v1pwBwc%2B&format=json
+  Status: 200
+  Mime: application/json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/surebets?signature=&product=surebets&autoupdate=1&format=json
+  Status: 200
+  Mime: application/json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/surebets?product=surebets&autoupdate=1&format=json
+  Status: 200
+  Mime: application/json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/surebets?product=surebets&autoupdate=1&format=json
+  Status: 200
+  Mime: application/json
+
+[2026-02-11 12:15:18] JSON: https://consentcdn.cookiebot.com/consentconfig/bd2cdca7-6947-4c6f-b872-97d282ae2a8d/settings.json
+  Status: 200
+  Mime: application/json
+
+[2026-02-11 12:15:18] JSON: https://consentcdn.cookiebot.com/consentconfig/bd2cdca7-6947-4c6f-b872-97d282ae2a8d/settings.json
+  Status: 200
+  Mime: application/json
+
+[2026-02-11 12:15:18] JSON: https://consentcdn.cookiebot.com/consentconfig/bd2cdca7-6947-4c6f-b872-97d282ae2a8d/settings.json
+  Status: 200
+  Mime: application/json
+
+[2026-02-11 12:15:18] JSON: https://consentcdn.cookiebot.com/consentconfig/bd2cdca7-6947-4c6f-b872-97d282ae2a8d/settings.json
+  Status: 200
+  Mime: application/json
+
+[2026-02-11 12:15:18] JSON: https://consentcdn.cookiebot.com/consentconfig/bd2cdca7-6947-4c6f-b872-97d282ae2a8d/settings.json
+  Status: 200
+  Mime: application/json
+
+[2026-02-11 12:15:18] JSON: https://consentcdn.cookiebot.com/consentconfig/bd2cdca7-6947-4c6f-b872-97d282ae2a8d/settings.json
+  Status: 200
+  Mime: application/json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/surebets?product=surebets&autoupdate=1&format=json
+  Status: 200
+  Mime: application/json
+
+[2026-02-11 12:15:18] JSON: https://en.surebet.com/base/manifest.webmanifest
+  Status: 200
+  Mime: application/manifest+json
+
+[2026-02-11 12:15:18] JSON: https://dwmu1hf7ovvid.cloudfront.net/site/upload/logos/loaders.json
+  Status: 200
+  Mime: application/json
+
+[2026-02-11 12:15:19] JSON: https://platform.20bet.com/api/data/get-countries-list?acceptLanguage=en-GB&p=0
+  Status: 200
+  Mime: application/json
+
+[2026-02-11 12:15:19] JSON: https://platform.20bet.com/api/v2/currency-variables?acceptLanguage=en-GB&p=0
+  Status: 200
+  Mime: application/json
+
+[2026-02-11 12:15:19] JSON: https://platform.20bet.com/api/data/get-currencies?acceptLanguage=en-GB&p=0&orderField=displayOrder&orderDirection=DESC
+  Status: 200
+  Mime: application/json
+
+[2026-02-11 12:15:19] JSON: https://platform.20bet.com/api/v2/rev2/configurations
+  Status: 200
+  Mime: application/json
+
+[2026-02-11 12:15:19] JSON: https://vegas.hu/api/config/settings
+  Status: 200
+  Mime: application/json
+
+[2026-02-11 12:15:19] JSON: https://vegas.hu/api/menu?gameIdsOnly=true
+  Status: 200
+  Mime: application/json
+
+[2026-02-11 12:15:19] JSON: https://vegas.hu/api/config/protected
+  Status: 200
+  Mime: application/json
+
+[2026-02-11 12:15:19] JSON: https://vegas.hu/api/config/country
+  Status: 200
+  Mime: application/json
+
+[2026-02-11 12:15:19] JSON: https://platform.20bet.com/api/v2/configurations?acceptLanguage=en-GB&p=0
+  Status: 200
+  Mime: application/json
+
+[2026-02-11 12:15:19] JSON: https://platform.20bet.com/api/v2/ip-data?acceptLanguage=en-GB&p=0
+  Status: 200
+  Mime: application/json
+
+[2026-02-11 12:15:19] JSON: https://20bet.com/api/v2/translation/get?acceptLanguage=en-GB&p=0&pageUrl=%2Fprematch%2Fbasketball%2F1075283-romania-liga-nationala-women%2F9162708-cs-rapid-bucuresti-women-agronomia-bucuresti-women&classificationsStrategy=2&classifications=db+column
+  Status: 200
+  Mime: application/json
+
+[2026-02-11 12:15:19] JSON: https://platform.20bet.com/api/data/provinces?acceptLanguage=en-GB&p=0
+  Status: 200
+  Mime: application/json
+
+[2026-02-11 12:15:19] JSON: https://20bet.com/api/config/bootstrap?acceptLanguage=en-GB&p=0&pageUrl=%2Fprematch%2Fbasketball%2F1075283-romania-liga-nationala-women%2F9162708-cs-rapid-bucuresti-women-agronomia-bucuresti-women
+  Status: 200
+  Mime: application/json
