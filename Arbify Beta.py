@@ -31,8 +31,6 @@ from selenium.common.exceptions import (
     NoSuchWindowException,
     WebDriverException,
 )
-import hashlib
-from bs4 import BeautifulSoup
 
 # Supabase SDK import for direct database queries
 try:
@@ -422,12 +420,6 @@ CONTENT_HASH_TRACK_IDS = True          # Track element IDs for better detection
 # =============================================================================
 # BEAUTIFULSOUP PRECISE DETECTION (Alternative to hash checking)
 # =============================================================================
-# Uses BeautifulSoup to track individual tbody elements with fingerprints
-# Cloudflare-safe (uses Selenium page_source, not HTTP requests)
-# Detects additions, removals, and content changes with extreme precision
-ENABLE_SOUP_PRECISE_CHECK = True   # Enable BeautifulSoup-based change detection
-# =============================================================================
-
 # =============================================================================
 # TEXT VERIFICATION REMOVED - Using enhanced content-based hash instead
 # =============================================================================
@@ -4231,92 +4223,6 @@ def open_group_tab_if_needed(group_url):
             pass
 
 
-def get_page_tbody_fingerprints_selenium(driver):
-    """
-    CLOUDFLARE-SAFE: Get tbody fingerprints from current Selenium page
-    Uses driver.page_source to avoid new HTTP requests
-    Tracks each tbody individually with unique fingerprints
-    """
-    try:
-        # Get HTML from current Selenium page (no new request needed!)
-        html = driver.page_source
-        soup = BeautifulSoup(html, 'html.parser')
-        
-        tbody_elements = soup.find_all('tbody')
-        fingerprints = {}
-        
-        for idx, tbody in enumerate(tbody_elements):
-            # Create unique fingerprint for each tbody
-            text = tbody.get_text(strip=True)
-            first_part = text[:200] if len(text) > 200 else text
-            last_part = text[-100:] if len(text) > 100 else text
-            
-            # Fingerprint includes position + content
-            fingerprint_data = f"{idx}:{first_part}:{last_part}"
-            fingerprint = hashlib.md5(fingerprint_data.encode()).hexdigest()
-            
-            fingerprints[fingerprint] = {
-                'index': idx,
-                'preview': text[:100] if len(text) > 100 else text,
-                'length': len(text)
-            }
-        
-        return fingerprints
-    except Exception as e:
-        warn(f"[SOUP] Error getting fingerprints: {e}")
-        return None
-
-
-def check_page_changes_precise(driver, info):
-    """
-    Ultra-precise change detection using BeautifulSoup
-    Detects additions, removals, and content changes
-    
-    Returns: (changed: bool, details: str)
-    """
-    try:
-        current_fps = get_page_tbody_fingerprints_selenium(driver)
-        last_fps = info.get('last_fingerprints', {})
-        
-        if not current_fps:
-            return True, "Error getting fingerprints"
-        
-        if not last_fps:
-            # First check - store and refresh
-            info['last_fingerprints'] = current_fps
-            return True, "First check"
-        
-        # Compare fingerprint sets
-        current_keys = set(current_fps.keys())
-        last_keys = set(last_fps.keys())
-        
-        # Detect removals
-        removed = last_keys - current_keys
-        if removed:
-            for fp in list(removed)[:3]:  # Log first 3
-                preview = last_fps[fp]['preview']
-                log(f"[SOUP] ❌ Removed tbody: {preview[:50]}...")
-            info['last_fingerprints'] = current_fps
-            return True, f"REMOVED {len(removed)} tbody"
-        
-        # Detect additions
-        added = current_keys - last_keys
-        if added:
-            for fp in list(added)[:3]:  # Log first 3
-                preview = current_fps[fp]['preview']
-                log(f"[SOUP] ✅ Added tbody: {preview[:50]}...")
-            info['last_fingerprints'] = current_fps
-            return True, f"ADDED {len(added)} tbody"
-        
-        # No changes detected
-        log(f"[SOUP] ✓ No changes detected ({len(current_keys)} tbody)")
-        return False, "No changes"
-        
-    except Exception as e:
-        warn(f"[SOUP] Error checking changes: {e}")
-        return True, "Error - refresh to be safe"
-
-
 def maybe_refresh_group_tab(url: str, info: dict) -> bool:
     now = time.time()
     if now - info.get("created_at", now) < GROUP_REFRESH_SKIP_ON_NEW_SEC:
@@ -4364,30 +4270,6 @@ def maybe_refresh_group_tab(url: str, info: dict) -> bool:
             return False
         else:
             _log_hash_check(f"🔄 GROUP will refresh (reason: {reason})", verbose_only=False)
-    
-    # 🎯 BEAUTIFULSOUP PRECISE CHECK - Ultra-precise detection (Cloudflare-safe)
-    if ENABLE_SOUP_PRECISE_CHECK and not ENABLE_CONTENT_HASH_CHECKING:
-        # Switch to the group tab first
-        try:
-            driver.switch_to.window(handle)
-        except Exception as e:
-            warn(f"[SOUP] Could not switch to group tab: {e}")
-        
-        # Check if content changed with BeautifulSoup
-        changed, details = check_page_changes_precise(driver, info)
-        
-        if not changed:
-            # Content hasn't changed, skip refresh!
-            log(f"[SOUP] ✓ GROUP refresh SKIPPED - {details}")
-            info["next_refresh"] = now + _rand_group_refresh_interval()
-            
-            # Clear scraping flag when no refresh
-            if ENABLE_CONDITIONAL_SCRAPING:
-                info["needs_scraping"] = False
-            
-            return False
-        else:
-            log(f"[SOUP] 🔄 GROUP will refresh - {details}")
 
     ok = False
     try:
