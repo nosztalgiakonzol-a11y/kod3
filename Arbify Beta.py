@@ -432,6 +432,16 @@ SCRAPING_FORCE_FIRST_TIME = True       # Force scrape on first encounter
 # =============================================================================
 
 # =============================================================================
+# 🔄 JSON AUTO-UPDATE (Real-time updates without page refresh)
+# =============================================================================
+# Fetch JSON and inject HTML into page without full refresh
+# Like MAIN page autoupdate, but for GROUP and NEXT pages
+ENABLE_JSON_AUTO_UPDATE = True          # Enable JSON auto-update
+JSON_UPDATE_INTERVAL = 35               # Update every 35 seconds
+JSON_SHOW_UPDATE_TIME = True            # Show "Updated X seconds ago"
+# =============================================================================
+
+# =============================================================================
 # 🔒 HEADER MINIMIZATION (Bot Detection Reduction)
 # =============================================================================
 # Uses minimal header set to reduce bot detection
@@ -4220,6 +4230,174 @@ def open_group_tab_if_needed(group_url):
             pass
 
 
+# =============================================================================
+# 🔄 JSON AUTO-UPDATE FUNCTIONS
+# =============================================================================
+
+def fetch_surebets_json_lightweight(driver):
+    """
+    Fetch surebets JSON WITHOUT full page refresh
+    Uses Selenium cookies for authentication
+    """
+    try:
+        # Get authentication from Selenium
+        cookies = {c['name']: c['value'] for c in driver.get_cookies()}
+        
+        # Get user agent
+        user_agent = driver.execute_script("return navigator.userAgent;")
+        
+        # Make lightweight JSON request
+        response = requests.get(
+            "https://en.surebet.com/surebets?product=surebets&autoupdate=1&format=json",
+            cookies=cookies,
+            headers={
+                'User-Agent': user_agent,
+                'Accept': 'application/json',
+                'Referer': 'https://en.surebet.com/surebets',
+            },
+            timeout=5
+        )
+        
+        if response.status_code == 200:
+            return response.json()
+        else:
+            log(f"[JSON-FETCH] Status {response.status_code}")
+            return None
+            
+    except Exception as e:
+        log(f"[JSON-FETCH] Error: {e}")
+        return None
+
+
+def show_update_timestamp(driver):
+    """
+    Show visual feedback: "Updated X seconds ago"
+    """
+    try:
+        driver.execute_script("""
+            // Remove old timestamp if exists
+            var oldTimestamp = document.getElementById('json-update-timestamp');
+            if (oldTimestamp) {
+                oldTimestamp.remove();
+            }
+            
+            // Create new timestamp badge
+            var badge = document.createElement('div');
+            badge.id = 'json-update-timestamp';
+            badge.style.position = 'fixed';
+            badge.style.top = '10px';
+            badge.style.right = '10px';
+            badge.style.backgroundColor = '#28a745';
+            badge.style.color = 'white';
+            badge.style.padding = '8px 12px';
+            badge.style.borderRadius = '4px';
+            badge.style.fontSize = '12px';
+            badge.style.fontWeight = 'bold';
+            badge.style.zIndex = '99999';
+            badge.style.boxShadow = '0 2px 4px rgba(0,0,0,0.2)';
+            badge.innerHTML = '🔄 Updated 0 seconds ago';
+            document.body.appendChild(badge);
+            
+            // Update timestamp every second
+            var startTime = Date.now();
+            if (window.updateTimestampInterval) {
+                clearInterval(window.updateTimestampInterval);
+            }
+            window.updateTimestampInterval = setInterval(function() {
+                var elapsed = Math.floor((Date.now() - startTime) / 1000);
+                badge.innerHTML = '🔄 Updated ' + elapsed + ' seconds ago';
+            }, 1000);
+        """)
+    except Exception as e:
+        log(f"[TIMESTAMP] Error: {e}")
+
+
+def inject_json_updates_to_page(driver, page_type="GROUP"):
+    """
+    Fetch JSON and inject HTML into page WITHOUT full refresh
+    """
+    try:
+        # Step 1: Fetch JSON
+        json_data = fetch_surebets_json_lightweight(driver)
+        
+        if not json_data:
+            log(f"[JSON-INJECT] Failed to fetch JSON for {page_type}")
+            return 0
+        
+        # Step 2: Parse table array
+        table = json_data.get('table', [])
+        
+        if not table:
+            log(f"[JSON-INJECT] No table data in JSON for {page_type}")
+            return 0
+        
+        # Step 3: Build HTML from all items
+        all_tbody_html = ""
+        for item in table:
+            tbody_html = item.get('html', '')
+            all_tbody_html += tbody_html
+        
+        # Step 4: Inject into #table-container
+        driver.execute_script("""
+            var container = document.querySelector('#table-container');
+            if (container) {
+                // Replace all content
+                container.innerHTML = arguments[0];
+                
+                // Re-initialize tooltips if Bootstrap is available
+                if (typeof bootstrap !== 'undefined') {
+                    var tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
+                    tooltips.forEach(function(el) {
+                        new bootstrap.Tooltip(el);
+                    });
+                }
+            } else {
+                console.error('Container #table-container not found');
+            }
+        """, all_tbody_html)
+        
+        # Step 5: Show visual feedback
+        if JSON_SHOW_UPDATE_TIME:
+            show_update_timestamp(driver)
+        
+        log(f"[JSON-INJECT] {page_type} updated: {len(table)} surebets")
+        return len(table)
+        
+    except Exception as e:
+        log(f"[JSON-INJECT] Error for {page_type}: {e}")
+        return 0
+
+
+def manage_auto_update(driver, page_type, info):
+    """
+    Manage auto-update for GROUP/NEXT pages
+    Runs every JSON_UPDATE_INTERVAL seconds
+    """
+    if not ENABLE_JSON_AUTO_UPDATE:
+        return False
+    
+    now = time.time()
+    last_update = info.get('last_json_update', 0)
+    
+    # Check if time to update
+    if now - last_update >= JSON_UPDATE_INTERVAL:
+        try:
+            # Fetch and inject
+            count = inject_json_updates_to_page(driver, page_type)
+            
+            # Update timestamp
+            info['last_json_update'] = now
+            
+            if count > 0:
+                log(f"[JSON-UPDATE] {page_type} auto-updated: {count} surebets")
+                return True
+            
+        except Exception as e:
+            log(f"[JSON-UPDATE] Error for {page_type}: {e}")
+    
+    return False
+
+
 def maybe_refresh_group_tab(url: str, info: dict) -> bool:
     now = time.time()
     if now - info.get("created_at", now) < GROUP_REFRESH_SKIP_ON_NEW_SEC:
@@ -6460,6 +6638,13 @@ if __name__ == "__main__":
             except Exception:
                 pass
 
+            # 🔄 JSON AUTO-UPDATE: Inject JSON updates without full refresh
+            try:
+                if ENABLE_JSON_AUTO_UPDATE:
+                    manage_auto_update(driver, "NEXT", info)
+            except Exception as e:
+                log(f"[AUTO-UPDATE] Error: {e}")
+
             if info.get("needs_scan", False):
                 curr_ids_tab, pend_del, should_close, found_next = next_scan_tab(url, info, curr_ids_main)
                 next_all_curr_ids.update(curr_ids_tab)
@@ -6488,6 +6673,13 @@ if __name__ == "__main__":
                     pass
             except Exception:
                 pass
+
+            # 🔄 JSON AUTO-UPDATE: Inject JSON updates without full refresh
+            try:
+                if ENABLE_JSON_AUTO_UPDATE:
+                    manage_auto_update(driver, "GROUP", info)
+            except Exception as e:
+                log(f"[AUTO-UPDATE] Error: {e}")
 
             if info.get("needs_scan", False):
                 curr_ids_tab, pend_del, should_close = group_scan_tab(url, info, higher_ids)
