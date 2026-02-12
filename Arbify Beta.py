@@ -4315,10 +4315,17 @@ def show_update_timestamp(driver):
 def inject_json_updates_to_page(driver, page_type="GROUP"):
     """
     Fetch JSON and inject HTML into page WITHOUT full refresh
+    OPTIMIZED: Performance improvements applied
     """
+    import time
+    start_time = time.time()
+    
     try:
-        # Step 1: Fetch JSON
+        # Step 1: Fetch JSON (with timing)
+        t1 = time.time()
         json_data = fetch_surebets_json_lightweight(driver)
+        fetch_time = (time.time() - t1) * 1000
+        log(f"[PERF] JSON fetch: {fetch_time:.1f}ms")
         
         if not json_data:
             log(f"[JSON-INJECT] Failed to fetch JSON for {page_type}")
@@ -4331,35 +4338,35 @@ def inject_json_updates_to_page(driver, page_type="GROUP"):
             log(f"[JSON-INJECT] No table data in JSON for {page_type}")
             return 0
         
-        # Step 3: Build HTML from all items
-        all_tbody_html = ""
-        for item in table:
-            tbody_html = item.get('html', '')
-            all_tbody_html += tbody_html
+        # Step 3: Build HTML from all items (OPTIMIZED: list join instead of concatenation)
+        t2 = time.time()
+        all_tbody_html = ''.join([item.get('html', '') for item in table])
+        build_time = (time.time() - t2) * 1000
+        log(f"[PERF] HTML build: {build_time:.1f}ms")
         
-        # Step 4: Inject into #table-container
+        # Step 4: Inject into #table-container (OPTIMIZED: removed tooltip re-init)
+        t3 = time.time()
         driver.execute_script("""
             var container = document.querySelector('#table-container');
             if (container) {
-                // Replace all content
+                // Replace all content (no tooltip re-init needed)
                 container.innerHTML = arguments[0];
-                
-                // Re-initialize tooltips if Bootstrap is available
-                if (typeof bootstrap !== 'undefined') {
-                    var tooltips = document.querySelectorAll('[data-bs-toggle="tooltip"]');
-                    tooltips.forEach(function(el) {
-                        new bootstrap.Tooltip(el);
-                    });
-                }
             } else {
                 console.error('Container #table-container not found');
             }
         """, all_tbody_html)
+        inject_time = (time.time() - t3) * 1000
+        log(f"[PERF] Injection: {inject_time:.1f}ms")
         
-        # Step 5: Show visual feedback
-        if JSON_SHOW_UPDATE_TIME:
+        # Step 5: Show visual feedback (only on GROUP/NEXT, not MAIN)
+        t4 = time.time()
+        if JSON_SHOW_UPDATE_TIME and page_type in ["GROUP", "NEXT"]:
             show_update_timestamp(driver)
+        timestamp_time = (time.time() - t4) * 1000
+        log(f"[PERF] Timestamp: {timestamp_time:.1f}ms")
         
+        total_time = (time.time() - start_time) * 1000
+        log(f"[PERF] TOTAL: {total_time:.1f}ms")
         log(f"[JSON-INJECT] {page_type} updated: {len(table)} surebets")
         return len(table)
         
