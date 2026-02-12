@@ -4405,6 +4405,152 @@ def manage_auto_update(driver, page_type, info):
     return False
 
 
+# ============================================================================
+# BOOKMAKER URL EXTRACTION (Avoid Rate Limits)
+# ============================================================================
+
+def extract_bookmaker_url_from_nav_link(nav_url, driver):
+    """
+    Extract bookmaker redirect URL from nav link WITHOUT opening it in browser.
+    This avoids rate limits by only fetching HTML, not opening pages.
+    
+    Args:
+        nav_url: The /nav/surebet/ link to extract from
+        driver: Selenium driver (for cookies)
+    
+    Returns:
+        Bookmaker URL string, or None if extraction failed
+    """
+    try:
+        # Get authentication from Selenium
+        cookies = {c['name']: c['value'] for c in driver.get_cookies()}
+        user_agent = driver.execute_script("return navigator.userAgent;")
+        
+        headers = {
+            'User-Agent': user_agent,
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Accept-Language': 'en-US,en;q=0.9,hu;q=0.8',
+            'Referer': driver.current_url,
+            'Connection': 'keep-alive'
+        }
+        
+        # Fetch HTML only (fast, no JavaScript execution)
+        log(f"[URL-EXTRACT] Fetching: {nav_url[:80]}...")
+        response = requests.get(
+            nav_url,
+            cookies=cookies,
+            headers=headers,
+            timeout=3,  # Fast timeout
+            allow_redirects=True
+        )
+        
+        if response.status_code != 200:
+            log(f"[URL-EXTRACT] HTTP {response.status_code} for {nav_url}")
+            return None
+        
+        html = response.text
+        
+        # Method 1: Extract from value attributes (most common)
+        url_pattern = r'value=["\'](https?://[^"\']+)["\']'
+        url_matches = re.findall(url_pattern, html)
+        
+        for url in url_matches:
+            # Filter out surebet.com URLs - we want bookmaker URLs
+            if 'surebet.com' not in url and len(url) > 20:
+                log(f"[URL-EXTRACT] Found (method 1): {url[:80]}...")
+                return url
+        
+        # Method 2: Look in entire HTML for bookmaker URLs
+        bookmaker_domains = ['bet365', '1xbet', 'betway', 'pinnacle', 'unibet', 
+                             'bwin', '888sport', 'williamhill', 'betfair', 'ladbrokes']
+        
+        all_urls = re.findall(r'https?://[^\s"\'<>]+', html)
+        for url in all_urls:
+            url_lower = url.lower()
+            if any(domain in url_lower for domain in bookmaker_domains):
+                if 'surebet.com' not in url_lower and len(url) > 20:
+                    log(f"[URL-EXTRACT] Found (method 2): {url[:80]}...")
+                    return url
+        
+        # Method 3: Check if response URL changed (HTTP redirect)
+        if response.url != nav_url and 'surebet.com' not in response.url:
+            log(f"[URL-EXTRACT] Found (redirect): {response.url[:80]}...")
+            return response.url
+        
+        log(f"[URL-EXTRACT] No bookmaker URL found in {nav_url[:60]}...")
+        return None
+        
+    except requests.Timeout:
+        log(f"[URL-EXTRACT] Timeout for {nav_url[:60]}...")
+        return None
+    except Exception as e:
+        log(f"[URL-EXTRACT] Error: {e}")
+        return None
+
+
+def extract_all_bookmaker_urls_from_page(driver):
+    """
+    Extract all bookmaker URLs from current page WITHOUT opening any links.
+    This replaces the old method of opening each tbody link.
+    
+    Args:
+        driver: Selenium driver
+    
+    Returns:
+        List of dicts with 'nav_url' and 'bookmaker_url' keys
+    """
+    log("[URL-EXTRACT] Starting URL extraction from page...")
+    
+    try:
+        # Get all /nav/surebet/ links from page
+        nav_links = driver.execute_script("""
+            return Array.from(document.querySelectorAll('a[href*="/nav/surebet/"]'))
+                        .map(a => a.href);
+        """)
+        
+        if not nav_links:
+            log("[URL-EXTRACT] No /nav/surebet/ links found on page")
+            return []
+        
+        log(f"[URL-EXTRACT] Found {len(nav_links)} nav links to process")
+        
+        results = []
+        processed = 0
+        
+        for nav_url in nav_links:
+            # Extract bookmaker URL
+            bookmaker_url = extract_bookmaker_url_from_nav_link(nav_url, driver)
+            
+            if bookmaker_url:
+                # Extract domain for logging
+                from urllib.parse import urlparse
+                try:
+                    domain = urlparse(bookmaker_url).netloc
+                except:
+                    domain = 'unknown'
+                
+                results.append({
+                    'nav_url': nav_url,
+                    'bookmaker_url': bookmaker_url,
+                    'domain': domain
+                })
+                
+                log(f"[URL-EXTRACT] ✅ {domain}: {bookmaker_url[:60]}...")
+            
+            processed += 1
+            
+            # Small delay to avoid overwhelming server
+            if processed < len(nav_links):
+                time.sleep(0.1)
+        
+        log(f"[URL-EXTRACT] Successfully extracted {len(results)}/{len(nav_links)} bookmaker URLs")
+        return results
+        
+    except Exception as e:
+        log(f"[URL-EXTRACT] Error during extraction: {e}")
+        return []
+
+
 def maybe_refresh_group_tab(url: str, info: dict) -> bool:
     now = time.time()
     if now - info.get("created_at", now) < GROUP_REFRESH_SKIP_ON_NEW_SEC:
