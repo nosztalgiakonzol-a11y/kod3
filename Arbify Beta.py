@@ -125,11 +125,11 @@ ACCOUNTS = {
         "password": "Pankix123!",
         "profile_dir": os.path.abspath("./profile_surebet_acc2"),
     },
-    "acc3": {  # harmadik account
-        "email": "bodabeni2@gmail.com",
-        "password": "Pankix123!",
-        "profile_dir": os.path.abspath("./profile_surebet_acc3"),
-    },
+    # "acc3": {  # harmadik account - TEMPORARILY DISABLED
+    #     "email": "bodabeni2@gmail.com",
+    #     "password": "Pankix123!",
+    #     "profile_dir": os.path.abspath("./profile_surebet_acc3"),
+    # },
 }
 
 ACCOUNT_ROTATE_MIN = float(os.getenv("SB_ACCOUNT_ROTATE_MIN", "30.5"))
