@@ -3733,18 +3733,42 @@ def background_nav_worker():
             if not todo:
                 continue
 
-            # 2) Pár-lista a resolverhez
+            # 2) Extract bookmaker URLs from nav links (NO browser tabs opened!)
             pairs = []
+            finals = []
+            states = []
+            
+            log(f"[NAV-WORKER] Processing {len(todo)} tasks with URL extraction (no browser opens)")
+            
             for t in todo:
                 h1, h2 = t.get("hrefs") or (None, None)
                 pairs.append((h1, h2) if (h1 and h2) else None)
-
-            any_to_open = any(p is not None for p in pairs)
-            if any_to_open:
-                finals, states = resolve_pairs_round_robin(pairs)
-            else:
-                finals = [(None, None)] * len(pairs)
-                states = [("timeout", "timeout")] * len(pairs)
+                
+                # Extract bookmaker URLs WITHOUT opening tabs
+                if h1 and h2:
+                    try:
+                        # Extract both URLs
+                        f1 = extract_bookmaker_url_from_nav_link(h1, driver)
+                        f2 = extract_bookmaker_url_from_nav_link(h2, driver)
+                        
+                        # Determine states
+                        s1 = "success" if (f1 and valid_external(f1)) else "timeout"
+                        s2 = "success" if (f2 and valid_external(f2)) else "timeout"
+                        
+                        finals.append((f1, f2))
+                        states.append((s1, s2))
+                        
+                        if f1 and f2:
+                            log(f"[NAV-EXTRACT] ✅ {t.get('id', 'N/A')}: Got both URLs")
+                        else:
+                            log(f"[NAV-EXTRACT] ⚠️ {t.get('id', 'N/A')}: f1={bool(f1)}, f2={bool(f2)}")
+                    except Exception as e:
+                        log(f"[NAV-EXTRACT] ❌ {t.get('id', 'N/A')}: Error: {e}")
+                        finals.append((None, None))
+                        states.append(("timeout", "timeout"))
+                else:
+                    finals.append((None, None))
+                    states.append(("timeout", "timeout"))
 
             # 3) Eredmények feldolgozása
             for idx, task in enumerate(todo):
@@ -3755,7 +3779,16 @@ def background_nav_worker():
                         # fallback: ha a pár None volt, de a taskban van két href, próbáljuk külön
                         h1, h2 = task.get("hrefs") or (None, None)
                         if h1 and h2:
-                            (f1, f2), (s1, s2) = resolve_two_final_urls_rr(h1, h2)
+                            # Use URL extraction instead of opening tabs
+                            try:
+                                f1 = extract_bookmaker_url_from_nav_link(h1, driver)
+                                f2 = extract_bookmaker_url_from_nav_link(h2, driver)
+                                s1 = "success" if (f1 and valid_external(f1)) else "timeout"
+                                s2 = "success" if (f2 and valid_external(f2)) else "timeout"
+                            except Exception as e:
+                                log(f"[NAV-EXTRACT-FALLBACK] Error: {e}")
+                                f1, f2 = None, None
+                                s1, s2 = ("timeout", "timeout")
                         else:
                             f1, f2 = h1, h2
                             s1, s2 = ("timeout", "timeout")
