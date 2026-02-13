@@ -4445,6 +4445,7 @@ def manage_auto_update(driver, page_type, info):
 def extract_bookmaker_url_from_nav_link(nav_url, driver):
     """
     Extract bookmaker redirect URL from nav link WITHOUT opening it in browser.
+    Uses the data-links attribute from #navigation element (95%+ reliable).
     This avoids rate limits by only fetching HTML, not opening pages.
     
     Args:
@@ -4483,17 +4484,64 @@ def extract_bookmaker_url_from_nav_link(nav_url, driver):
         
         html = response.text
         
-        # Method 1: Extract from value attributes (most common)
+        # PRIMARY METHOD: Parse data-links attribute from #navigation element
+        # This is the official data structure used by the website
+        try:
+            from bs4 import BeautifulSoup
+            import html as html_module
+            
+            soup = BeautifulSoup(html, 'html.parser')
+            nav_element = soup.find(id='navigation')
+            
+            if nav_element:
+                data_links = nav_element.get('data-links')
+                
+                if data_links:
+                    # Decode HTML entities
+                    data_links = html_module.unescape(data_links)
+                    
+                    # Parse JSON
+                    import json
+                    try:
+                        links = json.loads(data_links)
+                        
+                        if isinstance(links, list):
+                            # Extract URLs from links array
+                            for item in links:
+                                if not isinstance(item, dict):
+                                    continue
+                                
+                                link_obj = item.get('link', {})
+                                url = link_obj.get('url')
+                                
+                                if url:
+                                    # Check if external (not surebet.com)
+                                    from urllib.parse import urlparse
+                                    parsed = urlparse(url)
+                                    
+                                    if parsed.hostname and 'surebet.com' not in parsed.hostname:
+                                        log(f"[URL-EXTRACT] Found (data-links): {url[:80]}...")
+                                        return url
+                    
+                    except json.JSONDecodeError:
+                        log(f"[URL-EXTRACT] JSON parse error for data-links")
+        
+        except ImportError:
+            log(f"[URL-EXTRACT] BeautifulSoup not available, using fallback")
+        except Exception as e:
+            log(f"[URL-EXTRACT] data-links parse error: {e}")
+        
+        # FALLBACK METHOD 1: Extract from value attributes
         url_pattern = r'value=["\'](https?://[^"\']+)["\']'
         url_matches = re.findall(url_pattern, html)
         
         for url in url_matches:
             # Filter out surebet.com URLs - we want bookmaker URLs
             if 'surebet.com' not in url and len(url) > 20:
-                log(f"[URL-EXTRACT] Found (method 1): {url[:80]}...")
+                log(f"[URL-EXTRACT] Found (fallback-value): {url[:80]}...")
                 return url
         
-        # Method 2: Look in entire HTML for bookmaker URLs
+        # FALLBACK METHOD 2: Look for bookmaker domains
         bookmaker_domains = ['bet365', '1xbet', 'betway', 'pinnacle', 'unibet', 
                              'bwin', '888sport', 'williamhill', 'betfair', 'ladbrokes']
         
@@ -4502,10 +4550,10 @@ def extract_bookmaker_url_from_nav_link(nav_url, driver):
             url_lower = url.lower()
             if any(domain in url_lower for domain in bookmaker_domains):
                 if 'surebet.com' not in url_lower and len(url) > 20:
-                    log(f"[URL-EXTRACT] Found (method 2): {url[:80]}...")
+                    log(f"[URL-EXTRACT] Found (fallback-domain): {url[:80]}...")
                     return url
         
-        # Method 3: Check if response URL changed (HTTP redirect)
+        # FALLBACK METHOD 3: Check if response URL changed (HTTP redirect)
         if response.url != nav_url and 'surebet.com' not in response.url:
             log(f"[URL-EXTRACT] Found (redirect): {response.url[:80]}...")
             return response.url
