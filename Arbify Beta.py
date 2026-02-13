@@ -4612,7 +4612,7 @@ def extract_bookmaker_url_from_nav_link(nav_url, driver):
                         log(f"[URL-EXTRACT] JSON parse error: {e}")
         
         except ImportError:
-            log(f"[URL-EXTRACT] BeautifulSoup not available, using regex fallback")
+            pass  # Silently fall back to regex method
         except Exception as e:
             log(f"[URL-EXTRACT] BeautifulSoup method failed: {e}")
         
