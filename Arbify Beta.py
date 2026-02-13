@@ -15,6 +15,16 @@ import shutil
 import uuid  # correlation_id-hoz
 from collections import deque
 import sys
+import asyncio
+
+# Try to import aiohttp for async parallel URL extraction
+try:
+    import aiohttp
+    AIOHTTP_AVAILABLE = True
+except ImportError:
+    AIOHTTP_AVAILABLE = False
+    print("⚠️ aiohttp not available - install with: pip install aiohttp")
+    print("   Parallel URL extraction will be slower without it.")
 
 warnings.filterwarnings("ignore", category=ResourceWarning)
 
@@ -3733,53 +3743,125 @@ def background_nav_worker():
             if not todo:
                 continue
 
-            # 2) Extract bookmaker URLs from nav links (NO browser tabs opened!)
-            pairs = []
+            # 2) Extract bookmaker URLs using parallel async extraction
             finals = []
             states = []
             
-            log(f"[NAV-WORKER] Processing {len(todo)} tasks with URL extraction (no browser opens)")
+            log(f"[NAV-WORKER] Processing {len(todo)} pairs with parallel async extraction")
             
-            for t in todo:
-                h1, h2 = t.get("hrefs") or (None, None)
-                pairs.append((h1, h2) if (h1 and h2) else None)
-                
-                # Extract bookmaker URLs WITHOUT opening tabs
-                if h1 and h2:
-                    try:
-                        # Extract both URLs
-                        f1 = extract_bookmaker_url_from_nav_link(h1, driver)
-                        f2 = extract_bookmaker_url_from_nav_link(h2, driver)
+            # Try async parallel extraction if aiohttp is available
+            if AIOHTTP_AVAILABLE:
+                try:
+                    # Use asyncio.run() to call async function from sync code
+                    pairs_async = asyncio.run(extract_urls_parallel_async(todo, driver))
+                    
+                    # Process async results
+                    successful = 0
+                    failed = 0
+                    
+                    for idx, (f1, f2) in enumerate(pairs_async):
+                        task = todo[idx]
+                        task_id = task.get('id', 'N/A')
                         
-                        # Determine states
-                        s1 = "success" if (f1 and valid_external(f1)) else "timeout"
-                        s2 = "success" if (f2 and valid_external(f2)) else "timeout"
+                        # Track extraction failures
+                        if 'extraction_failures' not in task:
+                            task['extraction_failures'] = 0
                         
-                        finals.append((f1, f2))
-                        states.append((s1, s2))
-                        
-                        if f1 and f2:
-                            log(f"[NAV-EXTRACT] ✅ {t.get('id', 'N/A')}: Got both URLs")
+                        # Validate both URLs
+                        if f1 and f2 and valid_external(f1) and valid_external(f2):
+                            successful += 1
+                            task['extraction_failures'] = 0  # Reset on success
+                            finals.append((f1, f2))
+                            states.append(("success", "success"))
+                            log(f"[NAV-EXTRACT] ✅ {task_id}: Got both URLs")
                         else:
-                            log(f"[NAV-EXTRACT] ⚠️ {t.get('id', 'N/A')}: f1={bool(f1)}, f2={bool(f2)}")
-                    except Exception as e:
-                        log(f"[NAV-EXTRACT] ❌ {t.get('id', 'N/A')}: Error: {e}")
+                            failed += 1
+                            task['extraction_failures'] += 1
+                            finals.append((f1, f2))
+                            states.append(("timeout", "timeout"))
+                            
+                            # Log failure details
+                            if task['extraction_failures'] < 2:
+                                log(f"[NAV-EXTRACT] ⚠️ {task_id}: Retry {task['extraction_failures']}/2")
+                            else:
+                                log(f"[NAV-EXTRACT] ❌ {task_id}: 2 failures, will try CDP fallback")
+                    
+                    # Show statistics
+                    log(f"[NAV-WORKER] ✅ {successful}/{len(todo)} pairs successful, ❌ {failed}/{len(todo)} failed")
+                    
+                    # Handle CDP fallback for persistent failures
+                    for idx, task in enumerate(todo):
+                        if task.get('extraction_failures', 0) >= 2 and (not finals[idx][0] or not finals[idx][1]):
+                            task_id = task.get('id', 'N/A')
+                            h1, h2 = task.get('hrefs', (None, None))
+                            
+                            if h1 and h2:
+                                log(f"[NAV-FALLBACK] 🔄 {task_id}: Trying CDP method after {task['extraction_failures']} failures")
+                                try:
+                                    # Use old CDP method as fallback
+                                    cdp_pairs = [(h1, h2)]
+                                    cdp_finals, cdp_states = resolve_pairs_round_robin(cdp_pairs)
+                                    
+                                    if cdp_finals and len(cdp_finals) > 0:
+                                        f1, f2 = cdp_finals[0]
+                                        if f1 and f2 and valid_external(f1) and valid_external(f2):
+                                            finals[idx] = (f1, f2)
+                                            states[idx] = ("success", "success")
+                                            task['extraction_failures'] = 0  # Reset after CDP success
+                                            log(f"[NAV-FALLBACK] ✅ {task_id}: CDP succeeded")
+                                        else:
+                                            log(f"[NAV-FALLBACK] ❌ {task_id}: CDP also failed")
+                                except Exception as e:
+                                    log(f"[NAV-FALLBACK] ❌ {task_id}: CDP error: {e}")
+                    
+                except Exception as e:
+                    log(f"[NAV-WORKER] ⚠️ Async extraction error: {e}, falling back to sequential")
+                    # Fallback to sequential extraction
+                    AIOHTTP_AVAILABLE = False  # Disable for this session
+            
+            # Fallback: Sequential extraction if aiohttp not available
+            if not AIOHTTP_AVAILABLE:
+                log(f"[NAV-WORKER] Using sequential extraction (aiohttp not available)")
+                
+                for t in todo:
+                    h1, h2 = t.get("hrefs") or (None, None)
+                    
+                    if h1 and h2:
+                        try:
+                            f1 = extract_bookmaker_url_from_nav_link(h1, driver)
+                            f2 = extract_bookmaker_url_from_nav_link(h2, driver)
+                            
+                            s1 = "success" if (f1 and valid_external(f1)) else "timeout"
+                            s2 = "success" if (f2 and valid_external(f2)) else "timeout"
+                            
+                            finals.append((f1, f2))
+                            states.append((s1, s2))
+                            
+                            if f1 and f2:
+                                log(f"[NAV-EXTRACT] ✅ {t.get('id', 'N/A')}: Got both URLs")
+                            else:
+                                log(f"[NAV-EXTRACT] ⚠️ {t.get('id', 'N/A')}: f1={bool(f1)}, f2={bool(f2)}")
+                        except Exception as e:
+                            log(f"[NAV-EXTRACT] ❌ {t.get('id', 'N/A')}: Error: {e}")
+                            finals.append((None, None))
+                            states.append(("timeout", "timeout"))
+                    else:
                         finals.append((None, None))
                         states.append(("timeout", "timeout"))
-                else:
-                    finals.append((None, None))
-                    states.append(("timeout", "timeout"))
 
             # 3) Eredmények feldolgozása
             for idx, task in enumerate(todo):
                 try:
                     tbody_id = task["id"]
 
-                    if pairs[idx] is None:
-                        # fallback: ha a pár None volt, de a taskban van két href, próbáljuk külön
+                    # Get finals and states
+                    if idx < len(finals):
+                        (f1, f2) = finals[idx]
+                        (s1, s2) = states[idx]
+                    else:
+                        # Fallback if something went wrong
                         h1, h2 = task.get("hrefs") or (None, None)
                         if h1 and h2:
-                            # Use URL extraction instead of opening tabs
                             try:
                                 f1 = extract_bookmaker_url_from_nav_link(h1, driver)
                                 f2 = extract_bookmaker_url_from_nav_link(h2, driver)
@@ -4517,6 +4599,175 @@ def build_url_from_link_obj(link_obj, base_url):
     except Exception as e:
         log(f"[URL-BUILD] Error building URL: {e}")
         return None
+
+
+# ============================================================================
+# ASYNC PARALLEL URL EXTRACTION
+# ============================================================================
+
+async def fetch_url_async(url, cookies, user_agent):
+    """
+    Async fetch of single URL with random delay.
+    Extracts bookmaker URL from HTML response.
+    
+    Args:
+        url: The nav URL to fetch
+        cookies: Dictionary of cookies
+        user_agent: User agent string
+    
+    Returns:
+        Bookmaker URL string or None
+    """
+    import html as html_module
+    
+    # Random delay 0.17-0.33 seconds to prevent rate limiting
+    delay = random.uniform(0.17, 0.33)
+    await asyncio.sleep(delay)
+    
+    try:
+        headers = {
+            'User-Agent': user_agent,
+            'Accept': 'text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8',
+            'Referer': 'https://en.surebet.com/'
+        }
+        
+        # Async HTTP request
+        timeout = aiohttp.ClientTimeout(total=3)
+        async with aiohttp.ClientSession(cookies=cookies, timeout=timeout) as session:
+            async with session.get(url, headers=headers, allow_redirects=False) as response:
+                html = await response.text()
+                base_url = str(response.url) or url
+                
+                # Parse HTML to extract bookmaker URL (synchronous parsing is OK)
+                bookmaker_url = extract_url_from_html(html, base_url)
+                
+                return bookmaker_url
+                
+    except asyncio.TimeoutError:
+        log(f"[URL-EXTRACT] ⏱️ Timeout: {url[:60]}...")
+        return None
+    except Exception as e:
+        log(f"[URL-EXTRACT] ❌ Error: {type(e).__name__}: {str(e)[:100]}")
+        return None
+
+
+def extract_url_from_html(html, base_url):
+    """
+    Extract bookmaker URL from HTML using data-links attribute.
+    Synchronous helper function for async fetch.
+    
+    Args:
+        html: HTML content string
+        base_url: Base URL for making relative URLs absolute
+    
+    Returns:
+        Bookmaker URL string or None
+    """
+    import html as html_module
+    import json
+    from urllib.parse import urlparse
+    
+    def is_surebet_host(url_str):
+        try:
+            parsed = urlparse(url_str)
+            return parsed.hostname and 'surebet.com' in parsed.hostname
+        except:
+            return False
+    
+    try:
+        # Method 1: Try BeautifulSoup (if available)
+        try:
+            from bs4 import BeautifulSoup
+            soup = BeautifulSoup(html, 'html.parser')
+            nav_element = soup.find(id='navigation')
+            
+            if nav_element:
+                data_links = nav_element.get('data-links')
+                if data_links:
+                    data_links_decoded = html_module.unescape(data_links)
+                    links = json.loads(data_links_decoded)
+                    
+                    if isinstance(links, list):
+                        for item in links:
+                            link_obj = item.get('link', {}) if isinstance(item, dict) else {}
+                            complete_url = build_url_from_link_obj(link_obj, base_url)
+                            
+                            if complete_url and not is_surebet_host(complete_url):
+                                return complete_url
+        except ImportError:
+            pass  # BeautifulSoup not available, use regex fallback
+        
+        # Method 2: Regex fallback (works without BeautifulSoup)
+        nav_pattern = r'<[^>]*id=["\']navigation["\'][^>]*data-links=(["\'])([^\1]*?)\1'
+        match = re.search(nav_pattern, html, re.DOTALL)
+        
+        if match:
+            data_links_raw = match.group(2)
+            data_links_decoded = html_module.unescape(data_links_raw)
+            
+            try:
+                links = json.loads(data_links_decoded)
+                
+                if isinstance(links, list):
+                    for item in links:
+                        link_obj = item.get('link', {}) if isinstance(item, dict) else {}
+                        complete_url = build_url_from_link_obj(link_obj, base_url)
+                        
+                        if complete_url and not is_surebet_host(complete_url):
+                            return complete_url
+            except json.JSONDecodeError:
+                pass
+        
+        return None
+        
+    except Exception as e:
+        log(f"[URL-PARSE] Error: {e}")
+        return None
+
+
+async def extract_urls_parallel_async(tasks, driver):
+    """
+    Extract all URLs in parallel using asyncio + aiohttp.
+    
+    Args:
+        tasks: List of task dictionaries with 'hrefs' key
+        driver: Selenium driver (for cookies and user agent)
+    
+    Returns:
+        List of (url1, url2) tuples for each task
+    """
+    cookies = {c['name']: c['value'] for c in driver.get_cookies()}
+    user_agent = driver.execute_script("return navigator.userAgent;")
+    
+    # Create fetch tasks for all URLs
+    fetch_tasks = []
+    
+    for task in tasks:
+        h1, h2 = task.get('hrefs', (None, None))
+        if h1 and h2:
+            fetch_tasks.append(fetch_url_async(h1, cookies, user_agent))
+            fetch_tasks.append(fetch_url_async(h2, cookies, user_agent))
+        else:
+            fetch_tasks.append(asyncio.sleep(0, result=None))
+            fetch_tasks.append(asyncio.sleep(0, result=None))
+    
+    # Run all fetches in parallel
+    log(f"[NAV-WORKER] 🚀 Starting parallel fetch of {len(fetch_tasks)} URLs...")
+    start_time = time.time()
+    
+    results = await asyncio.gather(*fetch_tasks, return_exceptions=True)
+    
+    elapsed = time.time() - start_time
+    log(f"[NAV-WORKER] ⚡ Parallel fetch completed in {elapsed:.2f}s")
+    
+    # Group results into pairs
+    pairs = []
+    for i in range(0, len(results), 2):
+        f1 = results[i] if not isinstance(results[i], Exception) else None
+        f2 = results[i+1] if not isinstance(results[i+1], Exception) else None
+        pairs.append((f1, f2))
+    
+    return pairs
 
 
 def extract_bookmaker_url_from_nav_link(nav_url, driver):
