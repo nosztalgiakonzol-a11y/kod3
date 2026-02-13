@@ -4769,6 +4769,10 @@ def build_url_from_link_obj(link_obj, base_url):
         if query_string:
             final_url += f"?{query_string}"
         
+        # Preserve hash fragment (fixes vegas.hu URLs)
+        if parsed.fragment:
+            final_url += f"#{parsed.fragment}"
+        
         return final_url
         
     except Exception as e:
