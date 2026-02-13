@@ -7550,6 +7550,9 @@ if __name__ == "__main__":
         to_close = []
         open_requests = []
 
+        # 🔄 Collect tabs for parallel JSON update
+        tabs_to_update = []
+
         items = list(next_tabs.items())
         for url, info in items:
             handle = info["handle"]
@@ -7563,12 +7566,15 @@ if __name__ == "__main__":
             except Exception:
                 pass
 
-            # 🔄 JSON AUTO-UPDATE: Inject JSON updates without full refresh
+            # 🔄 JSON AUTO-UPDATE: Collect tabs that need updating
             try:
                 if ENABLE_JSON_AUTO_UPDATE:
-                    manage_auto_update(driver, "NEXT", info)
+                    now = time.time()
+                    last_update = info.get('last_json_update', 0)
+                    if now - last_update >= JSON_UPDATE_INTERVAL:
+                        tabs_to_update.append((driver, "NEXT", info))
             except Exception as e:
-                log(f"[AUTO-UPDATE] Error: {e}")
+                log(f"[AUTO-UPDATE] Error checking update time: {e}")
 
             if info.get("needs_scan", False):
                 curr_ids_tab, pend_del, should_close, found_next = next_scan_tab(url, info, curr_ids_main)
@@ -7579,12 +7585,37 @@ if __name__ == "__main__":
                 if should_close:
                     to_close.append(url)
 
+        # 🔄 Update all NEXT tabs in parallel
+        if tabs_to_update:
+            try:
+                if len(tabs_to_update) > 1:
+                    # Use parallel for multiple tabs
+                    tab_info = [(drv, ptype) for drv, ptype, _ in tabs_to_update]
+                    results = inject_json_updates_parallel(tab_info)
+                    # Update timestamps
+                    now = time.time()
+                    for _, _, info in tabs_to_update:
+                        info['last_json_update'] = now
+                    log(f"[JSON-UPDATE] NEXT: Updated {len(tabs_to_update)} tabs in parallel")
+                else:
+                    # Use sequential for single tab
+                    drv, ptype, info = tabs_to_update[0]
+                    count = inject_json_updates_to_page(drv, ptype)
+                    info['last_json_update'] = time.time()
+                    if count > 0:
+                        log(f"[JSON-UPDATE] NEXT auto-updated: {count} surebets")
+            except Exception as e:
+                log(f"[JSON-UPDATE] Error updating NEXT tabs: {e}")
+
         return next_all_curr_ids, pending_deletes, to_close, open_requests
 
     def scan_group_tabs_evented(curr_ids_main: set, higher_ids: set):
         group_all_curr_ids = set()
         pending_deletes = []
         to_close = []
+
+        # 🔄 Collect tabs for parallel JSON update
+        tabs_to_update = []
 
         items = list(group_tabs.items())
         for url, info in items:
@@ -7599,12 +7630,15 @@ if __name__ == "__main__":
             except Exception:
                 pass
 
-            # 🔄 JSON AUTO-UPDATE: Inject JSON updates without full refresh
+            # 🔄 JSON AUTO-UPDATE: Collect tabs that need updating
             try:
                 if ENABLE_JSON_AUTO_UPDATE:
-                    manage_auto_update(driver, "GROUP", info)
+                    now = time.time()
+                    last_update = info.get('last_json_update', 0)
+                    if now - last_update >= JSON_UPDATE_INTERVAL:
+                        tabs_to_update.append((driver, "GROUP", info))
             except Exception as e:
-                log(f"[AUTO-UPDATE] Error: {e}")
+                log(f"[AUTO-UPDATE] Error checking update time: {e}")
 
             if info.get("needs_scan", False):
                 curr_ids_tab, pend_del, should_close = group_scan_tab(url, info, higher_ids)
@@ -7612,6 +7646,28 @@ if __name__ == "__main__":
                 pending_deletes.extend(pend_del)
                 if should_close:
                     to_close.append(url)
+
+        # 🔄 Update all GROUP tabs in parallel
+        if tabs_to_update:
+            try:
+                if len(tabs_to_update) > 1:
+                    # Use parallel for multiple tabs
+                    tab_info = [(drv, ptype) for drv, ptype, _ in tabs_to_update]
+                    results = inject_json_updates_parallel(tab_info)
+                    # Update timestamps
+                    now = time.time()
+                    for _, _, info in tabs_to_update:
+                        info['last_json_update'] = now
+                    log(f"[JSON-UPDATE] GROUP: Updated {len(tabs_to_update)} tabs in parallel")
+                else:
+                    # Use sequential for single tab
+                    drv, ptype, info = tabs_to_update[0]
+                    count = inject_json_updates_to_page(drv, ptype)
+                    info['last_json_update'] = time.time()
+                    if count > 0:
+                        log(f"[JSON-UPDATE] GROUP auto-updated: {count} surebets")
+            except Exception as e:
+                log(f"[JSON-UPDATE] Error updating GROUP tabs: {e}")
 
         return group_all_curr_ids, pending_deletes, to_close
 
