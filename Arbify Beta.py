@@ -4531,7 +4531,48 @@ def extract_bookmaker_url_from_nav_link(nav_url, driver):
         except Exception as e:
             log(f"[URL-EXTRACT] data-links parse error: {e}")
         
-        # FALLBACK METHOD 1: Extract from value attributes
+        # FALLBACK METHOD 1: Extract data-links with regex (same as JavaScript method)
+        # Look for: id="navigation" data-links="..."
+        import html as html_module
+        import json
+        from urllib.parse import urlparse
+        
+        # Pattern to match data-links attribute (handle both single and double quotes)
+        nav_pattern = r'<[^>]*id=["\']navigation["\'][^>]*data-links=(["\'])([^\1]*?)\1'
+        match = re.search(nav_pattern, html, re.DOTALL)
+        
+        if match:
+            try:
+                # Get the data-links content (group 2)
+                data_links_raw = match.group(2)
+                
+                # Decode HTML entities (&amp; -> &, &quot; -> ", etc.)
+                data_links_decoded = html_module.unescape(data_links_raw)
+                
+                # Parse JSON
+                links = json.loads(data_links_decoded)
+                
+                if isinstance(links, list):
+                    # Extract URLs from links array
+                    for item in links:
+                        if not isinstance(item, dict):
+                            continue
+                        
+                        link_obj = item.get('link', {})
+                        url = link_obj.get('url')
+                        
+                        if url:
+                            # Check if external (not surebet.com)
+                            parsed = urlparse(url)
+                            
+                            if parsed.hostname and 'surebet.com' not in parsed.hostname:
+                                log(f"[URL-EXTRACT] Found (fallback-regex): {url[:80]}...")
+                                return url
+            
+            except (json.JSONDecodeError, AttributeError, KeyError) as e:
+                log(f"[URL-EXTRACT] Fallback regex parsing failed: {e}")
+        
+        # FALLBACK METHOD 2: Extract from value attributes
         url_pattern = r'value=["\'](https?://[^"\']+)["\']'
         url_matches = re.findall(url_pattern, html)
         
@@ -4541,7 +4582,7 @@ def extract_bookmaker_url_from_nav_link(nav_url, driver):
                 log(f"[URL-EXTRACT] Found (fallback-value): {url[:80]}...")
                 return url
         
-        # FALLBACK METHOD 2: Look for bookmaker domains
+        # FALLBACK METHOD 3: Look for bookmaker domains
         bookmaker_domains = ['bet365', '1xbet', 'betway', 'pinnacle', 'unibet', 
                              'bwin', '888sport', 'williamhill', 'betfair', 'ladbrokes']
         
@@ -4553,7 +4594,7 @@ def extract_bookmaker_url_from_nav_link(nav_url, driver):
                     log(f"[URL-EXTRACT] Found (fallback-domain): {url[:80]}...")
                     return url
         
-        # FALLBACK METHOD 3: Check if response URL changed (HTTP redirect)
+        # FALLBACK METHOD 4: Check if response URL changed (HTTP redirect)
         if response.url != nav_url and 'surebet.com' not in response.url:
             log(f"[URL-EXTRACT] Found (redirect): {response.url[:80]}...")
             return response.url
