@@ -4602,6 +4602,176 @@ def show_update_timestamp(driver):
         log(f"[TIMESTAMP] Error: {e}")
 
 
+async def fetch_json_async_single(url, cookies, user_agent):
+    """
+    Async fetch single JSON file
+    Used for parallel JSON fetching
+    """
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                url,
+                cookies=cookies,
+                headers={
+                    'User-Agent': user_agent,
+                    'Accept': 'application/json',
+                    'Referer': 'https://en.surebet.com/surebets',
+                },
+                timeout=aiohttp.ClientTimeout(total=5)
+            ) as response:
+                if response.status == 200:
+                    return await response.json()
+                else:
+                    log(f"[JSON-PARALLEL] Status {response.status} for {url}")
+                    return None
+    except Exception as e:
+        log(f"[JSON-PARALLEL] Error fetching {url}: {e}")
+        return None
+
+
+async def fetch_all_json_parallel_async(tab_info_list):
+    """
+    Fetch JSON for multiple tabs in parallel
+    
+    Args:
+        tab_info_list: List of (driver, page_type) tuples
+        
+    Returns:
+        List of (driver, page_type, json_data) tuples
+    """
+    import time
+    start_time = time.time()
+    
+    # Create fetch tasks for all tabs
+    tasks = []
+    for driver, page_type in tab_info_list:
+        # Get cookies and user agent for this tab
+        cookies = {c['name']: c['value'] for c in driver.get_cookies()}
+        user_agent = driver.execute_script("return navigator.userAgent;")
+        
+        # JSON URL (same for all pages currently)
+        url = "https://en.surebet.com/surebets?product=surebets&autoupdate=1&format=json"
+        
+        # Create async task
+        task = fetch_json_async_single(url, cookies, user_agent)
+        tasks.append((driver, page_type, task))
+    
+    # Execute all fetches in parallel
+    results = []
+    for driver, page_type, task in tasks:
+        json_data = await task
+        results.append((driver, page_type, json_data))
+    
+    elapsed = time.time() - start_time
+    log(f"[JSON-PARALLEL] Fetched {len(results)} JSON files in {elapsed:.2f}s")
+    
+    return results
+
+
+def inject_json_updates_parallel(tab_info_list):
+    """
+    Inject JSON updates to multiple tabs in parallel
+    
+    Args:
+        tab_info_list: List of (driver, page_type) tuples
+        
+    Returns:
+        Dict of {driver: count} with number of surebets per tab
+    """
+    if not tab_info_list:
+        return {}
+    
+    # Check if aiohttp is available
+    if not AIOHTTP_AVAILABLE:
+        log("[JSON-PARALLEL] aiohttp not available, using sequential fallback")
+        # Fallback to sequential
+        results = {}
+        for driver, page_type in tab_info_list:
+            count = inject_json_updates_to_page(driver, page_type)
+            results[driver] = count
+        return results
+    
+    try:
+        # Fetch all JSON in parallel
+        json_results = asyncio.run(fetch_all_json_parallel_async(tab_info_list))
+        
+        # Inject HTML to each tab (sequential but fast)
+        results = {}
+        for driver, page_type, json_data in json_results:
+            if json_data:
+                count = inject_json_data_to_page(driver, page_type, json_data)
+                results[driver] = count
+            else:
+                results[driver] = 0
+        
+        return results
+        
+    except Exception as e:
+        log(f"[JSON-PARALLEL] Error: {e}")
+        # Fallback to sequential
+        results = {}
+        for driver, page_type in tab_info_list:
+            count = inject_json_updates_to_page(driver, page_type)
+            results[driver] = count
+        return results
+
+
+def inject_json_data_to_page(driver, page_type, json_data):
+    """
+    Inject pre-fetched JSON data into page
+    (Used by parallel fetching)
+    """
+    import time
+    start_time = time.time()
+    
+    try:
+        if not json_data:
+            log(f"[JSON-INJECT] No JSON data for {page_type}")
+            return 0
+        
+        # Step 1: Parse table array
+        table = json_data.get('table', [])
+        
+        if not table:
+            log(f"[JSON-INJECT] No table data in JSON for {page_type}")
+            return 0
+        
+        # Step 2: Build HTML from all items
+        t2 = time.time()
+        all_tbody_html = ''.join([item.get('html', '') for item in table])
+        build_time = (time.time() - t2) * 1000
+        log(f"[PERF] HTML build: {build_time:.1f}ms")
+        
+        # Step 3: Inject into #table-container
+        t3 = time.time()
+        driver.execute_script("""
+            var container = document.querySelector('#table-container');
+            if (container) {
+                container.innerHTML = arguments[0];
+            } else {
+                console.error('Container #table-container not found');
+            }
+        """, all_tbody_html)
+        inject_time = (time.time() - t3) * 1000
+        log(f"[PERF] Injection: {inject_time:.1f}ms")
+        
+        # Step 4: Show visual feedback
+        t4 = time.time()
+        if JSON_SHOW_UPDATE_TIME and page_type in ["GROUP", "NEXT"]:
+            show_update_timestamp(driver)
+        timestamp_time = (time.time() - t4) * 1000
+        log(f"[PERF] Timestamp: {timestamp_time:.1f}ms")
+        
+        total_time = (time.time() - start_time) * 1000
+        log(f"[PERF] TOTAL: {total_time:.1f}ms")
+        log(f"[JSON-INJECT] {page_type} updated: {len(table)} surebets")
+        return len(table)
+        
+    except Exception as e:
+        log(f"[JSON-INJECT] Error for {page_type}: {e}")
+        return 0
+
+
 def inject_json_updates_to_page(driver, page_type="GROUP"):
     """
     Fetch JSON and inject HTML into page WITHOUT full refresh
