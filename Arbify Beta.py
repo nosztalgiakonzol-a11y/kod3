@@ -3720,7 +3720,7 @@ def background_nav_worker():
     """
     NAV-only: OPEN_TASKS folyamatos feldolgozása háttérben.
     """
-    global link_cache, DRIVER_DEAD
+    global link_cache, DRIVER_DEAD, AIOHTTP_AVAILABLE
 
     while True:
         # ha a driver halott, itt is lépjünk ki
