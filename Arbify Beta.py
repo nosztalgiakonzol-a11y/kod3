@@ -1551,6 +1551,148 @@ def smart_sleep(base_seconds, jitter_percent=0.3):
     time.sleep(sleep_time)
 
 # =============================================================================
+# 🤖 HUMAN BEHAVIOR SIMULATION - Anti-Detection
+# =============================================================================
+
+def random_mouse_movement(driver):
+    """
+    Move mouse to random coordinates to simulate human behavior
+    Uses smooth movements with random speed
+    """
+    try:
+        from selenium.webdriver.common.action_chains import ActionChains
+        
+        # Get viewport dimensions
+        viewport_width = driver.execute_script("return window.innerWidth;")
+        viewport_height = driver.execute_script("return window.innerHeight;")
+        
+        # Random target coordinates (avoid edges)
+        target_x = random.randint(50, viewport_width - 50)
+        target_y = random.randint(50, viewport_height - 50)
+        
+        # Move mouse with ActionChains
+        actions = ActionChains(driver)
+        actions.move_by_offset(target_x, target_y).perform()
+        
+        # Small pause
+        time.sleep(random.uniform(0.1, 0.3))
+        
+    except Exception as e:
+        pass  # Silently fail - not critical
+
+def random_scroll_behavior(driver):
+    """
+    Scroll the page randomly to simulate human reading behavior
+    """
+    try:
+        # Get page dimensions
+        page_height = driver.execute_script("return document.body.scrollHeight")
+        viewport_height = driver.execute_script("return window.innerHeight")
+        
+        if page_height <= viewport_height:
+            return  # Nothing to scroll
+        
+        # Random scroll direction and amount
+        scroll_direction = random.choice(['down', 'down', 'down', 'up'])  # 75% down, 25% up
+        
+        if scroll_direction == 'down':
+            scroll_amount = random.randint(100, 400)
+            driver.execute_script(f"window.scrollBy({{top: {scroll_amount}, behavior: 'smooth'}});")
+        else:
+            scroll_amount = random.randint(50, 200)
+            driver.execute_script(f"window.scrollBy({{top: -{scroll_amount}, behavior: 'smooth'}});")
+        
+        # Pause as if reading
+        time.sleep(random.uniform(0.5, 1.5))
+        
+    except Exception as e:
+        pass  # Silently fail
+
+def safe_random_click(driver):
+    """
+    Click on a SAFE element (non-interactive) to simulate human behavior
+    NEVER clicks on links, buttons, or any functional elements
+    """
+    try:
+        # Find safe elements to click (non-interactive decorative elements)
+        safe_selectors = [
+            "h1, h2, h3, h4, h5, h6",  # Headers
+            ".container:not(a):not(button)",  # Containers
+            ".header:not(a):not(button)",  # Header areas
+            ".title:not(a):not(button)",  # Title text
+            "thead th:not([onclick])",  # Table headers (non-sortable)
+        ]
+        
+        for selector in safe_selectors:
+            try:
+                elements = driver.find_elements(By.CSS_SELECTOR, selector)
+                if not elements:
+                    continue
+                
+                # Filter out interactive elements
+                safe_elements = []
+                for element in elements[:20]:  # Check first 20
+                    try:
+                        # Check if element has click handlers or is interactive
+                        tag_name = element.tag_name.lower()
+                        if tag_name in ['a', 'button', 'input', 'select', 'textarea']:
+                            continue
+                        
+                        # Check for onclick attribute
+                        if element.get_attribute('onclick'):
+                            continue
+                        
+                        # Check for href (link)
+                        if element.get_attribute('href'):
+                            continue
+                        
+                        # Check if inside a link
+                        parent = element.find_element(By.XPATH, "..")
+                        if parent and parent.tag_name.lower() == 'a':
+                            continue
+                        
+                        safe_elements.append(element)
+                    except:
+                        continue
+                
+                if safe_elements:
+                    # Click a random safe element
+                    target = random.choice(safe_elements)
+                    target.click()
+                    time.sleep(random.uniform(0.2, 0.5))
+                    return  # Success
+                    
+            except:
+                continue
+        
+    except Exception as e:
+        pass  # Silently fail - not critical
+
+def simulate_human_activity(driver, force=False):
+    """
+    Randomly simulate human behaviors (mouse movement, scrolling, clicking)
+    Call this periodically during normal operations
+    
+    Args:
+        driver: Selenium WebDriver instance
+        force: If True, always perform some action (for testing)
+    """
+    try:
+        # Random chance of doing something (or nothing)
+        rand = random.random()
+        
+        if force or rand < 0.20:  # 20% chance: mouse movement
+            random_mouse_movement(driver)
+        elif force or rand < 0.50:  # 30% chance: scrolling
+            random_scroll_behavior(driver)
+        elif force or rand < 0.60:  # 10% chance: safe clicking
+            safe_random_click(driver)
+        # 40% chance: do nothing (natural idle)
+        
+    except Exception as e:
+        pass  # Silently fail - not critical
+
+# =============================================================================
 
 
 # ---------- Chrome init (100% friss profil minden indításnál) ----------
