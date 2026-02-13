@@ -3874,9 +3874,6 @@ def background_nav_worker():
                         else:
                             f1, f2 = h1, h2
                             s1, s2 = ("timeout", "timeout")
-                    else:
-                        (f1, f2) = finals[idx]
-                        (s1, s2) = states[idx]
 
                     task["finals"] = (f1, f2)
 
