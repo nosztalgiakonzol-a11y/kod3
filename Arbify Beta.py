@@ -1676,18 +1676,54 @@ def simulate_human_activity(driver, force=False):
     Args:
         driver: Selenium WebDriver instance
         force: If True, always perform some action (for testing)
+    
+    Note: This function can block for 0.5-2 seconds. Use simulate_human_activity_async()
+          for non-blocking execution.
     """
     try:
         # Random chance of doing something (or nothing)
+        # Reduced by 50% from original: 10% + 15% + 5% = 30% vs 60% before
         rand = random.random()
         
-        if force or rand < 0.20:  # 20% chance: mouse movement
+        if force or rand < 0.10:  # 10% chance: mouse movement (was 20%)
             random_mouse_movement(driver)
-        elif force or rand < 0.50:  # 30% chance: scrolling
+        elif force or rand < 0.25:  # 15% chance: scrolling (was 30%)
             random_scroll_behavior(driver)
-        elif force or rand < 0.60:  # 10% chance: safe clicking
+        elif force or rand < 0.30:  # 5% chance: safe clicking (was 10%)
             safe_random_click(driver)
-        # 40% chance: do nothing (natural idle)
+        # 70% chance: do nothing (natural idle, was 40%)
+        
+    except Exception as e:
+        pass  # Silently fail - not critical
+
+def simulate_human_activity_async(driver):
+    """
+    Non-blocking version of simulate_human_activity()
+    Runs human behaviors in a background thread so it doesn't slow down the main script
+    
+    Args:
+        driver: Selenium WebDriver instance
+    
+    Usage:
+        simulate_human_activity_async(driver)  # Returns immediately!
+        # Your script continues without waiting
+    
+    Performance:
+        - Zero impact on main thread (0% slowdown)
+        - Behaviors run in background
+        - Thread auto-cleanup (daemon=True)
+    """
+    import threading
+    
+    try:
+        # Create and start background thread
+        thread = threading.Thread(
+            target=simulate_human_activity,
+            args=(driver,),
+            daemon=True  # Thread dies when main program exits
+        )
+        thread.start()
+        # Returns immediately - no blocking!
         
     except Exception as e:
         pass  # Silently fail - not critical
