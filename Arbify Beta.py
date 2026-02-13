@@ -4442,11 +4442,90 @@ def manage_auto_update(driver, page_type, info):
 # BOOKMAKER URL EXTRACTION (Avoid Rate Limits)
 # ============================================================================
 
+def build_url_from_link_obj(link_obj, base_url):
+    """
+    Build complete URL from link object, handling params/query/data.
+    EXACT TRANSLATION of JavaScript buildUrlFromLinkObj function.
+    
+    Args:
+        link_obj: Dictionary with 'url', 'params', 'query', 'data' keys
+        base_url: Base URL for making relative URLs absolute
+    
+    Returns:
+        Complete URL string with all parameters, or None if failed
+    """
+    from urllib.parse import urlparse, urljoin, urlencode, parse_qs
+    
+    raw_url = link_obj.get('url') if isinstance(link_obj, dict) else None
+    if not raw_url:
+        return None
+    
+    try:
+        # Make absolute URL
+        abs_url = urljoin(base_url, raw_url)
+        parsed = urlparse(abs_url)
+        
+        # Start with existing query params (if any)
+        params = {}
+        if parsed.query:
+            for k, v_list in parse_qs(parsed.query).items():
+                params[k] = v_list[0] if v_list else ''
+        
+        # Helper function to add params (same logic as JavaScript)
+        def add_params(obj, label):
+            if not obj:
+                return 0
+            added = 0
+            
+            if isinstance(obj, list):
+                # Handle array: [{name:"key", value:"val"}] or [["k","v"]]
+                for it in obj:
+                    if isinstance(it, dict) and 'name' in it and 'value' in it:
+                        # Format: {name: "key", value: "val"}
+                        params[str(it['name'])] = str(it['value'])
+                        added += 1
+                    elif isinstance(it, (list, tuple)) and len(it) >= 2:
+                        # Format: ["key", "val"]
+                        params[str(it[0])] = str(it[1])
+                        added += 1
+                return added
+            
+            if isinstance(obj, dict):
+                # Handle object: {key: "value"}
+                for k, v in obj.items():
+                    if v is not None and v != '':
+                        params[str(k)] = str(v)
+                        added += 1
+                return added
+            
+            return 0
+        
+        # Add params/query/data (same order as JavaScript)
+        a = add_params(link_obj.get('params'), 'params')
+        b = add_params(link_obj.get('query'), 'query')
+        c = add_params(link_obj.get('data'), 'data')
+        
+        # Build final URL with all parameters
+        query_string = urlencode(params, doseq=False)
+        
+        final_url = f"{parsed.scheme}://{parsed.netloc}{parsed.path}"
+        if query_string:
+            final_url += f"?{query_string}"
+        
+        return final_url
+        
+    except Exception as e:
+        log(f"[URL-BUILD] Error building URL: {e}")
+        return None
+
+
 def extract_bookmaker_url_from_nav_link(nav_url, driver):
     """
     Extract bookmaker redirect URL from nav link WITHOUT opening it in browser.
     Uses the data-links attribute from #navigation element (95%+ reliable).
     This avoids rate limits by only fetching HTML, not opening pages.
+    
+    EXACT TRANSLATION of JavaScript resolveSurebetNavRedirect function.
     
     Args:
         nav_url: The /nav/surebet/ link to extract from
@@ -4455,6 +4534,10 @@ def extract_bookmaker_url_from_nav_link(nav_url, driver):
     Returns:
         Bookmaker URL string, or None if extraction failed
     """
+    import html as html_module
+    import json
+    from urllib.parse import urlparse
+    
     try:
         # Get authentication from Selenium
         cookies = {c['name']: c['value'] for c in driver.get_cookies()}
@@ -4474,7 +4557,7 @@ def extract_bookmaker_url_from_nav_link(nav_url, driver):
             nav_url,
             cookies=cookies,
             headers=headers,
-            timeout=3,  # Fast timeout
+            timeout=3,
             allow_redirects=True
         )
         
@@ -4483,130 +4566,97 @@ def extract_bookmaker_url_from_nav_link(nav_url, driver):
             return None
         
         html = response.text
+        base_url = response.url or nav_url
+        
+        # Helper function to check if URL is surebet.com
+        def is_surebet_host(url_str):
+            try:
+                parsed = urlparse(url_str)
+                return parsed.hostname and 'surebet.com' in parsed.hostname
+            except:
+                return False
         
         # PRIMARY METHOD: Parse data-links attribute from #navigation element
-        # This is the official data structure used by the website
+        # Try with BeautifulSoup first (if available)
         try:
             from bs4 import BeautifulSoup
-            import html as html_module
             
             soup = BeautifulSoup(html, 'html.parser')
             nav_element = soup.find(id='navigation')
             
             if nav_element:
-                data_links = nav_element.get('data-links')
+                data_links_raw = nav_element.get('data-links', '')
                 
-                if data_links:
-                    # Decode HTML entities
-                    data_links = html_module.unescape(data_links)
+                if data_links_raw:
+                    # Decode HTML entities (like JavaScript decodeHtmlEntities)
+                    data_links_decoded = html_module.unescape(data_links_raw)
                     
                     # Parse JSON
-                    import json
                     try:
-                        links = json.loads(data_links)
+                        links = json.loads(data_links_decoded)
                         
                         if isinstance(links, list):
-                            # Extract URLs from links array
+                            # Build complete URLs and find first external one
                             for item in links:
                                 if not isinstance(item, dict):
                                     continue
                                 
                                 link_obj = item.get('link', {})
-                                url = link_obj.get('url')
+                                built_url = build_url_from_link_obj(link_obj, base_url)
                                 
-                                if url:
-                                    # Check if external (not surebet.com)
-                                    from urllib.parse import urlparse
-                                    parsed = urlparse(url)
-                                    
-                                    if parsed.hostname and 'surebet.com' not in parsed.hostname:
-                                        log(f"[URL-EXTRACT] Found (data-links): {url[:80]}...")
-                                        return url
+                                if built_url and not is_surebet_host(built_url):
+                                    log(f"[URL-EXTRACT] ✅ Found (data-links+BS4): {built_url[:80]}...")
+                                    return built_url
                     
-                    except json.JSONDecodeError:
-                        log(f"[URL-EXTRACT] JSON parse error for data-links")
+                    except json.JSONDecodeError as e:
+                        log(f"[URL-EXTRACT] JSON parse error: {e}")
         
         except ImportError:
-            log(f"[URL-EXTRACT] BeautifulSoup not available, using fallback")
+            log(f"[URL-EXTRACT] BeautifulSoup not available, using regex fallback")
         except Exception as e:
-            log(f"[URL-EXTRACT] data-links parse error: {e}")
+            log(f"[URL-EXTRACT] BeautifulSoup method failed: {e}")
         
-        # FALLBACK METHOD 1: Extract data-links with regex (same as JavaScript method)
-        # Look for: id="navigation" data-links="..."
-        import html as html_module
-        import json
-        from urllib.parse import urlparse
-        
-        # Pattern to match data-links attribute (handle both single and double quotes)
+        # FALLBACK METHOD: Extract data-links with regex (works without BeautifulSoup)
+        # Pattern to match: <... id="navigation" ... data-links="...">
         nav_pattern = r'<[^>]*id=["\']navigation["\'][^>]*data-links=(["\'])([^\1]*?)\1'
         match = re.search(nav_pattern, html, re.DOTALL)
         
         if match:
             try:
-                # Get the data-links content (group 2)
+                # Get the data-links content
                 data_links_raw = match.group(2)
                 
-                # Decode HTML entities (&amp; -> &, &quot; -> ", etc.)
+                # Decode HTML entities
                 data_links_decoded = html_module.unescape(data_links_raw)
                 
                 # Parse JSON
                 links = json.loads(data_links_decoded)
                 
                 if isinstance(links, list):
-                    # Extract URLs from links array
+                    # Build complete URLs and find first external one
                     for item in links:
                         if not isinstance(item, dict):
                             continue
                         
                         link_obj = item.get('link', {})
-                        url = link_obj.get('url')
+                        built_url = build_url_from_link_obj(link_obj, base_url)
                         
-                        if url:
-                            # Check if external (not surebet.com)
-                            parsed = urlparse(url)
-                            
-                            if parsed.hostname and 'surebet.com' not in parsed.hostname:
-                                log(f"[URL-EXTRACT] Found (fallback-regex): {url[:80]}...")
-                                return url
+                        if built_url and not is_surebet_host(built_url):
+                            log(f"[URL-EXTRACT] ✅ Found (data-links+regex): {built_url[:80]}...")
+                            return built_url
             
             except (json.JSONDecodeError, AttributeError, KeyError) as e:
-                log(f"[URL-EXTRACT] Fallback regex parsing failed: {e}")
+                log(f"[URL-EXTRACT] Regex fallback parsing failed: {e}")
         
-        # FALLBACK METHOD 2: Extract from value attributes
-        url_pattern = r'value=["\'](https?://[^"\']+)["\']'
-        url_matches = re.findall(url_pattern, html)
-        
-        for url in url_matches:
-            # Filter out surebet.com URLs - we want bookmaker URLs
-            if 'surebet.com' not in url and len(url) > 20:
-                log(f"[URL-EXTRACT] Found (fallback-value): {url[:80]}...")
-                return url
-        
-        # FALLBACK METHOD 3: Look for bookmaker domains
-        bookmaker_domains = ['bet365', '1xbet', 'betway', 'pinnacle', 'unibet', 
-                             'bwin', '888sport', 'williamhill', 'betfair', 'ladbrokes']
-        
-        all_urls = re.findall(r'https?://[^\s"\'<>]+', html)
-        for url in all_urls:
-            url_lower = url.lower()
-            if any(domain in url_lower for domain in bookmaker_domains):
-                if 'surebet.com' not in url_lower and len(url) > 20:
-                    log(f"[URL-EXTRACT] Found (fallback-domain): {url[:80]}...")
-                    return url
-        
-        # FALLBACK METHOD 4: Check if response URL changed (HTTP redirect)
-        if response.url != nav_url and 'surebet.com' not in response.url:
-            log(f"[URL-EXTRACT] Found (redirect): {response.url[:80]}...")
-            return response.url
-        
-        log(f"[URL-EXTRACT] No bookmaker URL found in {nav_url[:60]}...")
+        # If we get here, no external URL was found
+        log(f"[URL-EXTRACT] ❌ No external URL found in {nav_url[:60]}...")
         return None
         
     except requests.Timeout:
-        log(f"[URL-EXTRACT] Timeout for {nav_url[:60]}...")
+        log(f"[URL-EXTRACT] ⏱️ Timeout for {nav_url[:60]}...")
         return None
     except Exception as e:
-        log(f"[URL-EXTRACT] Error: {e}")
+        log(f"[URL-EXTRACT] ❌ Error: {e}")
         return None
 
 
