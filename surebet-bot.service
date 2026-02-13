@@ -1,0 +1,27 @@
+[Unit]
+Description=Surebet Bot Service
+After=network.target
+
+[Service]
+Type=simple
+User=YOUR_USERNAME_HERE
+WorkingDirectory=/home/YOUR_USERNAME_HERE/surebet-bot
+Environment="DISPLAY=:99"
+Environment="PATH=/home/YOUR_USERNAME_HERE/surebet-bot/venv/bin:/usr/local/bin:/usr/bin:/bin"
+
+# Start Xvfb before the bot
+ExecStartPre=/usr/bin/Xvfb :99 -screen 0 1920x1080x24 &
+
+# Start the bot
+ExecStart=/home/YOUR_USERNAME_HERE/surebet-bot/venv/bin/python3.11 "Arbify Beta.py"
+
+# Restart on failure
+Restart=always
+RestartSec=10
+
+# Logging
+StandardOutput=append:/home/YOUR_USERNAME_HERE/surebet-bot/bot.log
+StandardError=append:/home/YOUR_USERNAME_HERE/surebet-bot/bot.error.log
+
+[Install]
+WantedBy=multi-user.target
