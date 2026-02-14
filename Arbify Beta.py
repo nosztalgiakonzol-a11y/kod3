@@ -998,6 +998,152 @@ def remove_seen_line(tbody_id):
     try:
         with open(SEEN_FILE, "r", encoding="utf-8") as f:
             lines = [ln for ln in f.readlines() if f" | {tbody_id}" not in ln]
+
+# =============================================================================
+# 🔄 ASYNC DATABASE OPERATIONS (Non-blocking with Timeout)
+# =============================================================================
+
+async def save_surebet_async(surebet_data: dict):
+    """
+    Async save to database with 5s timeout
+    Non-blocking - returns immediately to caller
+    """
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                SAVE_TIP_URL,
+                headers={
+                    "apikey": SUPABASE_ANON_KEY,
+                    "Authorization": f"Bearer {SUPABASE_ANON_KEY}",
+                    "Content-Type": "application/json"
+                },
+                json=surebet_data,
+                timeout=aiohttp.ClientTimeout(total=5)  # 5s timeout
+            ) as response:
+                if response.status in [200, 201]:
+                    log("[DB-SAVE] ✅ Saved successfully")
+                    return True
+                else:
+                    log(f"[DB-SAVE] ❌ Error: {response.status}")
+                    return False
+    except asyncio.TimeoutError:
+        log("[DB-SAVE] ⏱️ Timeout after 5s")
+        return False
+    except Exception as e:
+        log(f"[DB-SAVE] ❌ Error: {e}")
+        return False
+
+
+async def update_surebet_async(surebet_id: str, update_data: dict):
+    """
+    Async update to database with 5s timeout
+    Non-blocking - returns immediately to caller
+    """
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                UPDATE_TIP_URL,
+                headers={
+                    "apikey": SUPABASE_ANON_KEY,
+                    "Authorization": f"Bearer {SUPABASE_ANON_KEY}",
+                    "Content-Type": "application/json"
+                },
+                json={"id": surebet_id, **update_data},
+                timeout=aiohttp.ClientTimeout(total=5)  # 5s timeout
+            ) as response:
+                if response.status in [200, 204]:
+                    log("[DB-UPDATE] ✅ Updated successfully")
+                    return True
+                else:
+                    log(f"[DB-UPDATE] ❌ Error: {response.status}")
+                    return False
+    except asyncio.TimeoutError:
+        log("[DB-UPDATE] ⏱️ Timeout after 5s")
+        return False
+    except Exception as e:
+        log(f"[DB-UPDATE] ❌ Error: {e}")
+        return False
+
+
+async def delete_surebet_async(surebet_id: str):
+    """
+    Async delete from database with 5s timeout
+    Non-blocking - returns immediately to caller
+    """
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.post(
+                DELETE_TIP_URL,
+                headers={
+                    "apikey": SUPABASE_ANON_KEY,
+                    "Authorization": f"Bearer {SUPABASE_ANON_KEY}",
+                    "Content-Type": "application/json"
+                },
+                json={"id": surebet_id},
+                timeout=aiohttp.ClientTimeout(total=5)  # 5s timeout
+            ) as response:
+                if response.status in [200, 204]:
+                    log("[DB-DELETE] ✅ Deleted successfully")
+                    return True
+                else:
+                    log(f"[DB-DELETE] ❌ Error: {response.status}")
+                    return False
+    except asyncio.TimeoutError:
+        log("[DB-DELETE] ⏱️ Timeout after 5s")
+        return False
+    except Exception as e:
+        log(f"[DB-DELETE] ❌ Error: {e}")
+        return False
+
+
+def save_surebet_to_db_async(surebet_data: dict):
+    """
+    Non-blocking save wrapper
+    Creates async task and returns immediately
+    """
+    try:
+        # Try to create task in current event loop
+        loop = asyncio.get_running_loop()
+        loop.create_task(save_surebet_async(surebet_data))
+    except RuntimeError:
+        # No running loop, try to run in thread
+        try:
+            asyncio.run(save_surebet_async(surebet_data))
+        except Exception as e:
+            log(f"[DB-SAVE] Could not execute async: {e}")
+
+
+def update_surebet_in_db_async(surebet_id: str, update_data: dict):
+    """
+    Non-blocking update wrapper
+    Creates async task and returns immediately
+    """
+    try:
+        loop = asyncio.get_running_loop()
+        loop.create_task(update_surebet_async(surebet_id, update_data))
+    except RuntimeError:
+        try:
+            asyncio.run(update_surebet_async(surebet_id, update_data))
+        except Exception as e:
+            log(f"[DB-UPDATE] Could not execute async: {e}")
+
+
+def delete_surebet_from_db_async(surebet_id: str):
+    """
+    Non-blocking delete wrapper
+    Creates async task and returns immediately
+    """
+    try:
+        loop = asyncio.get_running_loop()
+        loop.create_task(delete_surebet_async(surebet_id))
+    except RuntimeError:
+        try:
+            asyncio.run(delete_surebet_async(surebet_id))
+        except Exception as e:
+            log(f"[DB-DELETE] Could not execute async: {e}")
+
+# =============================================================================
+
         with open(SEEN_FILE, "w", encoding="utf-8") as f:
             f.writelines(lines)
     except Exception:
