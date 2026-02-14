@@ -447,8 +447,17 @@ SCRAPING_FORCE_FIRST_TIME = True       # Force scrape on first encounter
 # Fetch JSON and inject HTML into page without full refresh
 # Like MAIN page autoupdate, but for GROUP and NEXT pages
 ENABLE_JSON_AUTO_UPDATE = True          # Enable JSON auto-update
-JSON_UPDATE_INTERVAL = 35               # Update every 35 seconds
+JSON_UPDATE_INTERVAL_MIN = 50           # Minimum interval (random 50-60s)
+JSON_UPDATE_INTERVAL_MAX = 60           # Maximum interval (random 50-60s)
 JSON_SHOW_UPDATE_TIME = True            # Show "Updated X seconds ago"
+# =============================================================================
+
+# =============================================================================
+# 📑 TAB LIMITS (Bot Detection Reduction)
+# =============================================================================
+# Limit number of tabs to be more human-like (reduced from 5 to 4)
+MAX_GROUP_TABS = 4                      # Maximum GROUP tabs (reduced from 5)
+MAX_NEXT_TABS = 4                       # Maximum NEXT tabs (reduced from 5)
 # =============================================================================
 
 # =============================================================================
@@ -4838,7 +4847,7 @@ def inject_json_updates_to_page(driver, page_type="GROUP"):
 def manage_auto_update(driver, page_type, info):
     """
     Manage auto-update for GROUP/NEXT pages
-    Runs every JSON_UPDATE_INTERVAL seconds
+    Runs every JSON_UPDATE_INTERVAL_MIN-JSON_UPDATE_INTERVAL_MAX seconds (random)
     """
     if not ENABLE_JSON_AUTO_UPDATE:
         return False
@@ -4846,8 +4855,11 @@ def manage_auto_update(driver, page_type, info):
     now = time.time()
     last_update = info.get('last_json_update', 0)
     
+    # Random interval between min and max
+    update_interval = random.uniform(JSON_UPDATE_INTERVAL_MIN, JSON_UPDATE_INTERVAL_MAX)
+    
     # Check if time to update
-    if now - last_update >= JSON_UPDATE_INTERVAL:
+    if now - last_update >= update_interval:
         try:
             # Fetch and inject
             count = inject_json_updates_to_page(driver, page_type)
@@ -7238,7 +7250,7 @@ def run_dynamic_bootstrap():
         
         # Rekurzívan nyitjuk a NEXT oldalakat és keressük a további NEXT linkeket
         opened_next = set()
-        while next_urls_to_open and (time.time() - phase1_start) < NEXT_PHASE_TIMEOUT:
+        while next_urls_to_open and (time.time() - phase1_start) < NEXT_PHASE_TIMEOUT and len(opened_next) < MAX_NEXT_TABS:
             next_url = next_urls_to_open.pop(0)
             if next_url in opened_next or next_url in next_tabs:
                 continue
@@ -7312,17 +7324,20 @@ def run_dynamic_bootstrap():
         
         # === FÁZIS 2b: GROUP oldalak párhuzamos megnyitása ===
         group_count = len(group_urls_to_open)
-        log(f"🔍 {group_count} GROUP oldal nyitása...")
+        log(f"🔍 {group_count} GROUP oldal nyitása (max {MAX_GROUP_TABS})...")
+        
+        # Limit to MAX_GROUP_TABS
+        group_urls_list = list(group_urls_to_open)[:MAX_GROUP_TABS]
         
         # BOOTSTRAP: szinkron nyitás hogy biztosan megnyíljanak
-        for i, group_url in enumerate(group_urls_to_open):
+        for i, group_url in enumerate(group_urls_list):
             if (time.time() - bootstrap_start) >= MAX_BOOTSTRAP_TIME:
                 log("⏰ 5 perces timeout – BOOTSTRAP befejezése")
                 break
             try:
                 _open_group_tab_sync(group_url)
                 # Main delay adjusted for Option B (0.35-0.47s to total 0.55-0.67s with micro-delays)
-                if i < len(group_urls_to_open) - 1:  # Not after the last tab
+                if i < len(group_urls_list) - 1:  # Not after the last tab
                     delay = random.uniform(0.35, 0.47)
                     time.sleep(delay)
             except Exception as e:
@@ -7598,7 +7613,8 @@ if __name__ == "__main__":
                 if ENABLE_JSON_AUTO_UPDATE:
                     now = time.time()
                     last_update = info.get('last_json_update', 0)
-                    if now - last_update >= JSON_UPDATE_INTERVAL:
+                    update_interval = random.uniform(JSON_UPDATE_INTERVAL_MIN, JSON_UPDATE_INTERVAL_MAX)
+                    if now - last_update >= update_interval:
                         tabs_to_update.append((driver, "NEXT", info))
             except Exception as e:
                 log(f"[AUTO-UPDATE] Error checking update time: {e}")
@@ -7662,7 +7678,8 @@ if __name__ == "__main__":
                 if ENABLE_JSON_AUTO_UPDATE:
                     now = time.time()
                     last_update = info.get('last_json_update', 0)
-                    if now - last_update >= JSON_UPDATE_INTERVAL:
+                    update_interval = random.uniform(JSON_UPDATE_INTERVAL_MIN, JSON_UPDATE_INTERVAL_MAX)
+                    if now - last_update >= update_interval:
                         tabs_to_update.append((driver, "GROUP", info))
             except Exception as e:
                 log(f"[AUTO-UPDATE] Error checking update time: {e}")
