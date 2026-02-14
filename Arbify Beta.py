@@ -142,8 +142,8 @@ ACCOUNTS = {
     # },
 }
 
-ACCOUNT_ROTATE_MIN = float(os.getenv("SB_ACCOUNT_ROTATE_MIN", "30.5"))
-ACCOUNT_ROTATION_PAUSE_SEC = 17  # Pause before account rotation
+ACCOUNT_ROTATE_MIN = float(os.getenv("SB_ACCOUNT_ROTATE_MIN", "28.333"))  # 28 min 20 sec
+ACCOUNT_ROTATION_PAUSE_SEC = 120  # 2 minutes pause before account rotation
 RUNTIME_STATE_FILE = "runtime_state.json"  # persistent timer state
 
 # Runtime state management functions (must be defined before usage below)
@@ -2549,7 +2549,7 @@ def get_bet_name(td):
     except:
         return "Ismeretlen szelvény"
 
-def robust_event_text(tbody, attempts=3, sleep=0.06):
+def robust_event_text(tbody, attempts=3, sleep=0.04):  # 33% faster (was 0.06)
     for _ in range(attempts):
         try:
             els = tbody.find_elements(By.CSS_SELECTOR, "td[class^='event event-']")
@@ -3057,7 +3057,7 @@ def remove_gone_ids_from_open_tasks(gone_ids: set):
         warn(f"⚠️ remove_gone_ids_from_open_tasks hiba: {e}")
 
 # ---------- stale-biztos DOM snapshot ----------
-def dom_snapshot_by_id(tbody_id: str, attempts=4, sleep=0.08):
+def dom_snapshot_by_id(tbody_id: str, attempts=4, sleep=0.053):  # 33% faster (was 0.08)
     js = r"""
     const id = arguments[0];
     function snap(id){
