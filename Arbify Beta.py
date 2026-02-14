@@ -998,6 +998,10 @@ def remove_seen_line(tbody_id):
     try:
         with open(SEEN_FILE, "r", encoding="utf-8") as f:
             lines = [ln for ln in f.readlines() if f" | {tbody_id}" not in ln]
+        with open(SEEN_FILE, "w", encoding="utf-8") as f:
+            f.writelines(lines)
+    except Exception as e:
+        log(f"[SEEN] Error removing line: {e}")
 
 # =============================================================================
 # 🔄 ASYNC DATABASE OPERATIONS (Non-blocking with Timeout)
