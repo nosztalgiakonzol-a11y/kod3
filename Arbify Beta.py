@@ -5723,14 +5723,14 @@ def _open_group_tab_sync(group_url: str):
         original = None
 
     try:
-        # Pre-action delay for natural behavior
-        time.sleep(random.uniform(0.1, 0.3))
+        # Pre-action delay for natural behavior (reduced for Option B)
+        time.sleep(random.uniform(0.05, 0.1))
         
         # Use window.open() for more natural tab opening
         driver.execute_script("window.open(arguments[0], '_blank');", group_url)
         
-        # Network timing variation
-        time.sleep(random.uniform(0.2, 0.5))
+        # Network timing variation (reduced for Option B)
+        time.sleep(random.uniform(0.1, 0.2))
         
         # Switch to new tab
         driver.switch_to.window(driver.window_handles[-1])
@@ -5825,14 +5825,14 @@ def _open_next_tab_sync(next_url: str):
         original = None
 
     try:
-        # Pre-action delay for natural behavior
-        time.sleep(random.uniform(0.1, 0.3))
+        # Pre-action delay for natural behavior (reduced for Option B)
+        time.sleep(random.uniform(0.05, 0.1))
         
         # Use window.open() for more natural tab opening
         driver.execute_script("window.open(arguments[0], '_blank');", next_url)
         
-        # Network timing variation
-        time.sleep(random.uniform(0.2, 0.5))
+        # Network timing variation (reduced for Option B)
+        time.sleep(random.uniform(0.1, 0.2))
         
         # Switch to new tab
         driver.switch_to.window(driver.window_handles[-1])
@@ -7248,9 +7248,9 @@ def run_dynamic_bootstrap():
                 _open_next_tab_sync(next_url)
                 opened_next.add(next_url)
                 
-                # Natural delay between tab openings (0.55-0.67 seconds)
+                # Main delay adjusted for Option B (0.35-0.47s to total 0.55-0.67s with micro-delays)
                 if next_urls_to_open:  # Only if there are more tabs to open
-                    delay = random.uniform(0.55, 0.67)
+                    delay = random.uniform(0.35, 0.47)
                     time.sleep(delay)
                 
                 # Scan az újonnan megnyitott NEXT oldalon további NEXT linkekért
@@ -7321,9 +7321,9 @@ def run_dynamic_bootstrap():
                 break
             try:
                 _open_group_tab_sync(group_url)
-                # Natural delay between tab openings (0.55-0.67 seconds)
+                # Main delay adjusted for Option B (0.35-0.47s to total 0.55-0.67s with micro-delays)
                 if i < len(group_urls_to_open) - 1:  # Not after the last tab
-                    delay = random.uniform(0.55, 0.67)
+                    delay = random.uniform(0.35, 0.47)
                     time.sleep(delay)
             except Exception as e:
                 warn(f"⚠️ GROUP oldal megnyitás hiba ({group_url}): {e}")
