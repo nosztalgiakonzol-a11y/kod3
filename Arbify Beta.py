@@ -1895,115 +1895,131 @@ def simulate_human_activity_async(driver):
 PROFILE_DIR = ACTIVE_ACCOUNT["profile_dir"]
 os.makedirs(PROFILE_DIR, exist_ok=True)
 
-chrome_options = Options()
+def create_chrome_options():
+    """Create fresh ChromeOptions object - must be called for each Chrome instance"""
+    chrome_options = Options()
 
-if HEADLESS:
-    chrome_options.add_argument("--headless=new")
+    if HEADLESS:
+        chrome_options.add_argument("--headless=new")
 
-# 🔥 Minden account a saját fix profilkönyvtárát használja
-chrome_options.add_argument(f"--user-data-dir={PROFILE_DIR}")
+    # 🔥 Minden account a saját fix profilkönyvtárát használja
+    chrome_options.add_argument(f"--user-data-dir={PROFILE_DIR}")
 
-# (Opcionális) ha akarod mellé, maradhat az incognito is, de nem szükséges:
-# chrome_options.add_argument("--incognito")
+    # (Opcionális) ha akarod mellé, maradhat az incognito is, de nem szükséges:
+    # chrome_options.add_argument("--incognito")
 
-# Gyorsító / tiltó flag-ek
-chrome_options.add_argument("--disable-features=OptimizationHints,TranslateUI")
-chrome_options.add_argument("--disable-site-isolation-trials")
-chrome_options.add_argument("--disable-translate")
-chrome_options.add_argument("--disable-infobars")
-chrome_options.add_argument("--disable-sync")
-chrome_options.add_argument("--disable-client-side-phishing-detection")
-# GPU disabled only in headless mode (see line 546)
-chrome_options.add_argument("--disable-dev-shm-usage")
-chrome_options.add_argument("--disable-blink-features=AutomationControlled")
-chrome_options.add_argument("--window-size=960,540")
-chrome_options.add_argument("--disable-popup-blocking")
+    # Gyorsító / tiltó flag-ek
+    chrome_options.add_argument("--disable-features=OptimizationHints,TranslateUI")
+    chrome_options.add_argument("--disable-site-isolation-trials")
+    chrome_options.add_argument("--disable-translate")
+    chrome_options.add_argument("--disable-infobars")
+    chrome_options.add_argument("--disable-sync")
+    chrome_options.add_argument("--disable-client-side-phishing-detection")
+    # GPU disabled only in headless mode (see line 546)
+    chrome_options.add_argument("--disable-dev-shm-usage")
+    chrome_options.add_argument("--disable-blink-features=AutomationControlled")
+    chrome_options.add_argument("--window-size=960,540")
+    chrome_options.add_argument("--disable-popup-blocking")
 
-# 🚀 Multi-tab performance optimizations (40-72 tabs)
-# Memory management - increase heap size for JavaScript/V8
-chrome_options.add_argument("--max-old-space-size=4096")  # 4GB heap for JavaScript
-chrome_options.add_argument("--js-flags=--max-old-space-size=4096")  # V8 heap size
+    # 🚀 Multi-tab performance optimizations (40-72 tabs)
+    # Memory management - increase heap size for JavaScript/V8
+    chrome_options.add_argument("--max-old-space-size=4096")  # 4GB heap for JavaScript
+    chrome_options.add_argument("--js-flags=--max-old-space-size=4096")  # V8 heap size
 
-# Background tab optimization - aggressive memory management
-chrome_options.add_argument("--aggressive-cache-discard")  # Aggressive cache cleanup
-# chrome_options.add_argument("--aggressive-tab-discard")  # ❌ REMOVED - Breaks tab switching!
-chrome_options.add_argument("--disable-background-timer-throttling")  # Timer optimization
-chrome_options.add_argument("--disable-backgrounding-occluded-windows")  # Window optimization
-chrome_options.add_argument("--disable-renderer-backgrounding")  # Renderer optimization
+    # Background tab optimization - aggressive memory management
+    chrome_options.add_argument("--aggressive-cache-discard")  # Aggressive cache cleanup
+    # chrome_options.add_argument("--aggressive-tab-discard")  # ❌ REMOVED - Breaks tab switching!
+    chrome_options.add_argument("--disable-background-timer-throttling")  # Timer optimization
+    chrome_options.add_argument("--disable-backgrounding-occluded-windows")  # Window optimization
+    chrome_options.add_argument("--disable-renderer-backgrounding")  # Renderer optimization
 
-# Process optimization - reduce number of processes
-chrome_options.add_argument("--disable-features=IsolateOrigins,site-per-process")  # Fewer processes
-chrome_options.add_argument("--no-sandbox")  # Disable sandbox (faster, less secure)
-chrome_options.add_argument("--disable-setuid-sandbox")  # Additional sandbox disable
-# chrome_options.add_argument("--disable-gpu")  # ❌ REMOVED - User requested, might slow down
+    # Process optimization - reduce number of processes
+    chrome_options.add_argument("--disable-features=IsolateOrigins,site-per-process")  # Fewer processes
+    chrome_options.add_argument("--no-sandbox")  # Disable sandbox (faster, less secure)
+    chrome_options.add_argument("--disable-setuid-sandbox")  # Additional sandbox disable
+    # chrome_options.add_argument("--disable-gpu")  # ❌ REMOVED - User requested, might slow down
 
-# Resource optimization - disable unnecessary features
-chrome_options.add_argument("--disable-extensions")  # No extension overhead
-chrome_options.add_argument("--disable-plugins")  # Disable Flash, PDF, etc.
-chrome_options.add_argument("--disable-web-security")  # Faster loading (less security)
+    # Resource optimization - disable unnecessary features
+    chrome_options.add_argument("--disable-extensions")  # No extension overhead
+    chrome_options.add_argument("--disable-plugins")  # Disable Flash, PDF, etc.
+    chrome_options.add_argument("--disable-web-security")  # Faster loading (less security)
 
-# Performance optimizations: reduce RAM usage and speed up page loads
-chrome_options.add_argument("--blink-settings=imagesEnabled=false")  # Disable images
-chrome_options.add_argument("--disable-remote-fonts")  # Disable remote fonts
-chrome_options.add_argument("--disk-cache-size=50000000")  # 50MB disk cache
-chrome_options.add_argument("--media-cache-size=50000000")  # 50MB media cache
+    # Performance optimizations: reduce RAM usage and speed up page loads
+    chrome_options.add_argument("--blink-settings=imagesEnabled=false")  # Disable images
+    chrome_options.add_argument("--disable-remote-fonts")  # Disable remote fonts
+    chrome_options.add_argument("--disk-cache-size=50000000")  # 50MB disk cache
+    chrome_options.add_argument("--media-cache-size=50000000")  # 50MB media cache
 
-# Optimization #3: Network optimizations (+10-15% speed)
-chrome_options.add_argument("--enable-quic")  # Enable QUIC protocol (faster than TCP)
-chrome_options.add_argument("--enable-tcp-fast-open")  # TCP Fast Open
-chrome_options.add_argument("--dns-prefetch-disable")  # Disable DNS prefetch (save bandwidth)
+    # Optimization #3: Network optimizations (+10-15% speed)
+    chrome_options.add_argument("--enable-quic")  # Enable QUIC protocol (faster than TCP)
+    chrome_options.add_argument("--enable-tcp-fast-open")  # TCP Fast Open
+    chrome_options.add_argument("--dns-prefetch-disable")  # Disable DNS prefetch (save bandwidth)
 
-# 🎭 User Agent Rotation - Random selection for bot detection avoidance
-selected_user_agent = random.choice(USER_AGENTS)
-log(f"🎭 User Agent kiválasztva: {selected_user_agent[:80]}...")
-chrome_options.add_argument(f"--user-agent={selected_user_agent}")
+    # 🎭 User Agent Rotation - Random selection for bot detection avoidance
+    selected_user_agent = random.choice(USER_AGENTS)
+    log(f"🎭 User Agent kiválasztva: {selected_user_agent[:80]}...")
+    chrome_options.add_argument(f"--user-agent={selected_user_agent}")
 
-# Prefs 1
-prefs1 = {
-    "credentials_enable_service": False,
-    "profile.password_manager_enabled": False,
-    "profile.default_content_setting_values.notifications": 2,
-    "translate_whitelists": {"lt": "en"},
-    "translate": {"enabled": "true"},
-}
-chrome_options.add_experimental_option("prefs", prefs1)
+    # Prefs 1
+    prefs1 = {
+        "credentials_enable_service": False,
+        "profile.password_manager_enabled": False,
+        "profile.default_content_setting_values.notifications": 2,
+        "translate_whitelists": {"lt": "en"},
+        "translate": {"enabled": "true"},
+    }
+    chrome_options.add_experimental_option("prefs", prefs1)
 
-# Performance optimizations: disable images, CSS, geolocation, etc.
-# 🎨 CSS kikapcsolás/bekapcsolás (DISABLE_CSS változó alapján)
-if DISABLE_CSS:
-    log("🎨 CSS betöltés KIKAPCSOLVA (DISABLE_CSS=True) - Gyorsabb de csúnya")
-    css_setting = 2  # 2 = Block CSS
-else:
-    log("🎨 CSS betöltés BEKAPCSOLVA (DISABLE_CSS=False) - Lassabb de szép")
-    css_setting = 1  # 1 = Allow CSS
+    # Performance optimizations: disable images, CSS, geolocation, etc.
+    # 🎨 CSS kikapcsolás/bekapcsolás (DISABLE_CSS változó alapján)
+    if DISABLE_CSS:
+        log("🎨 CSS betöltés KIKAPCSOLVA (DISABLE_CSS=True) - Gyorsabb de csúnya")
+        css_setting = 2  # 2 = Block CSS
+    else:
+        log("🎨 CSS betöltés BEKAPCSOLVA (DISABLE_CSS=False) - Lassabb de szép")
+        css_setting = 1  # 1 = Allow CSS
 
-prefs2 = {
-    "profile.default_content_setting_values.popups": 1,
-    "profile.managed_default_content_settings.images": 2,  # Disable images
-    "profile.default_content_setting_values.stylesheets": css_setting,  # CSS: configurable! (FIXED: was "stylesheet" singular)
-    "profile.managed_default_content_settings.geolocation": 2,
-    "profile.managed_default_content_settings.notifications": 2,
-    "profile.managed_default_content_settings.media_stream": 2,
-}
-chrome_options.add_experimental_option("prefs", prefs2)
+    prefs2 = {
+        "profile.default_content_setting_values.popups": 1,
+        "profile.managed_default_content_settings.images": 2,  # Disable images
+        "profile.default_content_setting_values.stylesheets": css_setting,  # CSS: configurable! (FIXED: was "stylesheet" singular)
+        "profile.managed_default_content_settings.geolocation": 2,
+        "profile.managed_default_content_settings.notifications": 2,
+        "profile.managed_default_content_settings.media_stream": 2,
+    }
+    chrome_options.add_experimental_option("prefs", prefs2)
 
-# Logging
-try:
-    chrome_options.set_capability("pageLoadStrategy", "eager")
-    chrome_options.set_capability("goog:loggingPrefs", {"performance": "ALL"})
-except Exception:
-    pass
-
-# 🔥 Chrome indítása egyszer, tisztán
-try:
-    driver = uc.Chrome(options=chrome_options, version_main=143)
-except Exception as e:
-    print(f"First Chrome start attempt failed: {e}")
+    # Logging
     try:
-        driver = uc.Chrome(options=chrome_options)
-    except Exception as e2:
-        print(f"❌ Chrome start FAILED: {e2}")
-        raise SystemExit(1)
+        chrome_options.set_capability("pageLoadStrategy", "eager")
+        chrome_options.set_capability("goog:loggingPrefs", {"performance": "ALL"})
+    except Exception:
+        pass
+    
+    return chrome_options
+
+# 🔥 Chrome indítása egyszer, tisztán - with retry logic
+driver = None
+for attempt in range(3):
+    try:
+        chrome_options = create_chrome_options()  # Fresh options for each attempt!
+        if attempt == 0:
+            driver = uc.Chrome(options=chrome_options, version_main=143)
+        else:
+            driver = uc.Chrome(options=chrome_options)
+        log(f"✅ Chrome started successfully on attempt {attempt + 1}")
+        break
+    except Exception as e:
+        print(f"Chrome start attempt {attempt + 1}/3 failed: {e}")
+        if "ChromeDriver" in str(e) and "version" in str(e):
+            print("⚠️ ChromeDriver version mismatch detected!")
+            print("💡 Tip: Update ChromeDriver or use: pip install webdriver-manager")
+        if attempt < 2:
+            print(f"🔄 Retrying in 2 seconds...")
+            time.sleep(2)
+        else:
+            print(f"❌ Chrome start FAILED after 3 attempts: {e}")
+            raise SystemExit(1)
 
 uc.Chrome.__del__ = lambda self: None
 
