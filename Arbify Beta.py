@@ -5723,8 +5723,17 @@ def _open_group_tab_sync(group_url: str):
         original = None
 
     try:
-        driver.switch_to.new_window('tab')
-        driver.get(group_url)
+        # Pre-action delay for natural behavior
+        time.sleep(random.uniform(0.1, 0.3))
+        
+        # Use window.open() for more natural tab opening
+        driver.execute_script("window.open(arguments[0], '_blank');", group_url)
+        
+        # Network timing variation
+        time.sleep(random.uniform(0.2, 0.5))
+        
+        # Switch to new tab
+        driver.switch_to.window(driver.window_handles[-1])
         _inject_disable_animations()
         handle = driver.current_window_handle
         handle_birth[handle] = time.time()
@@ -5816,8 +5825,17 @@ def _open_next_tab_sync(next_url: str):
         original = None
 
     try:
-        driver.switch_to.new_window('tab')
-        driver.get(next_url)
+        # Pre-action delay for natural behavior
+        time.sleep(random.uniform(0.1, 0.3))
+        
+        # Use window.open() for more natural tab opening
+        driver.execute_script("window.open(arguments[0], '_blank');", next_url)
+        
+        # Network timing variation
+        time.sleep(random.uniform(0.2, 0.5))
+        
+        # Switch to new tab
+        driver.switch_to.window(driver.window_handles[-1])
         _inject_disable_animations()
         handle = driver.current_window_handle
         handle_birth[handle] = time.time()
@@ -7230,6 +7248,11 @@ def run_dynamic_bootstrap():
                 _open_next_tab_sync(next_url)
                 opened_next.add(next_url)
                 
+                # Natural delay between tab openings (0.55-0.67 seconds)
+                if next_urls_to_open:  # Only if there are more tabs to open
+                    delay = random.uniform(0.55, 0.67)
+                    time.sleep(delay)
+                
                 # Scan az újonnan megnyitott NEXT oldalon további NEXT linkekért
                 if next_url in next_tabs:
                     info = next_tabs[next_url]
@@ -7292,12 +7315,16 @@ def run_dynamic_bootstrap():
         log(f"🔍 {group_count} GROUP oldal nyitása...")
         
         # BOOTSTRAP: szinkron nyitás hogy biztosan megnyíljanak
-        for group_url in group_urls_to_open:
+        for i, group_url in enumerate(group_urls_to_open):
             if (time.time() - bootstrap_start) >= MAX_BOOTSTRAP_TIME:
                 log("⏰ 5 perces timeout – BOOTSTRAP befejezése")
                 break
             try:
                 _open_group_tab_sync(group_url)
+                # Natural delay between tab openings (0.55-0.67 seconds)
+                if i < len(group_urls_to_open) - 1:  # Not after the last tab
+                    delay = random.uniform(0.55, 0.67)
+                    time.sleep(delay)
             except Exception as e:
                 warn(f"⚠️ GROUP oldal megnyitás hiba ({group_url}): {e}")
         
