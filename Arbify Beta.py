@@ -8083,10 +8083,10 @@ if __name__ == "__main__":
     tab_cleanup_thread.start()
     log("🧹 TAB cleanup worker elindítva")
 
-    # Smart async JSON refresh worker
-    smart_refresh_thread = threading.Thread(target=smart_json_refresh_loop, daemon=True)
-    smart_refresh_thread.start()
-    log("🔄 Smart async JSON refresh worker elindítva")
+    # Smart async JSON refresh worker - DISABLED (using unified cycle instead)
+    # smart_refresh_thread = threading.Thread(target=smart_json_refresh_loop, daemon=True)
+    # smart_refresh_thread.start()
+    log("⚠️ Old smart_json_refresh_loop DISABLED (using unified cycle to prevent constant tab cycling)")
 
     # Autoupdate indítása Shift+P-vel, ha kell
     ensure_main_autoupdate()
