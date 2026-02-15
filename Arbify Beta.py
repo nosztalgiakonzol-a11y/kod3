@@ -8939,6 +8939,96 @@ def open_new_tabs_and_inject(driver, new_group_urls, new_next_urls, json_data, g
         return 0
 
 
+def check_and_disable_autoupdate(driver, main_tab_handle, next_tabs):
+    """
+    Check and disable auto-update on MAIN and NEXT pages
+    Integrated into scraping cycle - runs every 60-75s
+    """
+    disabled_count = 0
+    current_handle = driver.current_window_handle
+    
+    try:
+        # Check MAIN page
+        if main_tab_handle:
+            try:
+                driver.switch_to.window(main_tab_handle)
+                if disable_autoupdate_on_page(driver, "MAIN"):
+                    disabled_count += 1
+            except Exception as e:
+                log(f"[AUTO-UPDATE] MAIN check error: {e}")
+        
+        # Check NEXT pages
+        for url, tab_info in list(next_tabs.items()):
+            try:
+                driver.switch_to.window(tab_info['handle'])
+                if disable_autoupdate_on_page(driver, "NEXT"):
+                    disabled_count += 1
+            except Exception as e:
+                log(f"[AUTO-UPDATE] NEXT check error: {e}")
+        
+        # Switch back
+        driver.switch_to.window(current_handle)
+        
+        if disabled_count > 0:
+            log(f"[AUTO-UPDATE] ✅ Disabled on {disabled_count} pages")
+        else:
+            log(f"[AUTO-UPDATE] All pages already have auto-update disabled")
+        
+    except Exception as e:
+        log(f"[AUTO-UPDATE] Error: {e}")
+
+
+def disable_autoupdate_on_page(driver, page_type):
+    """
+    Disable auto-update on current page
+    Multiple selector fallbacks + JavaScript
+    Returns True if disabled something, False if already disabled
+    """
+    try:
+        # Try common selectors for auto-update buttons/checkboxes
+        selectors = [
+            '#auto-update-toggle',
+            '.auto-update-btn',
+            '[data-auto-update]',
+            'input[type="checkbox"][name*="auto"]',
+            'button[data-toggle="auto-update"]',
+        ]
+        
+        for selector in selectors:
+            try:
+                btn = driver.find_element(By.CSS_SELECTOR, selector)
+                # Check if it's enabled
+                is_enabled = btn.is_selected() if btn.get_attribute('type') == 'checkbox' else btn.get_attribute('checked') == 'true'
+                
+                if is_enabled:
+                    btn.click()
+                    log(f"[{page_type}] ✅ Auto-update disabled via {selector}")
+                    return True
+            except:
+                continue
+        
+        # JavaScript fallback - disable all auto-update related checkboxes
+        driver.execute_script("""
+            const autoElements = document.querySelectorAll(
+                '[id*="auto"][id*="update"], [class*="auto"][class*="update"], [data-auto-update]'
+            );
+            let disabled = false;
+            autoElements.forEach(el => {
+                if (el.type === 'checkbox' && el.checked) {
+                    el.checked = false;
+                    disabled = true;
+                }
+            });
+            return disabled;
+        """)
+        
+        return False
+        
+    except Exception as e:
+        log(f"[{page_type}] Auto-update check error: {e}")
+        return False
+
+
 def scrape_all_group_and_next_tabs(driver, group_tabs, next_tabs):
     """
     Final step: Scrape ALL GROUP and NEXT tabs
