@@ -8679,6 +8679,10 @@ async def fetch_unified_json(driver):
         cookies = {c['name']: c['value'] for c in driver.get_cookies()}
         user_agent = driver.execute_script("return navigator.userAgent;")
         
+        # Log request for monitoring
+        if rate_monitor:
+            rate_monitor.log_request(url)
+        
         # Async fetch with aiohttp
         async with aiohttp.ClientSession() as session:
             async with session.get(
@@ -9088,6 +9092,14 @@ def unified_json_refresh_and_scrape_cycle(driver, main_tab_handle, group_tabs, n
             log("[UNIFIED] ═══════════════════════════════════════")
             log("[UNIFIED] 🔄 Starting new cycle")
             log("[UNIFIED] ═══════════════════════════════════════")
+            
+            # Log statistics
+            if rate_monitor:
+                rate_monitor.log_stats()
+            
+            # Check and disable auto-update
+            log("[UNIFIED] Step 0: Checking auto-update states...")
+            check_and_disable_autoupdate(driver, main_tab_handle, next_tabs)
             
             # ─────────────────────────────────────────────
             # STEP 1: Fetch ONE JSON for ALL tabs
