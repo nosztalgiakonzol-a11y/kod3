@@ -194,6 +194,17 @@ Runtime: {runtime:.1f} minutes
             pass
 
 
+# =============================================================================
+# Initialize Global Request Rate Monitor
+# =============================================================================
+try:
+    rate_monitor = RequestRateMonitor()
+    print("[INIT] ✅ Request rate monitor initialized → request_stats.txt will be created")
+except Exception as e:
+    print(f"[INIT] ⚠️ Failed to initialize rate monitor: {e}")
+    rate_monitor = None
+
+
 def _is_driver_connection_error(exc: Exception) -> bool:
     """
     Felismeri a klasszikus 'HTTPConnectionPool / WinError 10061 / Max retries exceeded' típusú hibákat,
