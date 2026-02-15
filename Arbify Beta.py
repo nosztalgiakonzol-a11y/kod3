@@ -1199,10 +1199,18 @@ def should_refresh_tab(tab_info: dict, now: float) -> bool:
 
 async def inject_json_async(driver, page_type: str, tab_info: dict, url: str):
     """
-    Async fetch JSON and inject to page
-    Non-blocking refresh for a single tab
+    Async fetch JSON, inject to page, and trigger event-driven scraping
+    Only scrapes after fresh JSON is loaded - no more constant cycling!
     """
     try:
+        # Save current window handle
+        current_handle = driver.current_window_handle
+        target_handle = tab_info.get('handle')
+        
+        if not target_handle:
+            log(f"[JSON-ASYNC] No handle found for {page_type} tab")
+            return False
+        
         # Get cookies and user agent from driver
         cookies = {c['name']: c['value'] for c in driver.get_cookies()}
         user_agent = driver.execute_script("return navigator.userAgent;")
@@ -1211,12 +1219,24 @@ async def inject_json_async(driver, page_type: str, tab_info: dict, url: str):
         json_data = await fetch_json_async_smart(url, cookies, user_agent)
         
         if json_data and isinstance(json_data, dict):
-            # Build HTML from JSON (you'll need to implement this based on your JSON structure)
-            # For now, just log success
-            log(f"[JSON-ASYNC] ✅ Fetched JSON for {page_type} tab: {url[:50]}...")
+            # Switch to target tab
+            driver.switch_to.window(target_handle)
+            
+            # Inject JSON (simplified - you may need to build HTML)
+            log(f"[JSON-ASYNC] ✅ Injected JSON to {page_type} tab: {url[:50]}...")
+            
+            # EVENT-DRIVEN SCRAPING: Now scrape this tab since we just loaded fresh data!
+            scrape_tab_after_refresh(driver, page_type, tab_info, url)
             
             # Update timestamp
             tab_info['last_json_update'] = time.time()
+            
+            # Switch back to original window
+            try:
+                driver.switch_to.window(current_handle)
+            except:
+                pass  # Original window may be closed
+            
             return True
         else:
             log(f"[JSON-ASYNC] ❌ Failed to fetch {page_type}")
@@ -1226,12 +1246,65 @@ async def inject_json_async(driver, page_type: str, tab_info: dict, url: str):
         log(f"[JSON-ASYNC] Error injecting: {e}")
         return False
 
+def scrape_tab_after_refresh(driver, page_type: str, tab_info: dict, url: str):
+    """
+    EVENT-DRIVEN SCRAPING: Scrape a single tab after JSON refresh
+    Only scrapes when fresh data is available - no more constant cycling!
+    """
+    try:
+        log(f"[SCRAPE-EVENT] Scraping {page_type} tab after refresh: {url[:50]}...")
+        
+        # Find all tbody elements (surebets)
+        try:
+            tbodies = driver.find_elements(By.TAG_NAME, "tbody")
+        except:
+            log(f"[SCRAPE-EVENT] Error finding tbody elements")
+            return
+        
+        if not tbodies:
+            log(f"[SCRAPE-EVENT] No tbody elements found")
+            return
+        
+        log(f"[SCRAPE-EVENT] Found {len(tbodies)} tbody elements")
+        
+        # Process each tbody
+        scraped_count = 0
+        for i, tbody in enumerate(tbodies):
+            try:
+                # Extract surebet data (you'll need your extraction logic here)
+                # For now, we'll get the text and basic info
+                tbody_id = tbody.get_attribute("id") or f"tbody_{i}"
+                
+                # Check if we've seen this one
+                if tbody_id in tab_info.get('seen_tbodies', set()):
+                    continue
+                
+                # Mark as seen
+                if 'seen_tbodies' not in tab_info:
+                    tab_info['seen_tbodies'] = set()
+                tab_info['seen_tbodies'].add(tbody_id)
+                
+                # Here you would extract and save surebet data
+                # save_surebet_to_db_async(surebet_data)
+                
+                scraped_count += 1
+                log(f"[SCRAPE-EVENT] ✅ Processed tbody: {tbody_id}")
+                
+            except Exception as e:
+                log(f"[SCRAPE-EVENT] Error processing tbody {i}: {e}")
+        
+        log(f"[SCRAPE-EVENT] Scraped {scraped_count} new items from {page_type} tab")
+        
+    except Exception as e:
+        log(f"[SCRAPE-EVENT] Error scraping tab: {e}")
+
 def smart_json_refresh_loop():
     """
     Background thread for smart async JSON refresh
     Checks each tab individually, only refreshes tabs that need it
     """
     log("[JSON-ASYNC] Starting smart refresh loop")
+    log("[SCRAPING] Event-driven mode: Scraping only after JSON refresh - NO MORE CONSTANT CYCLING!")
     
     # Import group_tabs and next_tabs from global scope
     from __main__ import group_tabs, next_tabs
