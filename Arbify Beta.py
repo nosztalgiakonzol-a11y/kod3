@@ -8683,31 +8683,59 @@ async def fetch_unified_json(driver):
         if rate_monitor:
             rate_monitor.log_request(url)
         
-        # Async fetch with aiohttp
-        async with aiohttp.ClientSession() as session:
-            async with session.get(
-                url,
-                cookies=cookies,
-                headers={
-                    "User-Agent": user_agent,
-                    "Accept-Encoding": "br, gzip, deflate",  # Enable compression (83% bandwidth savings!)
-                },
-                timeout=aiohttp.ClientTimeout(total=5)
-            ) as response:
-                if response.status == 200:
+        # Use httpx with HTTP/2 support if available, fallback to aiohttp
+        if HTTPX_AVAILABLE:
+            # Async fetch with httpx (HTTP/2 support!)
+            async with httpx.AsyncClient(http2=True) as client:
+                response = await client.get(
+                    url,
+                    cookies=cookies,
+                    headers={
+                        "User-Agent": user_agent,
+                        "Accept-Encoding": "br, gzip, deflate",  # Enable compression (83% bandwidth savings!)
+                    },
+                    timeout=5.0
+                )
+                if response.status_code == 200:
                     # Try to get JSON data
                     try:
-                        json_data = await response.json()
-                        log(f"[UNIFIED-JSON] ✅ Fetched unified JSON")
+                        json_data = response.json()
+                        log(f"[UNIFIED-JSON] ✅ Fetched via httpx (HTTP/2)")
                         return json_data
                     except:
                         # If not JSON, get text (might be HTML with embedded JSON)
-                        text_data = await response.text()
-                        log(f"[UNIFIED-JSON] ✅ Fetched unified data ({len(text_data)} chars)")
+                        text_data = response.text
+                        log(f"[UNIFIED-JSON] ✅ Fetched data via httpx ({len(text_data)} chars)")
                         return {'html': text_data}
                 else:
-                    log(f"[UNIFIED-JSON] HTTP {response.status}")
+                    log(f"[UNIFIED-JSON] HTTP {response.status_code}")
                     return None
+        else:
+            # Fallback to aiohttp (HTTP/1.1)
+            async with aiohttp.ClientSession() as session:
+                async with session.get(
+                    url,
+                    cookies=cookies,
+                    headers={
+                        "User-Agent": user_agent,
+                        "Accept-Encoding": "br, gzip, deflate",  # Enable compression (83% bandwidth savings!)
+                    },
+                    timeout=aiohttp.ClientTimeout(total=5)
+                ) as response:
+                    if response.status == 200:
+                        # Try to get JSON data
+                        try:
+                            json_data = await response.json()
+                            log(f"[UNIFIED-JSON] ✅ Fetched via aiohttp (HTTP/1.1)")
+                            return json_data
+                        except:
+                            # If not JSON, get text (might be HTML with embedded JSON)
+                            text_data = await response.text()
+                            log(f"[UNIFIED-JSON] ✅ Fetched data via aiohttp ({len(text_data)} chars)")
+                            return {'html': text_data}
+                    else:
+                        log(f"[UNIFIED-JSON] HTTP {response.status}")
+                        return None
                     
     except asyncio.TimeoutError:
         log("[UNIFIED-JSON] Timeout after 5s")
