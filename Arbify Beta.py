@@ -26,6 +26,32 @@ except ImportError:
     print("⚠️ aiohttp not available - install with: pip install aiohttp")
     print("   Parallel URL extraction will be slower without it.")
 
+# Performance & reliability imports
+try:
+    from bs4 import BeautifulSoup
+    import lxml
+    BS4_AVAILABLE = True
+    print("✅ BeautifulSoup4 + lxml loaded (10× faster parsing!)")
+except ImportError:
+    BS4_AVAILABLE = False
+    print("⚠️ BeautifulSoup4 not available - install with: pip install beautifulsoup4 lxml")
+
+try:
+    from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
+    TENACITY_AVAILABLE = True
+    print("✅ Tenacity loaded (auto-retry enabled!)")
+except ImportError:
+    TENACITY_AVAILABLE = False
+    print("⚠️ Tenacity not available - install with: pip install tenacity")
+
+try:
+    from fake_useragent import UserAgent
+    FAKE_UA_AVAILABLE = True
+    print("✅ Fake-UserAgent loaded (UA rotation enabled!)")
+except ImportError:
+    FAKE_UA_AVAILABLE = False
+    print("⚠️ Fake-UserAgent not available - install with: pip install fake-useragent")
+
 warnings.filterwarnings("ignore", category=ResourceWarning)
 
 import requests
