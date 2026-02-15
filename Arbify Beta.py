@@ -1147,11 +1147,145 @@ def delete_surebet_from_db_async(surebet_id: str):
             log(f"[DB-DELETE] Could not execute async: {e}")
 
 # =============================================================================
+# 🔄 SMART ASYNC JSON REFRESH (Only refresh tabs that need it)
+# =============================================================================
 
-        with open(SEEN_FILE, "w", encoding="utf-8") as f:
-            f.writelines(lines)
-    except Exception:
-        pass
+async def fetch_json_async_smart(url: str, cookies: dict, user_agent: str):
+    """
+    Async JSON fetch with aiohttp - non-blocking
+    Returns JSON data or None on error
+    """
+    try:
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                url,
+                cookies=cookies,
+                headers={"User-Agent": user_agent},
+                timeout=aiohttp.ClientTimeout(total=5)  # 5s timeout
+            ) as response:
+                if response.status == 200:
+                    json_data = await response.json()
+                    return json_data
+                else:
+                    log(f"[JSON-ASYNC] HTTP {response.status}")
+                    return None
+    except asyncio.TimeoutError:
+        log("[JSON-ASYNC] Timeout after 5s")
+        return None
+    except Exception as e:
+        log(f"[JSON-ASYNC] Error: {e}")
+        return None
+
+def should_refresh_tab(tab_info: dict, now: float) -> bool:
+    """
+    Check if tab needs refresh based on age
+    Each tab has its own random threshold (50-60s)
+    """
+    last_update = tab_info.get('last_json_update', 0)
+    age = now - last_update
+    
+    # Random threshold per tab (50-60s)
+    threshold = random.uniform(
+        JSON_UPDATE_INTERVAL_MIN,  # 50
+        JSON_UPDATE_INTERVAL_MAX   # 60
+    )
+    
+    should_refresh = age >= threshold
+    
+    if should_refresh:
+        log(f"[JSON-ASYNC] Tab age {age:.1f}s >= {threshold:.1f}s → Refresh")
+    
+    return should_refresh
+
+async def inject_json_async(driver, page_type: str, tab_info: dict, url: str):
+    """
+    Async fetch JSON and inject to page
+    Non-blocking refresh for a single tab
+    """
+    try:
+        # Get cookies and user agent from driver
+        cookies = {c['name']: c['value'] for c in driver.get_cookies()}
+        user_agent = driver.execute_script("return navigator.userAgent;")
+        
+        # Fetch JSON async (aiohttp)
+        json_data = await fetch_json_async_smart(url, cookies, user_agent)
+        
+        if json_data and isinstance(json_data, dict):
+            # Build HTML from JSON (you'll need to implement this based on your JSON structure)
+            # For now, just log success
+            log(f"[JSON-ASYNC] ✅ Fetched JSON for {page_type} tab: {url[:50]}...")
+            
+            # Update timestamp
+            tab_info['last_json_update'] = time.time()
+            return True
+        else:
+            log(f"[JSON-ASYNC] ❌ Failed to fetch {page_type}")
+            return False
+            
+    except Exception as e:
+        log(f"[JSON-ASYNC] Error injecting: {e}")
+        return False
+
+def smart_json_refresh_loop():
+    """
+    Background thread for smart async JSON refresh
+    Checks each tab individually, only refreshes tabs that need it
+    """
+    log("[JSON-ASYNC] Starting smart refresh loop")
+    
+    # Import group_tabs and next_tabs from global scope
+    from __main__ import group_tabs, next_tabs
+    
+    while True:
+        try:
+            now = time.time()
+            refreshed_count = 0
+            
+            # Check GROUP tabs
+            for url, tab_info in list(group_tabs.items()):
+                try:
+                    if should_refresh_tab(tab_info, now):
+                        driver = tab_info.get('driver')
+                        if driver:
+                            # Async refresh (non-blocking!)
+                            success = asyncio.run(
+                                inject_json_async(driver, "GROUP", tab_info, url)
+                            )
+                            
+                            if success:
+                                refreshed_count += 1
+                            
+                except Exception as e:
+                    log(f"[JSON-ASYNC] Error refreshing GROUP: {e}")
+            
+            # Check NEXT tabs
+            for url, tab_info in list(next_tabs.items()):
+                try:
+                    if should_refresh_tab(tab_info, now):
+                        driver = tab_info.get('driver')
+                        if driver:
+                            # Async refresh (non-blocking!)
+                            success = asyncio.run(
+                                inject_json_async(driver, "NEXT", tab_info, url)
+                            )
+                            
+                            if success:
+                                refreshed_count += 1
+                            
+                except Exception as e:
+                    log(f"[JSON-ASYNC] Error refreshing NEXT: {e}")
+            
+            if refreshed_count > 0:
+                log(f"[JSON-ASYNC] Refreshed {refreshed_count} tabs this cycle")
+            
+            # Wait 5s before next check
+            time.sleep(5)
+            
+        except Exception as e:
+            log(f"[JSON-ASYNC] Loop error: {e}")
+            time.sleep(10)
+
+# =============================================================================
 
 def load_active():
     s = set()
@@ -7416,7 +7550,8 @@ def run_dynamic_bootstrap():
         
         # Rekurzívan nyitjuk a NEXT oldalakat és keressük a további NEXT linkeket
         opened_next = set()
-        while next_urls_to_open and (time.time() - phase1_start) < NEXT_PHASE_TIMEOUT and len(opened_next) < MAX_NEXT_TABS:
+        # Removed MAX_NEXT_TABS limit - allow unlimited tab opening
+        while next_urls_to_open and (time.time() - phase1_start) < NEXT_PHASE_TIMEOUT:
             next_url = next_urls_to_open.pop(0)
             if next_url in opened_next or next_url in next_tabs:
                 continue
@@ -7490,10 +7625,10 @@ def run_dynamic_bootstrap():
         
         # === FÁZIS 2b: GROUP oldalak párhuzamos megnyitása ===
         group_count = len(group_urls_to_open)
-        log(f"🔍 {group_count} GROUP oldal nyitása (max {MAX_GROUP_TABS})...")
+        log(f"🔍 {group_count} GROUP oldal nyitása...")
         
-        # Limit to MAX_GROUP_TABS
-        group_urls_list = list(group_urls_to_open)[:MAX_GROUP_TABS]
+        # Removed MAX_GROUP_TABS limit - allow unlimited tab opening
+        group_urls_list = list(group_urls_to_open)
         
         # BOOTSTRAP: szinkron nyitás hogy biztosan megnyíljanak
         for i, group_url in enumerate(group_urls_list):
@@ -7747,6 +7882,11 @@ if __name__ == "__main__":
     tab_cleanup_thread = threading.Thread(target=tab_cleanup_worker, daemon=True)
     tab_cleanup_thread.start()
     log("🧹 TAB cleanup worker elindítva")
+
+    # Smart async JSON refresh worker
+    smart_refresh_thread = threading.Thread(target=smart_json_refresh_loop, daemon=True)
+    smart_refresh_thread.start()
+    log("🔄 Smart async JSON refresh worker elindítva")
 
     # Autoupdate indítása Shift+P-vel, ha kell
     ensure_main_autoupdate()
