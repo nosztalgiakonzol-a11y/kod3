@@ -93,6 +93,107 @@ KEY_MOD = Keys.COMMAND if IS_MAC else Keys.CONTROL
 # --- Driver életjelző ---
 DRIVER_DEAD = False
 
+# ========================================
+# REQUEST RATE MONITOR
+# ========================================
+class RequestRateMonitor:
+    """
+    Monitor HTTP request rates
+    Logs to console and request_stats.txt file
+    Tracks requests per minute for rate limiting analysis
+    """
+    def __init__(self, log_file="request_stats.txt"):
+        self.requests = []
+        self.total_requests = 0
+        self.log_file = log_file
+        self.start_time = time.time()
+        
+        # Initialize log file with header
+        try:
+            with open(self.log_file, 'w', encoding='utf-8') as f:
+                f.write("="*70 + "\n")
+                f.write("REQUEST RATE MONITOR - Session Started\n")
+                f.write(f"Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
+                f.write("="*70 + "\n\n")
+            print(f"✅ Request rate monitor initialized (logging to {self.log_file})")
+        except Exception as e:
+            print(f"⚠️ Could not initialize request log file: {e}")
+    
+    def log_request(self, url):
+        """Log a request to memory and file"""
+        timestamp = time.time()
+        self.requests.append({'timestamp': timestamp, 'url': url})
+        self.total_requests += 1
+        
+        # Write to file
+        try:
+            with open(self.log_file, 'a', encoding='utf-8') as f:
+                dt = datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
+                f.write(f"[{dt}] REQUEST #{self.total_requests} → {url}\n")
+        except Exception:
+            pass  # Silent fail on file write
+    
+    def get_requests_per_minute(self):
+        """Get requests in last 60 seconds"""
+        now = time.time()
+        recent = [r for r in self.requests if now - r['timestamp'] < 60]
+        return len(recent)
+    
+    def get_average_rpm(self):
+        """Get average RPM over last 5 minutes"""
+        now = time.time()
+        recent = [r for r in self.requests if now - r['timestamp'] < 300]
+        if not recent:
+            return 0
+        duration = min(300, now - recent[0]['timestamp'])
+        if duration == 0:
+            return 0
+        return (len(recent) / duration) * 60
+    
+    def get_peak_rpm(self):
+        """Get peak RPM in any 1-minute window"""
+        if not self.requests:
+            return 0
+        
+        peak = 0
+        for i in range(len(self.requests)):
+            start_time = self.requests[i]['timestamp']
+            count = sum(1 for r in self.requests if start_time <= r['timestamp'] < start_time + 60)
+            peak = max(peak, count)
+        return peak
+    
+    def log_stats(self):
+        """Log statistics to console and file"""
+        rpm = self.get_requests_per_minute()
+        avg_rpm = self.get_average_rpm()
+        peak_rpm = self.get_peak_rpm()
+        runtime = (time.time() - self.start_time) / 60
+        
+        stats = f"""
+{"="*70}
+REQUEST RATE MONITOR - Statistics
+{"="*70}
+Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
+{"-"*70}
+Current Requests/min: {rpm}
+Average RPM (5 min): {avg_rpm:.1f}
+Peak RPM: {peak_rpm}
+Total Requests: {self.total_requests}
+Runtime: {runtime:.1f} minutes
+{"="*70}
+"""
+        
+        # Console log
+        print(stats)
+        
+        # File log
+        try:
+            with open(self.log_file, 'a', encoding='utf-8') as f:
+                f.write(stats + "\n")
+        except Exception:
+            pass
+
+
 def _is_driver_connection_error(exc: Exception) -> bool:
     """
     Felismeri a klasszikus 'HTTPConnectionPool / WinError 10061 / Max retries exceeded' típusú hibákat,
