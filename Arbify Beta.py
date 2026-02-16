@@ -3358,6 +3358,11 @@ class AsyncHttpDispatcher:
         self.DELETE_BATCH_FLUSH_SEC = 1.5
 
         self.HTTP_TIMEOUT = 12
+        self.SAVE_ENQUEUE_DEDUP_SEC = 8.0
+        self.SAVE_ENQUEUE_MAP_MAX_SIZE = 5000
+        self.SAVE_ENQUEUE_STALE_MULTIPLIER = 5
+        self._last_save_enqueue_ts = {}
+        self._save_enqueue_lock = threading.Lock()
 
         self._stop = threading.Event()
         self._thr = threading.Thread(target=self._run, daemon=True)
@@ -3377,6 +3382,22 @@ class AsyncHttpDispatcher:
         return items
 
     def enqueue_save(self, item: dict):
+        try:
+            tid = item.get("id")
+            if tid:
+                with self._save_enqueue_lock:
+                    now = time.time()
+                    last_ts = self._last_save_enqueue_ts.get(tid, 0.0)
+                    if (now - last_ts) < self.SAVE_ENQUEUE_DEDUP_SEC:
+                        return
+                    self._last_save_enqueue_ts[tid] = now
+                    if len(self._last_save_enqueue_ts) > self.SAVE_ENQUEUE_MAP_MAX_SIZE:
+                        cutoff = now - (self.SAVE_ENQUEUE_DEDUP_SEC * self.SAVE_ENQUEUE_STALE_MULTIPLIER)
+                        self._last_save_enqueue_ts = {
+                            k: v for k, v in self._last_save_enqueue_ts.items() if v >= cutoff
+                        }
+        except (AttributeError, TypeError) as e:
+            warn(f"⚠️ SAVE dedupe skip error: {e}")
         try:
             self.q_save.put_nowait(item)
         except Exception:
