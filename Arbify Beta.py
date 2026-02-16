@@ -43,6 +43,9 @@ except ImportError:
     print("⚠️ httpx not available - install with: pip install httpx")
     print("   Using aiohttp fallback (HTTP/1.1 only)")
 
+PREFER_AIOHTTP = os.getenv("SB_PREFER_AIOHTTP", "1") == "1"
+USE_HTTPX = HTTPX_AVAILABLE and not PREFER_AIOHTTP
+
 # Performance & reliability imports
 try:
     from bs4 import BeautifulSoup
@@ -5606,7 +5609,7 @@ async def fetch_url_async(url, cookies, user_agent):
         # Async HTTP request (prefer httpx when available)
         html = None
         base_url = url
-        if HTTPX_AVAILABLE:
+        if USE_HTTPX:
             try:
                 shared_http_session = globals().get("http_session")
                 if shared_http_session:
@@ -8798,7 +8801,7 @@ class PersistentHTTPSession:
         return await self.client.get(url, **kwargs)
 
 
-http_session = PersistentHTTPSession() if HTTPX_AVAILABLE else None
+http_session = PersistentHTTPSession() if USE_HTTPX else None
 
 def _close_http_session_on_exit():
     if not http_session:
@@ -8867,7 +8870,7 @@ async def fetch_unified_json(driver):
             rate_monitor.log_request(url)
         
         # Use httpx with HTTP/2 support if available, fallback to aiohttp
-        if HTTPX_AVAILABLE:
+        if USE_HTTPX:
             # Async fetch with httpx (HTTP/2 support!)
             shared_http_session = globals().get("http_session")
             if shared_http_session:
