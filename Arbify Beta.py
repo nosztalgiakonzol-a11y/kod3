@@ -16,6 +16,7 @@ import uuid  # correlation_id-hoz
 from collections import deque
 import sys
 import asyncio
+import atexit
 
 # Try to import aiohttp for async parallel URL extraction
 try:
@@ -8690,7 +8691,11 @@ def disable_main_autoupdate(driver, main_tab_handle):
 
 class PersistentHTTPSession:
     def __init__(self):
-        self.client = httpx.AsyncClient(http2=True)
+        self.client = httpx.AsyncClient(
+            http2=True,
+            timeout=5.0,
+            limits=httpx.Limits(max_keepalive_connections=20, max_connections=100),
+        )
 
     async def get(self, url, **kwargs):
         return await self.client.get(url, **kwargs)
@@ -8698,11 +8703,29 @@ class PersistentHTTPSession:
 
 http_session = PersistentHTTPSession() if HTTPX_AVAILABLE else None
 
+def _close_http_session_on_exit():
+    if not http_session:
+        return
+    try:
+        asyncio.run(http_session.client.aclose())
+    except Exception:
+        pass
+
+atexit.register(_close_http_session_on_exit)
+
+
+class FetchUnifiedJsonError(Exception):
+    pass
+
+
+def _is_retryable_http_status(status_code: int) -> bool:
+    return status_code == 429 or status_code >= 500
+
 
 @retry(
     stop=stop_after_attempt(3),
     wait=wait_exponential(multiplier=1, min=2, max=10),
-    retry=retry_if_exception_type(Exception),
+    retry=retry_if_exception_type((asyncio.TimeoutError, FetchUnifiedJsonError)),
     reraise=True
 )
 async def fetch_unified_json(driver):
@@ -8761,14 +8784,16 @@ async def fetch_unified_json(driver):
                     json_data = response.json()
                     log(f"[UNIFIED-JSON] ✅ Fetched via httpx (HTTP/2)")
                     return json_data
-                except:
+                except Exception:
                     # If not JSON, get text (might be HTML with embedded JSON)
                     text_data = response.text
                     log(f"[UNIFIED-JSON] ✅ Fetched data via httpx ({len(text_data)} chars)")
                     return {'html': text_data}
             else:
                 log(f"[UNIFIED-JSON] HTTP {response.status_code}")
-                raise RuntimeError(f"HTTP {response.status_code}")
+                if _is_retryable_http_status(response.status_code):
+                    raise FetchUnifiedJsonError(f"HTTP {response.status_code} for {url}")
+                return None
         else:
             # Fallback to aiohttp (HTTP/1.1)
             async with aiohttp.ClientSession() as session:
@@ -8784,21 +8809,23 @@ async def fetch_unified_json(driver):
                             json_data = await response.json()
                             log(f"[UNIFIED-JSON] ✅ Fetched via aiohttp (HTTP/1.1)")
                             return json_data
-                        except:
+                        except Exception:
                             # If not JSON, get text (might be HTML with embedded JSON)
                             text_data = await response.text()
                             log(f"[UNIFIED-JSON] ✅ Fetched data via aiohttp ({len(text_data)} chars)")
                             return {'html': text_data}
                     else:
                         log(f"[UNIFIED-JSON] HTTP {response.status}")
-                        raise RuntimeError(f"HTTP {response.status}")
+                        if _is_retryable_http_status(response.status):
+                            raise FetchUnifiedJsonError(f"HTTP {response.status} for {url}")
+                        return None
                     
     except asyncio.TimeoutError:
         log("[UNIFIED-JSON] Timeout after 5s")
         raise
     except Exception as e:
         log(f"[UNIFIED-JSON] Error: {e}")
-        raise
+        raise FetchUnifiedJsonError(str(e)) from e
 
 
 def inject_json_to_page(driver, json_data, page_type):
