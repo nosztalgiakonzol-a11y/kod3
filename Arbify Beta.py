@@ -5519,17 +5519,22 @@ async def fetch_url_async(url, cookies, user_agent):
             'Referer': 'https://en.surebet.com/'
         }
         
-        # Async HTTP request
-        timeout = aiohttp.ClientTimeout(total=3)
-        async with aiohttp.ClientSession(cookies=cookies, timeout=timeout) as session:
-            async with session.get(url, headers=headers, allow_redirects=False) as response:
-                html = await response.text()
+        # Async HTTP request (prefer httpx when available)
+        if HTTPX_AVAILABLE:
+            async with httpx.AsyncClient(http2=True, timeout=3.0, follow_redirects=False) as client:
+                response = await client.get(url, headers=headers, cookies=cookies)
+                html = response.text
                 base_url = str(response.url) or url
-                
-                # Parse HTML to extract bookmaker URL (synchronous parsing is OK)
-                bookmaker_url = extract_url_from_html(html, base_url)
-                
-                return bookmaker_url
+        else:
+            timeout = aiohttp.ClientTimeout(total=3)
+            async with aiohttp.ClientSession(cookies=cookies, timeout=timeout) as session:
+                async with session.get(url, headers=headers, allow_redirects=False) as response:
+                    html = await response.text()
+                    base_url = str(response.url) or url
+
+        # Parse HTML to extract bookmaker URL (synchronous parsing is OK)
+        bookmaker_url = extract_url_from_html(html, base_url)
+        return bookmaker_url
                 
     except asyncio.TimeoutError:
         log(f"[URL-EXTRACT] ⏱️ Timeout: {url[:60]}...")
