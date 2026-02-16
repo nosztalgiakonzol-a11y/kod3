@@ -287,6 +287,7 @@ DEFAULT_BASE = "https://en.surebet.com"
 LOGIN_URL = "https://surebet.com/users/sign_in"
 CHECK_INTERVAL = 1.25
 MAIN_URL = "https://en.surebet.com/surebets"
+MANUAL_TAB_INSPECTION_MODE = os.getenv("MANUAL_TAB_INSPECTION_MODE", "0") == "1"  # Debug: don't force MAIN while manually checking tabs
 
 
 ACCOUNTS = {
@@ -6667,7 +6668,7 @@ def cleanup_stray_tabs():
             continue
 
     try:
-        if MAIN_HANDLE and MAIN_HANDLE in driver.window_handles:
+        if not MANUAL_TAB_INSPECTION_MODE and MAIN_HANDLE and MAIN_HANDLE in driver.window_handles:
             driver.switch_to.window(MAIN_HANDLE)
         elif driver.window_handles:
             driver.switch_to.window(driver.window_handles[0])
@@ -8455,6 +8456,15 @@ if __name__ == "__main__":
                     _wait_main_container(timeout=12)
                     ensure_main_autoupdate()
                     time.sleep(3)
+
+                if MANUAL_TAB_INSPECTION_MODE:
+                    try:
+                        current_handle = driver.current_window_handle
+                    except Exception:
+                        current_handle = None
+                    if current_handle and current_handle != MAIN_HANDLE:
+                        time.sleep(CHECK_INTERVAL)
+                        continue
 
                 # biztosan MAIN-en vagyunk
                 driver.switch_to.window(MAIN_HANDLE)
