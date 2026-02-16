@@ -16,6 +16,7 @@ import uuid  # correlation_id-hoz
 from collections import deque
 import sys
 import asyncio
+import atexit
 
 # Try to import aiohttp for async parallel URL extraction
 try:
@@ -42,6 +43,9 @@ except ImportError:
     print("⚠️ httpx not available - install with: pip install httpx")
     print("   Using aiohttp fallback (HTTP/1.1 only)")
 
+PREFER_AIOHTTP = os.getenv("SB_PREFER_AIOHTTP", "1") == "1"
+USE_HTTPX = HTTPX_AVAILABLE and not PREFER_AIOHTTP
+
 # Performance & reliability imports
 try:
     from bs4 import BeautifulSoup
@@ -58,6 +62,16 @@ try:
     print("✅ Tenacity loaded (auto-retry enabled!)")
 except ImportError:
     TENACITY_AVAILABLE = False
+    def retry(*args, **kwargs):
+        def _decorator(func):
+            return func
+        return _decorator
+    def stop_after_attempt(*args, **kwargs):
+        return None
+    def wait_exponential(*args, **kwargs):
+        return None
+    def retry_if_exception_type(*args, **kwargs):
+        return None
     print("⚠️ Tenacity not available - install with: pip install tenacity")
 
 try:
@@ -276,6 +290,12 @@ DEFAULT_BASE = "https://en.surebet.com"
 LOGIN_URL = "https://surebet.com/users/sign_in"
 CHECK_INTERVAL = 1.25
 MAIN_URL = "https://en.surebet.com/surebets"
+MANUAL_TAB_INSPECTION_MODE = os.getenv("MANUAL_TAB_INSPECTION_MODE", "0") == "1"  # Debug: don't force MAIN while manually checking tabs
+USE_UNIFIED_MAIN_CYCLE = os.getenv("USE_UNIFIED_MAIN_CYCLE", "1") == "1"  # Run 60-75s unified cycle as main loop
+ENABLE_GROUP_NEXT_OPENER_WORKER = os.getenv(
+    "ENABLE_GROUP_NEXT_OPENER_WORKER",
+    "0" if USE_UNIFIED_MAIN_CYCLE else "1"
+) == "1"
 
 
 ACCOUNTS = {
@@ -600,10 +620,11 @@ SCRAPING_FORCE_FIRST_TIME = True       # Force scrape on first encounter
 # =============================================================================
 # Fetch JSON and inject HTML into page without full refresh
 # Like MAIN page autoupdate, but for GROUP and NEXT pages
-ENABLE_JSON_AUTO_UPDATE = True          # Enable JSON auto-update
+ENABLE_JSON_AUTO_UPDATE = False         # Disabled: avoid extra per-tab fetch loops (use unified cycle strategy)
 JSON_UPDATE_INTERVAL_MIN = 50           # Minimum interval (random 50-60s)
 JSON_UPDATE_INTERVAL_MAX = 60           # Maximum interval (random 50-60s)
 JSON_SHOW_UPDATE_TIME = True            # Show "Updated X seconds ago"
+ENABLE_LEGACY_NEXT_GROUP_SCAN = False   # Enable/disable legacy NEXT/GROUP scan loop block in main while cycle
 # =============================================================================
 
 # =============================================================================
@@ -892,7 +913,7 @@ def _cdp_dump_nav_targets(label: str = ""):
         return
 
 # --- NETWORK LOGGING FOR API DISCOVERY ---
-ENABLE_NETWORK_LOGGING = True
+ENABLE_NETWORK_LOGGING = False
 NETWORK_LOG_DIR = "./network_logs"
 last_network_log_save = 0
 
@@ -3342,6 +3363,11 @@ class AsyncHttpDispatcher:
         self.DELETE_BATCH_FLUSH_SEC = 1.5
 
         self.HTTP_TIMEOUT = 12
+        self.SAVE_ENQUEUE_DEDUP_SEC = 8.0
+        self.SAVE_ENQUEUE_MAP_MAX_SIZE = 5000
+        self.SAVE_ENQUEUE_STALE_MULTIPLIER = 5
+        self._last_save_enqueue_ts = {}
+        self._save_enqueue_lock = threading.Lock()
 
         self._stop = threading.Event()
         self._thr = threading.Thread(target=self._run, daemon=True)
@@ -3361,6 +3387,22 @@ class AsyncHttpDispatcher:
         return items
 
     def enqueue_save(self, item: dict):
+        try:
+            tid = item.get("id")
+            if tid:
+                with self._save_enqueue_lock:
+                    now = time.time()
+                    last_ts = self._last_save_enqueue_ts.get(tid, 0.0)
+                    if (now - last_ts) < self.SAVE_ENQUEUE_DEDUP_SEC:
+                        return
+                    self._last_save_enqueue_ts[tid] = now
+                    if len(self._last_save_enqueue_ts) > self.SAVE_ENQUEUE_MAP_MAX_SIZE:
+                        cutoff = now - (self.SAVE_ENQUEUE_DEDUP_SEC * self.SAVE_ENQUEUE_STALE_MULTIPLIER)
+                        self._last_save_enqueue_ts = {
+                            k: v for k, v in self._last_save_enqueue_ts.items() if v >= cutoff
+                        }
+        except (AttributeError, TypeError) as e:
+            warn(f"⚠️ SAVE dedupe skip error: {e}")
         try:
             self.q_save.put_nowait(item)
         except Exception:
@@ -5138,6 +5180,77 @@ def show_update_timestamp(driver):
         log(f"[TIMESTAMP] Error: {e}")
 
 
+def show_cycle_status_badge(driver, page_type, event_type):
+    """
+    Show unified cycle status on page:
+    - last JSON inject time
+    - last scrape time
+    - updates every second
+    Args:
+        driver: Selenium webdriver
+        page_type: MAIN, GROUP or NEXT
+        event_type: "inject" or "scrape"
+    """
+    try:
+        driver.execute_script("""
+            var pageType = arguments[0];
+            var eventType = arguments[1];
+            var now = Date.now();
+            window._unifiedCycleStatus = window._unifiedCycleStatus || {};
+            window._unifiedCycleStatus[pageType] = window._unifiedCycleStatus[pageType] || { injectedAt: null, scrapedAt: null };
+            var state = window._unifiedCycleStatus[pageType];
+
+            if (eventType === 'inject') {
+                state.injectedAt = now;
+            } else if (eventType === 'scrape') {
+                state.scrapedAt = now;
+            }
+
+            if (window._unifiedCycleStatusInterval) clearInterval(window._unifiedCycleStatusInterval);
+            var oldBadge = document.getElementById('unified-cycle-status');
+            if (oldBadge) oldBadge.remove();
+
+            var badge = document.createElement('div');
+            badge.id = 'unified-cycle-status';
+            badge.style.position = 'fixed';
+            badge.style.top = '10px';
+            badge.style.right = '10px';
+            badge.style.backgroundColor = 'rgba(0,0,0,0.78)';
+            badge.style.color = '#fff';
+            badge.style.padding = '8px 12px';
+            badge.style.borderRadius = '6px';
+            badge.style.fontSize = '12px';
+            badge.style.fontWeight = 'bold';
+            badge.style.whiteSpace = 'pre-line';
+            badge.style.zIndex = '99999';
+            badge.style.boxShadow = '0 2px 4px rgba(0,0,0,0.25)';
+
+            function fmt(ts, prefix) {
+                if (!ts) return prefix + ': never';
+                var elapsed = Math.floor((Date.now() - ts) / 1000);
+                return prefix + ': ' + elapsed + 's ago';
+            }
+
+            function render() {
+                badge.textContent = '🔁 ' + String(pageType) + '\n' +
+                                    fmt(state.injectedAt, 'Inject') + '\n' +
+                                    fmt(state.scrapedAt, 'Scrape');
+            }
+
+            render();
+            window._unifiedCycleStatusInterval = setInterval(render, 1000);
+            if (!window._unifiedBadgeCleanupBound) {
+                window.addEventListener('beforeunload', function() {
+                    if (window._unifiedCycleStatusInterval) clearInterval(window._unifiedCycleStatusInterval);
+                });
+                window._unifiedBadgeCleanupBound = true;
+            }
+            document.body.appendChild(badge);
+        """, page_type, event_type)
+    except Exception as e:
+        log(f"[UNIFIED-BADGE] Error: {e}")
+
+
 async def fetch_json_async_single(url, cookies, user_agent):
     """
     Async fetch single JSON file
@@ -5519,17 +5632,38 @@ async def fetch_url_async(url, cookies, user_agent):
             'Referer': 'https://en.surebet.com/'
         }
         
-        # Async HTTP request
-        timeout = aiohttp.ClientTimeout(total=3)
-        async with aiohttp.ClientSession(cookies=cookies, timeout=timeout) as session:
-            async with session.get(url, headers=headers, allow_redirects=False) as response:
-                html = await response.text()
+        # Async HTTP request (prefer httpx when available)
+        html = None
+        base_url = url
+        if USE_HTTPX:
+            try:
+                shared_http_session = globals().get("http_session")
+                if shared_http_session:
+                    response = await shared_http_session.get(
+                        url,
+                        headers=headers,
+                        cookies=cookies,
+                        timeout=3.0,
+                        follow_redirects=False
+                    )
+                else:
+                    async with httpx.AsyncClient(http2=True, timeout=3.0, follow_redirects=False) as client:
+                        response = await client.get(url, headers=headers, cookies=cookies)
+                html = response.text
                 base_url = str(response.url) or url
-                
-                # Parse HTML to extract bookmaker URL (synchronous parsing is OK)
-                bookmaker_url = extract_url_from_html(html, base_url)
-                
-                return bookmaker_url
+            except httpx.HTTPError as e:
+                log(f"[URL-EXTRACT] httpx failed, falling back to aiohttp: {type(e).__name__}")
+
+        if html is None:
+            timeout = aiohttp.ClientTimeout(total=3)
+            async with aiohttp.ClientSession(cookies=cookies, timeout=timeout) as session:
+                async with session.get(url, headers=headers, allow_redirects=False) as response:
+                    html = await response.text()
+                    base_url = str(response.url) or url
+
+        # Parse HTML to extract bookmaker URL (synchronous parsing is OK)
+        bookmaker_url = extract_url_from_html(html, base_url)
+        return bookmaker_url
                 
     except asyncio.TimeoutError:
         log(f"[URL-EXTRACT] ⏱️ Timeout: {url[:60]}...")
@@ -6336,6 +6470,14 @@ def open_group_tab_if_needed(group_url: str):
         log(f"⏳ Group URL tiltva (async wrapper): {group_url}")
         return
 
+    if not ENABLE_GROUP_NEXT_OPENER_WORKER:
+        group_open_pending.add(group_url)
+        try:
+            _open_group_tab_sync(group_url)
+        finally:
+            group_open_pending.discard(group_url)
+        return
+
     group_open_pending.add(group_url)
     try:
         GROUP_NEXT_OPEN_QUEUE.put_nowait({"type": "group", "url": group_url})
@@ -6431,6 +6573,14 @@ def open_next_tab_if_needed(next_url: str):
     if next_url in next_tabs or next_url in next_open_pending:
         if LOG_NEXT_ALREADY_OPEN_VERBOSE:
             log(f"ℹ️ NEXT már nyitva vagy épp nyílik: {next_url}")
+        return
+
+    if not ENABLE_GROUP_NEXT_OPENER_WORKER:
+        next_open_pending.add(next_url)
+        try:
+            _open_next_tab_sync(next_url)
+        finally:
+            next_open_pending.discard(next_url)
         return
 
     next_open_pending.add(next_url)
@@ -6563,7 +6713,7 @@ def cleanup_stray_tabs():
             continue
 
     try:
-        if MAIN_HANDLE and MAIN_HANDLE in driver.window_handles:
+        if not MANUAL_TAB_INSPECTION_MODE and MAIN_HANDLE and MAIN_HANDLE in driver.window_handles:
             driver.switch_to.window(MAIN_HANDLE)
         elif driver.window_handles:
             driver.switch_to.window(driver.window_handles[0])
@@ -8093,10 +8243,13 @@ if __name__ == "__main__":
     except Exception:
         MAIN_HANDLE = None
 
-    # GROUP/NEXT tab-nyitó háttér worker - BOOTSTRAP ELŐTT indul!
-    groupnext_thread = threading.Thread(target=group_next_opener_worker, daemon=True)
-    groupnext_thread.start()
-    log("🚀 Group/NEXT opener worker elindítva (BOOTSTRAP előtt)")
+    # GROUP/NEXT tab-nyitó háttér worker - BOOTSTRAP ELŐTT indul (ha engedélyezve)
+    if ENABLE_GROUP_NEXT_OPENER_WORKER:
+        groupnext_thread = threading.Thread(target=group_next_opener_worker, daemon=True)
+        groupnext_thread.start()
+        log("🚀 Group/NEXT opener worker elindítva (BOOTSTRAP előtt)")
+    else:
+        log("⚙️ Group/NEXT opener worker KIKAPCSOLVA (direct sync tab open mode)")
 
     # Dinamikus BOOTSTRAP futtatása
     run_dynamic_bootstrap()
@@ -8248,8 +8401,9 @@ if __name__ == "__main__":
 
         return group_all_curr_ids, pending_deletes, to_close
 
+    # Legacy main loop path (only when unified mode is disabled)
     try:
-        while True:
+        while not USE_UNIFIED_MAIN_CYCLE:
             loop_start_time = time.time()
             
             # 💀 Ha a WebDriver meghalt, ne kínlódjunk tovább – lépjünk ki a fő loopból
@@ -8351,6 +8505,15 @@ if __name__ == "__main__":
                     _wait_main_container(timeout=12)
                     ensure_main_autoupdate()
                     time.sleep(3)
+
+                if MANUAL_TAB_INSPECTION_MODE:
+                    try:
+                        current_handle = driver.current_window_handle
+                    except Exception:
+                        current_handle = None
+                    if current_handle and current_handle != MAIN_HANDLE:
+                        time.sleep(CHECK_INTERVAL)
+                        continue
 
                 # biztosan MAIN-en vagyunk
                 driver.switch_to.window(MAIN_HANDLE)
@@ -8463,19 +8626,29 @@ if __name__ == "__main__":
             except Exception:
                 pass
 
-            # --- NEXT tabok scan ---
-            next_all_curr_ids, next_pending_deletes, next_to_close, next_open_requests = scan_next_tabs_evented(curr_ids_main)
+            if ENABLE_LEGACY_NEXT_GROUP_SCAN:
+                # --- NEXT tabok scan ---
+                next_all_curr_ids, next_pending_deletes, next_to_close, next_open_requests = scan_next_tabs_evented(curr_ids_main)
 
-            # új NEXT URL-ek nyitása (BOOTSTRAP alatt is)
-            for nurl in next_open_requests:
-                try:
-                    open_next_tab_if_needed(nurl)
-                except Exception:
-                    pass
+                # új NEXT URL-ek nyitása (BOOTSTRAP alatt is)
+                for nurl in next_open_requests:
+                    try:
+                        open_next_tab_if_needed(nurl)
+                    except Exception:
+                        pass
 
-            # --- GROUP tabok scan ---
-            higher_ids = curr_ids_main | next_all_curr_ids
-            group_all_curr_ids, group_pending_deletes, group_to_close = scan_group_tabs_evented(curr_ids_main, higher_ids)
+                # --- GROUP tabok scan ---
+                higher_ids = curr_ids_main | next_all_curr_ids
+                group_all_curr_ids, group_pending_deletes, group_to_close = scan_group_tabs_evented(curr_ids_main, higher_ids)
+            else:
+                # Defaults used when legacy NEXT/GROUP scan loop is disabled
+                next_all_curr_ids = set()
+                next_pending_deletes = []
+                next_to_close = []
+                next_open_requests = []
+                group_all_curr_ids = set()
+                group_pending_deletes = []
+                group_to_close = []
 
             curr_ids_all_now = curr_ids_main | next_all_curr_ids | group_all_curr_ids
             now2 = time.time()
@@ -8662,6 +8835,45 @@ def disable_main_autoupdate(driver, main_tab_handle):
         log(f"[MAIN] Error disabling auto-update: {e}")
 
 
+class PersistentHTTPSession:
+    def __init__(self):
+        self.client = httpx.AsyncClient(
+            http2=True,
+            timeout=5.0,
+            limits=httpx.Limits(max_keepalive_connections=20, max_connections=100),
+        )
+
+    async def get(self, url, **kwargs):
+        return await self.client.get(url, **kwargs)
+
+
+http_session = PersistentHTTPSession() if USE_HTTPX else None
+
+def _close_http_session_on_exit():
+    if not http_session:
+        return
+    try:
+        asyncio.run(http_session.client.aclose())
+    except Exception:
+        pass
+
+atexit.register(_close_http_session_on_exit)
+
+
+class FetchUnifiedJsonError(Exception):
+    pass
+
+
+def _is_retryable_http_status(status_code: int) -> bool:
+    return status_code == 429 or status_code >= 500
+
+
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=1, min=2, max=10),
+    retry=retry_if_exception_type((asyncio.TimeoutError, FetchUnifiedJsonError)),
+    reraise=True
+)
 async def fetch_unified_json(driver):
     """
     Fetch ONE JSON for ALL tabs
@@ -8677,49 +8889,69 @@ async def fetch_unified_json(driver):
         
         # Get cookies and user agent from driver
         cookies = {c['name']: c['value'] for c in driver.get_cookies()}
-        user_agent = driver.execute_script("return navigator.userAgent;")
+        browser_user_agent = driver.execute_script("return navigator.userAgent;")
+        user_agent = browser_user_agent
+        if FAKE_UA_AVAILABLE:
+            try:
+                user_agent = UserAgent().random
+            except Exception:
+                user_agent = browser_user_agent
+
+        headers = {
+            "User-Agent": user_agent,
+            "Accept": "application/json, text/html, */*",
+            "Accept-Language": "en-US,en;q=0.9,hu;q=0.8",
+            "Accept-Encoding": "br, gzip, deflate",
+            "Connection": "keep-alive",
+            "Referer": url,
+            "Sec-Fetch-Dest": "document",
+            "Sec-Fetch-Mode": "navigate",
+            "Sec-Fetch-Site": "none",
+            "Sec-Fetch-User": "?1",
+            "Cache-Control": "max-age=0",
+        }
         
         # Log request for monitoring
         if rate_monitor:
             rate_monitor.log_request(url)
         
         # Use httpx with HTTP/2 support if available, fallback to aiohttp
-        if HTTPX_AVAILABLE:
+        if USE_HTTPX:
             # Async fetch with httpx (HTTP/2 support!)
-            async with httpx.AsyncClient(http2=True) as client:
-                response = await client.get(
+            shared_http_session = globals().get("http_session")
+            if shared_http_session:
+                response = await shared_http_session.get(
                     url,
                     cookies=cookies,
-                    headers={
-                        "User-Agent": user_agent,
-                        "Accept-Encoding": "br, gzip, deflate",  # Enable compression (83% bandwidth savings!)
-                    },
+                    headers=headers,
                     timeout=5.0
                 )
-                if response.status_code == 200:
-                    # Try to get JSON data
-                    try:
-                        json_data = response.json()
-                        log(f"[UNIFIED-JSON] ✅ Fetched via httpx (HTTP/2)")
-                        return json_data
-                    except:
-                        # If not JSON, get text (might be HTML with embedded JSON)
-                        text_data = response.text
-                        log(f"[UNIFIED-JSON] ✅ Fetched data via httpx ({len(text_data)} chars)")
-                        return {'html': text_data}
-                else:
-                    log(f"[UNIFIED-JSON] HTTP {response.status_code}")
-                    return None
+            else:
+                async with httpx.AsyncClient(http2=True, timeout=5.0) as client:
+                    response = await client.get(url, cookies=cookies, headers=headers)
+            if response.status_code == 200:
+                # Try to get JSON data
+                try:
+                    json_data = response.json()
+                    log(f"[UNIFIED-JSON] ✅ Fetched via httpx (HTTP/2)")
+                    return json_data
+                except Exception:
+                    # If not JSON, get text (might be HTML with embedded JSON)
+                    text_data = response.text
+                    log(f"[UNIFIED-JSON] ✅ Fetched data via httpx ({len(text_data)} chars)")
+                    return {'html': text_data}
+            else:
+                log(f"[UNIFIED-JSON] HTTP {response.status_code}")
+                if _is_retryable_http_status(response.status_code):
+                    raise FetchUnifiedJsonError(f"HTTP {response.status_code} for {url}")
+                return None
         else:
             # Fallback to aiohttp (HTTP/1.1)
             async with aiohttp.ClientSession() as session:
                 async with session.get(
                     url,
                     cookies=cookies,
-                    headers={
-                        "User-Agent": user_agent,
-                        "Accept-Encoding": "br, gzip, deflate",  # Enable compression (83% bandwidth savings!)
-                    },
+                    headers=headers,
                     timeout=aiohttp.ClientTimeout(total=5)
                 ) as response:
                     if response.status == 200:
@@ -8728,21 +8960,23 @@ async def fetch_unified_json(driver):
                             json_data = await response.json()
                             log(f"[UNIFIED-JSON] ✅ Fetched via aiohttp (HTTP/1.1)")
                             return json_data
-                        except:
+                        except Exception:
                             # If not JSON, get text (might be HTML with embedded JSON)
                             text_data = await response.text()
                             log(f"[UNIFIED-JSON] ✅ Fetched data via aiohttp ({len(text_data)} chars)")
                             return {'html': text_data}
                     else:
                         log(f"[UNIFIED-JSON] HTTP {response.status}")
+                        if _is_retryable_http_status(response.status):
+                            raise FetchUnifiedJsonError(f"HTTP {response.status} for {url}")
                         return None
                     
     except asyncio.TimeoutError:
         log("[UNIFIED-JSON] Timeout after 5s")
-        return None
+        raise
     except Exception as e:
         log(f"[UNIFIED-JSON] Error: {e}")
-        return None
+        raise FetchUnifiedJsonError(str(e)) from e
 
 
 def inject_json_to_page(driver, json_data, page_type):
@@ -8759,12 +8993,14 @@ def inject_json_to_page(driver, json_data, page_type):
                 // Just refresh the page content
                 location.reload();
             """)
+            show_cycle_status_badge(driver, page_type, "inject")
             log(f"[INJECT] ✅ Refreshed {page_type} page")
             return True
         
         # If we have JSON, could build HTML here
         # For now, just refresh the page
         driver.execute_script("location.reload();")
+        show_cycle_status_badge(driver, page_type, "inject")
         log(f"[INJECT] ✅ Injected to {page_type} page")
         return True
         
@@ -8791,6 +9027,7 @@ def inject_json_to_all_existing_tabs(driver, json_data, main_tab_handle, group_t
                 driver.switch_to.window(main_tab_handle)
                 if inject_json_to_page(driver, json_data, "MAIN"):
                     injected_count += 1
+                    log("[MAIN] ✅ JSON injected")
             except Exception as e:
                 log(f"[BATCH-INJECT] Error MAIN: {e}")
         
@@ -8823,34 +9060,60 @@ def inject_json_to_all_existing_tabs(driver, json_data, main_tab_handle, group_t
         return 0
 
 
+def scrape_single_tab(driver, page_type):
+    """
+    Parse current tab HTML and collect tbody link data.
+    Uses BeautifulSoup+lxml when available (faster), selenium fallback otherwise.
+    """
+    if BS4_AVAILABLE:
+        html = driver.page_source
+        soup = BeautifulSoup(html, 'lxml')
+        tbodies = soup.find_all('tbody')
+        rows = []
+        for tbody in tbodies:
+            rows.append({
+                'id': tbody.get('id'),
+                'hrefs': [a.get('href') for a in tbody.find_all('a', href=True)]
+            })
+        return rows
+
+    rows = []
+    tbodies = driver.find_elements(By.TAG_NAME, "tbody")
+    for tbody in tbodies:
+        links = tbody.find_elements(By.TAG_NAME, "a")
+        rows.append({
+            'id': tbody.get_attribute("id"),
+            'hrefs': [link.get_attribute("href") for link in links if link.get_attribute("href")]
+        })
+    return rows
+
+
 def scrape_main_and_discover_urls(driver, main_tab_handle):
     """
     Scrape MAIN page and discover new GROUP/NEXT URLs
     """
     try:
         driver.switch_to.window(main_tab_handle)
+        disable_autoupdate_on_page(driver, "MAIN")
         
         discovered = {
             'group': set(),
             'next': set()
         }
         
-        # Find all tbody elements
-        tbodies = driver.find_elements(By.TAG_NAME, "tbody")
-        log(f"[MAIN-SCRAPE] Found {len(tbodies)} tbody elements")
+        rows = scrape_single_tab(driver, "MAIN")
+        log(f"[MAIN-SCRAPE] Found {len(rows)} tbody elements")
         
         scraped_count = 0
         
-        for tbody in tbodies:
+        for row in rows:
             try:
                 # Extract surebet data (you'll need to implement this)
-                tbody_id = tbody.get_attribute("id") or f"tbody_{scraped_count}"
+                tbody_id = row.get('id') or f"tbody_{scraped_count}"
                 
                 # Find all links in tbody
-                links = tbody.find_elements(By.TAG_NAME, "a")
-                for link in links:
+                for href in row.get('hrefs', []):
                     try:
-                        href = link.get_attribute("href")
                         if href:
                             if "/group/" in href or "/groups/" in href:
                                 discovered['group'].add(href)
@@ -8866,6 +9129,7 @@ def scrape_main_and_discover_urls(driver, main_tab_handle):
         
         log(f"[MAIN-SCRAPE] Scraped {scraped_count} items")
         log(f"[MAIN-SCRAPE] Discovered {len(discovered['group'])} GROUP, {len(discovered['next'])} NEXT URLs")
+        show_cycle_status_badge(driver, "MAIN", "scrape")
         
         return discovered
         
@@ -8885,16 +9149,15 @@ def scrape_next_tabs_and_discover_urls(driver, next_tabs):
         for url, tab_info in list(next_tabs.items()):
             try:
                 driver.switch_to.window(tab_info['handle'])
+                disable_autoupdate_on_page(driver, "NEXT")
                 
-                tbodies = driver.find_elements(By.TAG_NAME, "tbody")
+                rows = scrape_single_tab(driver, "NEXT")
                 
-                for tbody in tbodies:
+                for row in rows:
                     try:
                         # Find GROUP links
-                        links = tbody.find_elements(By.TAG_NAME, "a")
-                        for link in links:
+                        for href in row.get('hrefs', []):
                             try:
-                                href = link.get_attribute("href")
                                 if href and ("/group/" in href or "/groups/" in href):
                                     more_group_urls.add(href)
                             except:
@@ -8904,6 +9167,7 @@ def scrape_next_tabs_and_discover_urls(driver, next_tabs):
                         
                     except Exception as e:
                         log(f"[NEXT-SCRAPE] Error tbody: {e}")
+                show_cycle_status_badge(driver, "NEXT", "scrape")
                 
             except Exception as e:
                 log(f"[NEXT-SCRAPE] Error tab: {e}")
@@ -8934,12 +9198,10 @@ def open_new_tabs_and_inject(driver, new_group_urls, new_next_urls, json_data, g
         # Open new GROUP tabs
         for url in new_group_urls:
             try:
-                # You'll need to call your existing _open_group_tab_sync function
-                # _open_group_tab_sync(url)
-                
-                # For now, just log
-                log(f"[OPEN-TABS] Would open GROUP: {url[:60]}...")
-                opened_count += 1
+                was_open = url in group_tabs
+                _open_group_tab_sync(url)
+                if (not was_open) and (url in group_tabs):
+                    opened_count += 1
                 
                 # Small delay
                 time.sleep(random.uniform(0.35, 0.47))
@@ -8950,12 +9212,10 @@ def open_new_tabs_and_inject(driver, new_group_urls, new_next_urls, json_data, g
         # Open new NEXT tabs
         for url in new_next_urls:
             try:
-                # You'll need to call your existing _open_next_tab_sync function
-                # _open_next_tab_sync(url)
-                
-                # For now, just log
-                log(f"[OPEN-TABS] Would open NEXT: {url[:60]}...")
-                opened_count += 1
+                was_open = url in next_tabs
+                _open_next_tab_sync(url)
+                if (not was_open) and (url in next_tabs):
+                    opened_count += 1
                 
                 # Small delay
                 time.sleep(random.uniform(0.35, 0.47))
@@ -9107,9 +9367,6 @@ def unified_json_refresh_and_scrape_cycle(driver, main_tab_handle, group_tabs, n
     log("[UNIFIED] 🚀 Starting unified JSON refresh and scrape cycle")
     log("[UNIFIED] Architecture: 1 fetch → all tabs → MAIN scrape → NEXT scrape → open new → scrape all")
     
-    # Disable MAIN auto-update
-    disable_main_autoupdate(driver, main_tab_handle)
-    
     while True:
         try:
             # Random interval 60-75 seconds
@@ -9125,18 +9382,18 @@ def unified_json_refresh_and_scrape_cycle(driver, main_tab_handle, group_tabs, n
             if rate_monitor:
                 rate_monitor.log_stats()
             
-            # Check and disable auto-update
-            log("[UNIFIED] Step 0: Checking auto-update states...")
-            check_and_disable_autoupdate(driver, main_tab_handle, next_tabs)
-            
             # ─────────────────────────────────────────────
             # STEP 1: Fetch ONE JSON for ALL tabs
             # ─────────────────────────────────────────────
             log("[UNIFIED] Step 1/6: Fetching unified JSON...")
-            json_data = asyncio.run(fetch_unified_json(driver))
+            try:
+                json_data = asyncio.run(fetch_unified_json(driver))
+            except Exception as e:
+                log(f"[UNIFIED] ❌ Step 1/6 failed (JSON fetch): {type(e).__name__}: {e}")
+                continue
             
             if not json_data:
-                log("[UNIFIED] ❌ No JSON data, skipping cycle")
+                log("[UNIFIED] ❌ Step 1/6 returned no JSON data (skip cycle)")
                 continue
             
             # ─────────────────────────────────────────────
@@ -9197,3 +9454,10 @@ def unified_json_refresh_and_scrape_cycle(driver, main_tab_handle, group_tabs, n
 # =============================================================================
 # END OF UNIFIED JSON ARCHITECTURE
 # =============================================================================
+
+if __name__ == "__main__" and USE_UNIFIED_MAIN_CYCLE:
+    if "driver" in globals() and MAIN_HANDLE and "group_tabs" in globals() and "next_tabs" in globals():
+        log("⚙️ USE_UNIFIED_MAIN_CYCLE=1 → unified 60-75s cycle started")
+        unified_json_refresh_and_scrape_cycle(driver, MAIN_HANDLE, group_tabs, next_tabs)
+    else:
+        warn("⚠️ Unified cycle not started: runtime context not initialized (driver/MAIN_HANDLE/group_tabs/next_tabs)")
