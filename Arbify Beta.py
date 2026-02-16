@@ -8941,6 +8941,7 @@ def scrape_main_and_discover_urls(driver, main_tab_handle):
     """
     try:
         driver.switch_to.window(main_tab_handle)
+        disable_autoupdate_on_page(driver, "MAIN")
         
         discovered = {
             'group': set(),
@@ -8994,6 +8995,7 @@ def scrape_next_tabs_and_discover_urls(driver, next_tabs):
         for url, tab_info in list(next_tabs.items()):
             try:
                 driver.switch_to.window(tab_info['handle'])
+                disable_autoupdate_on_page(driver, "NEXT")
                 
                 rows = scrape_single_tab(driver, "NEXT")
                 
@@ -9214,9 +9216,6 @@ def unified_json_refresh_and_scrape_cycle(driver, main_tab_handle, group_tabs, n
     log("[UNIFIED] 🚀 Starting unified JSON refresh and scrape cycle")
     log("[UNIFIED] Architecture: 1 fetch → all tabs → MAIN scrape → NEXT scrape → open new → scrape all")
     
-    # Disable MAIN auto-update
-    disable_main_autoupdate(driver, main_tab_handle)
-    
     while True:
         try:
             # Random interval 60-75 seconds
@@ -9231,10 +9230,6 @@ def unified_json_refresh_and_scrape_cycle(driver, main_tab_handle, group_tabs, n
             # Log statistics
             if rate_monitor:
                 rate_monitor.log_stats()
-            
-            # Check and disable auto-update
-            log("[UNIFIED] Step 0: Checking auto-update states...")
-            check_and_disable_autoupdate(driver, main_tab_handle, next_tabs)
             
             # ─────────────────────────────────────────────
             # STEP 1: Fetch ONE JSON for ALL tabs
