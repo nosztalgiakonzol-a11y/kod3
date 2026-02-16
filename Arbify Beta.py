@@ -5520,12 +5520,18 @@ async def fetch_url_async(url, cookies, user_agent):
         }
         
         # Async HTTP request (prefer httpx when available)
+        html = None
+        base_url = url
         if HTTPX_AVAILABLE:
-            async with httpx.AsyncClient(http2=True, timeout=3.0, follow_redirects=False) as client:
-                response = await client.get(url, headers=headers, cookies=cookies)
-                html = response.text
-                base_url = str(response.url) or url
-        else:
+            try:
+                async with httpx.AsyncClient(http2=True, timeout=3.0, follow_redirects=False) as client:
+                    response = await client.get(url, headers=headers, cookies=cookies)
+                    html = response.text
+                    base_url = str(response.url) or url
+            except httpx.HTTPError as e:
+                log(f"[URL-EXTRACT] httpx failed, falling back to aiohttp: {type(e).__name__}")
+
+        if html is None:
             timeout = aiohttp.ClientTimeout(total=3)
             async with aiohttp.ClientSession(cookies=cookies, timeout=timeout) as session:
                 async with session.get(url, headers=headers, allow_redirects=False) as response:
