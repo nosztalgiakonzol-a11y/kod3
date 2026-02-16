@@ -5150,6 +5150,77 @@ def show_update_timestamp(driver):
         log(f"[TIMESTAMP] Error: {e}")
 
 
+def show_cycle_status_badge(driver, page_type, event_type):
+    """
+    Show unified cycle status on page:
+    - last JSON inject time
+    - last scrape time
+    - updates every second
+    Args:
+        driver: Selenium webdriver
+        page_type: MAIN, GROUP or NEXT
+        event_type: "inject" or "scrape"
+    """
+    try:
+        driver.execute_script("""
+            var pageType = arguments[0];
+            var eventType = arguments[1];
+            var now = Date.now();
+            window._unifiedCycleStatus = window._unifiedCycleStatus || {};
+            window._unifiedCycleStatus[pageType] = window._unifiedCycleStatus[pageType] || { injectedAt: null, scrapedAt: null };
+            var state = window._unifiedCycleStatus[pageType];
+
+            if (eventType === 'inject') {
+                state.injectedAt = now;
+            } else if (eventType === 'scrape') {
+                state.scrapedAt = now;
+            }
+
+            if (window._unifiedCycleStatusInterval) clearInterval(window._unifiedCycleStatusInterval);
+            var oldBadge = document.getElementById('unified-cycle-status');
+            if (oldBadge) oldBadge.remove();
+
+            var badge = document.createElement('div');
+            badge.id = 'unified-cycle-status';
+            badge.style.position = 'fixed';
+            badge.style.top = '10px';
+            badge.style.right = '10px';
+            badge.style.backgroundColor = 'rgba(0,0,0,0.78)';
+            badge.style.color = '#fff';
+            badge.style.padding = '8px 12px';
+            badge.style.borderRadius = '6px';
+            badge.style.fontSize = '12px';
+            badge.style.fontWeight = 'bold';
+            badge.style.whiteSpace = 'pre-line';
+            badge.style.zIndex = '99999';
+            badge.style.boxShadow = '0 2px 4px rgba(0,0,0,0.25)';
+
+            function fmt(ts, prefix) {
+                if (!ts) return prefix + ': never';
+                var elapsed = Math.floor((Date.now() - ts) / 1000);
+                return prefix + ': ' + elapsed + 's ago';
+            }
+
+            function render() {
+                badge.textContent = '🔁 ' + String(pageType) + '\n' +
+                                    fmt(state.injectedAt, 'Inject') + '\n' +
+                                    fmt(state.scrapedAt, 'Scrape');
+            }
+
+            render();
+            window._unifiedCycleStatusInterval = setInterval(render, 1000);
+            if (!window._unifiedBadgeCleanupBound) {
+                window.addEventListener('beforeunload', function() {
+                    if (window._unifiedCycleStatusInterval) clearInterval(window._unifiedCycleStatusInterval);
+                });
+                window._unifiedBadgeCleanupBound = true;
+            }
+            document.body.appendChild(badge);
+        """, page_type, event_type)
+    except Exception as e:
+        log(f"[UNIFIED-BADGE] Error: {e}")
+
+
 async def fetch_json_async_single(url, cookies, user_agent):
     """
     Async fetch single JSON file
@@ -8863,12 +8934,14 @@ def inject_json_to_page(driver, json_data, page_type):
                 // Just refresh the page content
                 location.reload();
             """)
+            show_cycle_status_badge(driver, page_type, "inject")
             log(f"[INJECT] ✅ Refreshed {page_type} page")
             return True
         
         # If we have JSON, could build HTML here
         # For now, just refresh the page
         driver.execute_script("location.reload();")
+        show_cycle_status_badge(driver, page_type, "inject")
         log(f"[INJECT] ✅ Injected to {page_type} page")
         return True
         
@@ -8997,6 +9070,7 @@ def scrape_main_and_discover_urls(driver, main_tab_handle):
         
         log(f"[MAIN-SCRAPE] Scraped {scraped_count} items")
         log(f"[MAIN-SCRAPE] Discovered {len(discovered['group'])} GROUP, {len(discovered['next'])} NEXT URLs")
+        show_cycle_status_badge(driver, "MAIN", "scrape")
         
         return discovered
         
@@ -9034,6 +9108,7 @@ def scrape_next_tabs_and_discover_urls(driver, next_tabs):
                         
                     except Exception as e:
                         log(f"[NEXT-SCRAPE] Error tbody: {e}")
+                show_cycle_status_badge(driver, "NEXT", "scrape")
                 
             except Exception as e:
                 log(f"[NEXT-SCRAPE] Error tab: {e}")
@@ -9256,10 +9331,14 @@ def unified_json_refresh_and_scrape_cycle(driver, main_tab_handle, group_tabs, n
             # STEP 1: Fetch ONE JSON for ALL tabs
             # ─────────────────────────────────────────────
             log("[UNIFIED] Step 1/6: Fetching unified JSON...")
-            json_data = asyncio.run(fetch_unified_json(driver))
+            try:
+                json_data = asyncio.run(fetch_unified_json(driver))
+            except Exception as e:
+                log(f"[UNIFIED] ❌ Step 1/6 failed (JSON fetch): {type(e).__name__}: {e}")
+                continue
             
             if not json_data:
-                log("[UNIFIED] ❌ No JSON data, skipping cycle")
+                log("[UNIFIED] ❌ Step 1/6 returned no JSON data (skip cycle)")
                 continue
             
             # ─────────────────────────────────────────────
