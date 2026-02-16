@@ -26,21 +26,10 @@ except ImportError:
     print("⚠️ aiohttp not available - install with: pip install aiohttp")
     print("   Parallel URL extraction will be slower without it.")
 
-# httpx - Modern HTTP client with HTTP/2 support (2× faster!)
-# BENEFITS:
-# - HTTP/2 multiplexing → Multiple requests on same connection = 2× faster
-# - Cleaner, more Pythonic API than aiohttp
-# - Better connection pooling and reuse
-# - Same API for sync and async operations
-# - Simpler timeout handling
-try:
-    import httpx
-    HTTPX_AVAILABLE = True
-    print("✅ httpx loaded (HTTP/2 support - 2× faster parallel requests!)")
-except ImportError:
-    HTTPX_AVAILABLE = False
-    print("⚠️ httpx not available - install with: pip install httpx")
-    print("   Using aiohttp fallback (HTTP/1.1 only)")
+# NOTE: httpx path disabled by request.
+# This bot now runs in aiohttp-only mode to avoid httpx timeout instability.
+HTTPX_AVAILABLE = False
+print("ℹ️ httpx path disabled (aiohttp-only mode)")
 
 # Performance & reliability imports
 try:
@@ -276,6 +265,9 @@ DEFAULT_BASE = "https://en.surebet.com"
 LOGIN_URL = "https://surebet.com/users/sign_in"
 CHECK_INTERVAL = 1.25
 MAIN_URL = "https://en.surebet.com/surebets"
+
+# Unified cycle toggle (default: enabled)
+USE_UNIFIED_CYCLE = os.getenv("USE_UNIFIED_CYCLE", "1") == "1"
 
 
 ACCOUNTS = {
@@ -8035,7 +8027,7 @@ runtime_state = load_runtime_state()
 accumulated_runtime_minutes = runtime_state.get("accumulated_minutes", 0.0)
 
 # NOTE: A futtatáskor a login() hívás indít. Ha csak importálod, ne fusson automatikusan.
-if __name__ == "__main__":
+if __name__ == "__main__" and not USE_UNIFIED_CYCLE:
     SESSION_START_TIME = time.time()
     RUN_STARTED_AT = SESSION_START_TIME
     
@@ -8683,59 +8675,31 @@ async def fetch_unified_json(driver):
         if rate_monitor:
             rate_monitor.log_request(url)
         
-        # Use httpx with HTTP/2 support if available, fallback to aiohttp
-        if HTTPX_AVAILABLE:
-            # Async fetch with httpx (HTTP/2 support!)
-            async with httpx.AsyncClient(http2=True) as client:
-                response = await client.get(
-                    url,
-                    cookies=cookies,
-                    headers={
-                        "User-Agent": user_agent,
-                        "Accept-Encoding": "br, gzip, deflate",  # Enable compression (83% bandwidth savings!)
-                    },
-                    timeout=5.0
-                )
-                if response.status_code == 200:
+        # aiohttp-only mode (httpx disabled)
+        async with aiohttp.ClientSession() as session:
+            async with session.get(
+                url,
+                cookies=cookies,
+                headers={
+                    "User-Agent": user_agent,
+                    "Accept-Encoding": "br, gzip, deflate",  # Enable compression
+                },
+                timeout=aiohttp.ClientTimeout(total=5)
+            ) as response:
+                if response.status == 200:
                     # Try to get JSON data
                     try:
-                        json_data = response.json()
-                        log(f"[UNIFIED-JSON] ✅ Fetched via httpx (HTTP/2)")
+                        json_data = await response.json()
+                        log(f"[UNIFIED-JSON] ✅ Fetched via aiohttp")
                         return json_data
                     except:
                         # If not JSON, get text (might be HTML with embedded JSON)
-                        text_data = response.text
-                        log(f"[UNIFIED-JSON] ✅ Fetched data via httpx ({len(text_data)} chars)")
+                        text_data = await response.text()
+                        log(f"[UNIFIED-JSON] ✅ Fetched data via aiohttp ({len(text_data)} chars)")
                         return {'html': text_data}
                 else:
-                    log(f"[UNIFIED-JSON] HTTP {response.status_code}")
+                    log(f"[UNIFIED-JSON] HTTP {response.status}")
                     return None
-        else:
-            # Fallback to aiohttp (HTTP/1.1)
-            async with aiohttp.ClientSession() as session:
-                async with session.get(
-                    url,
-                    cookies=cookies,
-                    headers={
-                        "User-Agent": user_agent,
-                        "Accept-Encoding": "br, gzip, deflate",  # Enable compression (83% bandwidth savings!)
-                    },
-                    timeout=aiohttp.ClientTimeout(total=5)
-                ) as response:
-                    if response.status == 200:
-                        # Try to get JSON data
-                        try:
-                            json_data = await response.json()
-                            log(f"[UNIFIED-JSON] ✅ Fetched via aiohttp (HTTP/1.1)")
-                            return json_data
-                        except:
-                            # If not JSON, get text (might be HTML with embedded JSON)
-                            text_data = await response.text()
-                            log(f"[UNIFIED-JSON] ✅ Fetched data via aiohttp ({len(text_data)} chars)")
-                            return {'html': text_data}
-                    else:
-                        log(f"[UNIFIED-JSON] HTTP {response.status}")
-                        return None
                     
     except asyncio.TimeoutError:
         log("[UNIFIED-JSON] Timeout after 5s")
@@ -9197,3 +9161,57 @@ def unified_json_refresh_and_scrape_cycle(driver, main_tab_handle, group_tabs, n
 # =============================================================================
 # END OF UNIFIED JSON ARCHITECTURE
 # =============================================================================
+
+
+# Unified runner must be defined AFTER unified function definitions above
+if __name__ == "__main__" and USE_UNIFIED_CYCLE:
+    SESSION_START_TIME = time.time()
+    RUN_STARTED_AT = SESSION_START_TIME
+
+    # Persist account/runtime state similarly to legacy startup
+    last_session_start = runtime_state.get("last_session_start")
+    if last_session_start and (SESSION_START_TIME - last_session_start) < 3600:
+        log(f"📊 Előző akkumulált futásidő: {accumulated_runtime_minutes:.1f} perc")
+
+    runtime_state["last_session_start"] = SESSION_START_TIME
+    if runtime_state.get("account_rotation_pending"):
+        log(f"✅ Account rotation sikeres volt: {runtime_state.get('current_account')} → {ACTIVE_ACCOUNT_KEY}")
+    runtime_state["current_account"] = ACTIVE_ACCOUNT_KEY
+    runtime_state["account_rotation_pending"] = False
+    save_runtime_state(runtime_state)
+    log(f"💾 Account állapot frissítve: current={ACTIVE_ACCOUNT_KEY}, pending=False")
+
+    log("")
+    log("=" * 80)
+    log("🔍 KRITIKUS ELLENŐRZÉS: surebet.com szerver elérhető-e?")
+    log("=" * 80)
+    if not is_surebet_server_available():
+        log("❌ Szerver nem elérhető - nem lehet bejelentkezni!")
+        wait_for_server_recovery()
+    log("✅ Szerver elérhető, folytatás...")
+    log("=" * 80)
+    log("")
+
+    login()
+
+    log("🚀 DINAMIKUS BOOTSTRAP fázis: rekurzív MAIN + NEXT + GROUP oldalak megnyitása")
+    try:
+        MAIN_HANDLE = driver.current_window_handle
+    except Exception:
+        MAIN_HANDLE = None
+
+    # Keep existing background helpers that are useful in unified mode too
+    groupnext_thread = threading.Thread(target=group_next_opener_worker, daemon=True)
+    groupnext_thread.start()
+    log("🚀 Group/NEXT opener worker elindítva (BOOTSTRAP előtt)")
+
+    run_dynamic_bootstrap()
+
+    tab_cleanup_thread = threading.Thread(target=tab_cleanup_worker, daemon=True)
+    tab_cleanup_thread.start()
+    log("🧹 TAB cleanup worker elindítva")
+
+    ensure_main_autoupdate()
+
+    log("🚀 UNIFIED MODE AKTÍV - unified_json_refresh_and_scrape_cycle indul")
+    unified_json_refresh_and_scrape_cycle(driver, MAIN_HANDLE, group_tabs, next_tabs)
