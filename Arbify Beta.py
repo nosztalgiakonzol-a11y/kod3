@@ -903,7 +903,7 @@ def _cdp_dump_nav_targets(label: str = ""):
         return
 
 # --- NETWORK LOGGING FOR API DISCOVERY ---
-ENABLE_NETWORK_LOGGING = True
+ENABLE_NETWORK_LOGGING = False
 NETWORK_LOG_DIR = "./network_logs"
 last_network_log_save = 0
 
