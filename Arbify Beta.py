@@ -5535,13 +5535,18 @@ async def fetch_url_async(url, cookies, user_agent):
         base_url = url
         if HTTPX_AVAILABLE:
             try:
-                response = await http_session.get(
-                    url,
-                    headers=headers,
-                    cookies=cookies,
-                    timeout=3.0,
-                    follow_redirects=False
-                )
+                shared_http_session = globals().get("http_session")
+                if shared_http_session:
+                    response = await shared_http_session.get(
+                        url,
+                        headers=headers,
+                        cookies=cookies,
+                        timeout=3.0,
+                        follow_redirects=False
+                    )
+                else:
+                    async with httpx.AsyncClient(http2=True, timeout=3.0, follow_redirects=False) as client:
+                        response = await client.get(url, headers=headers, cookies=cookies)
                 html = response.text
                 base_url = str(response.url) or url
             except httpx.HTTPError as e:
@@ -8772,12 +8777,17 @@ async def fetch_unified_json(driver):
         # Use httpx with HTTP/2 support if available, fallback to aiohttp
         if HTTPX_AVAILABLE:
             # Async fetch with httpx (HTTP/2 support!)
-            response = await http_session.get(
-                url,
-                cookies=cookies,
-                headers=headers,
-                timeout=5.0
-            )
+            shared_http_session = globals().get("http_session")
+            if shared_http_session:
+                response = await shared_http_session.get(
+                    url,
+                    cookies=cookies,
+                    headers=headers,
+                    timeout=5.0
+                )
+            else:
+                async with httpx.AsyncClient(http2=True, timeout=5.0) as client:
+                    response = await client.get(url, cookies=cookies, headers=headers)
             if response.status_code == 200:
                 # Try to get JSON data
                 try:
