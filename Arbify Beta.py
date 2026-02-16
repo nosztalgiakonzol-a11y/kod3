@@ -58,6 +58,16 @@ try:
     print("✅ Tenacity loaded (auto-retry enabled!)")
 except ImportError:
     TENACITY_AVAILABLE = False
+    def retry(*args, **kwargs):
+        def _decorator(func):
+            return func
+        return _decorator
+    def stop_after_attempt(*args, **kwargs):
+        return None
+    def wait_exponential(*args, **kwargs):
+        return None
+    def retry_if_exception_type(*args, **kwargs):
+        return None
     print("⚠️ Tenacity not available - install with: pip install tenacity")
 
 try:
@@ -5524,10 +5534,15 @@ async def fetch_url_async(url, cookies, user_agent):
         base_url = url
         if HTTPX_AVAILABLE:
             try:
-                async with httpx.AsyncClient(http2=True, timeout=3.0, follow_redirects=False) as client:
-                    response = await client.get(url, headers=headers, cookies=cookies)
-                    html = response.text
-                    base_url = str(response.url) or url
+                response = await http_session.get(
+                    url,
+                    headers=headers,
+                    cookies=cookies,
+                    timeout=3.0,
+                    follow_redirects=False
+                )
+                html = response.text
+                base_url = str(response.url) or url
             except httpx.HTTPError as e:
                 log(f"[URL-EXTRACT] httpx failed, falling back to aiohttp: {type(e).__name__}")
 
@@ -8673,6 +8688,23 @@ def disable_main_autoupdate(driver, main_tab_handle):
         log(f"[MAIN] Error disabling auto-update: {e}")
 
 
+class PersistentHTTPSession:
+    def __init__(self):
+        self.client = httpx.AsyncClient(http2=True)
+
+    async def get(self, url, **kwargs):
+        return await self.client.get(url, **kwargs)
+
+
+http_session = PersistentHTTPSession() if HTTPX_AVAILABLE else None
+
+
+@retry(
+    stop=stop_after_attempt(3),
+    wait=wait_exponential(multiplier=1, min=2, max=10),
+    retry=retry_if_exception_type(Exception),
+    reraise=True
+)
 async def fetch_unified_json(driver):
     """
     Fetch ONE JSON for ALL tabs
@@ -8688,7 +8720,27 @@ async def fetch_unified_json(driver):
         
         # Get cookies and user agent from driver
         cookies = {c['name']: c['value'] for c in driver.get_cookies()}
-        user_agent = driver.execute_script("return navigator.userAgent;")
+        browser_user_agent = driver.execute_script("return navigator.userAgent;")
+        user_agent = browser_user_agent
+        if FAKE_UA_AVAILABLE:
+            try:
+                user_agent = UserAgent().random
+            except Exception:
+                user_agent = browser_user_agent
+
+        headers = {
+            "User-Agent": user_agent,
+            "Accept": "application/json, text/html, */*",
+            "Accept-Language": "en-US,en;q=0.9,hu;q=0.8",
+            "Accept-Encoding": "br, gzip, deflate",
+            "Connection": "keep-alive",
+            "Referer": url,
+            "Sec-Fetch-Dest": "document",
+            "Sec-Fetch-Mode": "navigate",
+            "Sec-Fetch-Site": "none",
+            "Sec-Fetch-User": "?1",
+            "Cache-Control": "max-age=0",
+        }
         
         # Log request for monitoring
         if rate_monitor:
@@ -8697,40 +8749,33 @@ async def fetch_unified_json(driver):
         # Use httpx with HTTP/2 support if available, fallback to aiohttp
         if HTTPX_AVAILABLE:
             # Async fetch with httpx (HTTP/2 support!)
-            async with httpx.AsyncClient(http2=True) as client:
-                response = await client.get(
-                    url,
-                    cookies=cookies,
-                    headers={
-                        "User-Agent": user_agent,
-                        "Accept-Encoding": "br, gzip, deflate",  # Enable compression (83% bandwidth savings!)
-                    },
-                    timeout=5.0
-                )
-                if response.status_code == 200:
-                    # Try to get JSON data
-                    try:
-                        json_data = response.json()
-                        log(f"[UNIFIED-JSON] ✅ Fetched via httpx (HTTP/2)")
-                        return json_data
-                    except:
-                        # If not JSON, get text (might be HTML with embedded JSON)
-                        text_data = response.text
-                        log(f"[UNIFIED-JSON] ✅ Fetched data via httpx ({len(text_data)} chars)")
-                        return {'html': text_data}
-                else:
-                    log(f"[UNIFIED-JSON] HTTP {response.status_code}")
-                    return None
+            response = await http_session.get(
+                url,
+                cookies=cookies,
+                headers=headers,
+                timeout=5.0
+            )
+            if response.status_code == 200:
+                # Try to get JSON data
+                try:
+                    json_data = response.json()
+                    log(f"[UNIFIED-JSON] ✅ Fetched via httpx (HTTP/2)")
+                    return json_data
+                except:
+                    # If not JSON, get text (might be HTML with embedded JSON)
+                    text_data = response.text
+                    log(f"[UNIFIED-JSON] ✅ Fetched data via httpx ({len(text_data)} chars)")
+                    return {'html': text_data}
+            else:
+                log(f"[UNIFIED-JSON] HTTP {response.status_code}")
+                raise RuntimeError(f"HTTP {response.status_code}")
         else:
             # Fallback to aiohttp (HTTP/1.1)
             async with aiohttp.ClientSession() as session:
                 async with session.get(
                     url,
                     cookies=cookies,
-                    headers={
-                        "User-Agent": user_agent,
-                        "Accept-Encoding": "br, gzip, deflate",  # Enable compression (83% bandwidth savings!)
-                    },
+                    headers=headers,
                     timeout=aiohttp.ClientTimeout(total=5)
                 ) as response:
                     if response.status == 200:
@@ -8746,14 +8791,14 @@ async def fetch_unified_json(driver):
                             return {'html': text_data}
                     else:
                         log(f"[UNIFIED-JSON] HTTP {response.status}")
-                        return None
+                        raise RuntimeError(f"HTTP {response.status}")
                     
     except asyncio.TimeoutError:
         log("[UNIFIED-JSON] Timeout after 5s")
-        return None
+        raise
     except Exception as e:
         log(f"[UNIFIED-JSON] Error: {e}")
-        return None
+        raise
 
 
 def inject_json_to_page(driver, json_data, page_type):
@@ -8802,6 +8847,7 @@ def inject_json_to_all_existing_tabs(driver, json_data, main_tab_handle, group_t
                 driver.switch_to.window(main_tab_handle)
                 if inject_json_to_page(driver, json_data, "MAIN"):
                     injected_count += 1
+                    log("[MAIN] ✅ JSON injected")
             except Exception as e:
                 log(f"[BATCH-INJECT] Error MAIN: {e}")
         
@@ -8834,6 +8880,34 @@ def inject_json_to_all_existing_tabs(driver, json_data, main_tab_handle, group_t
         return 0
 
 
+def scrape_single_tab(driver, page_type):
+    """
+    Parse current tab HTML and collect tbody link data.
+    Uses BeautifulSoup+lxml when available (faster), selenium fallback otherwise.
+    """
+    if BS4_AVAILABLE:
+        html = driver.page_source
+        soup = BeautifulSoup(html, 'lxml')
+        tbodies = soup.find_all('tbody')
+        rows = []
+        for tbody in tbodies:
+            rows.append({
+                'id': tbody.get('id'),
+                'hrefs': [a.get('href') for a in tbody.find_all('a', href=True)]
+            })
+        return rows
+
+    rows = []
+    tbodies = driver.find_elements(By.TAG_NAME, "tbody")
+    for tbody in tbodies:
+        links = tbody.find_elements(By.TAG_NAME, "a")
+        rows.append({
+            'id': tbody.get_attribute("id"),
+            'hrefs': [link.get_attribute("href") for link in links if link.get_attribute("href")]
+        })
+    return rows
+
+
 def scrape_main_and_discover_urls(driver, main_tab_handle):
     """
     Scrape MAIN page and discover new GROUP/NEXT URLs
@@ -8846,22 +8920,19 @@ def scrape_main_and_discover_urls(driver, main_tab_handle):
             'next': set()
         }
         
-        # Find all tbody elements
-        tbodies = driver.find_elements(By.TAG_NAME, "tbody")
-        log(f"[MAIN-SCRAPE] Found {len(tbodies)} tbody elements")
+        rows = scrape_single_tab(driver, "MAIN")
+        log(f"[MAIN-SCRAPE] Found {len(rows)} tbody elements")
         
         scraped_count = 0
         
-        for tbody in tbodies:
+        for row in rows:
             try:
                 # Extract surebet data (you'll need to implement this)
-                tbody_id = tbody.get_attribute("id") or f"tbody_{scraped_count}"
+                tbody_id = row.get('id') or f"tbody_{scraped_count}"
                 
                 # Find all links in tbody
-                links = tbody.find_elements(By.TAG_NAME, "a")
-                for link in links:
+                for href in row.get('hrefs', []):
                     try:
-                        href = link.get_attribute("href")
                         if href:
                             if "/group/" in href or "/groups/" in href:
                                 discovered['group'].add(href)
@@ -8897,15 +8968,13 @@ def scrape_next_tabs_and_discover_urls(driver, next_tabs):
             try:
                 driver.switch_to.window(tab_info['handle'])
                 
-                tbodies = driver.find_elements(By.TAG_NAME, "tbody")
+                rows = scrape_single_tab(driver, "NEXT")
                 
-                for tbody in tbodies:
+                for row in rows:
                     try:
                         # Find GROUP links
-                        links = tbody.find_elements(By.TAG_NAME, "a")
-                        for link in links:
+                        for href in row.get('hrefs', []):
                             try:
-                                href = link.get_attribute("href")
                                 if href and ("/group/" in href or "/groups/" in href):
                                     more_group_urls.add(href)
                             except:
