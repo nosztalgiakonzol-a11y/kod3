@@ -611,7 +611,7 @@ SCRAPING_FORCE_FIRST_TIME = True       # Force scrape on first encounter
 # =============================================================================
 # Fetch JSON and inject HTML into page without full refresh
 # Like MAIN page autoupdate, but for GROUP and NEXT pages
-ENABLE_JSON_AUTO_UPDATE = True          # Enable JSON auto-update
+ENABLE_JSON_AUTO_UPDATE = False         # Disabled: avoid extra per-tab fetch loops (use unified cycle strategy)
 JSON_UPDATE_INTERVAL_MIN = 50           # Minimum interval (random 50-60s)
 JSON_UPDATE_INTERVAL_MAX = 60           # Maximum interval (random 50-60s)
 JSON_SHOW_UPDATE_TIME = True            # Show "Updated X seconds ago"
