@@ -292,6 +292,10 @@ CHECK_INTERVAL = 1.25
 MAIN_URL = "https://en.surebet.com/surebets"
 MANUAL_TAB_INSPECTION_MODE = os.getenv("MANUAL_TAB_INSPECTION_MODE", "0") == "1"  # Debug: don't force MAIN while manually checking tabs
 USE_UNIFIED_MAIN_CYCLE = os.getenv("USE_UNIFIED_MAIN_CYCLE", "1") == "1"  # Run 60-75s unified cycle as main loop
+ENABLE_GROUP_NEXT_OPENER_WORKER = os.getenv(
+    "ENABLE_GROUP_NEXT_OPENER_WORKER",
+    "0" if USE_UNIFIED_MAIN_CYCLE else "1"
+) == "1"
 
 
 ACCOUNTS = {
@@ -6466,6 +6470,14 @@ def open_group_tab_if_needed(group_url: str):
         log(f"⏳ Group URL tiltva (async wrapper): {group_url}")
         return
 
+    if not ENABLE_GROUP_NEXT_OPENER_WORKER:
+        group_open_pending.add(group_url)
+        try:
+            _open_group_tab_sync(group_url)
+        finally:
+            group_open_pending.discard(group_url)
+        return
+
     group_open_pending.add(group_url)
     try:
         GROUP_NEXT_OPEN_QUEUE.put_nowait({"type": "group", "url": group_url})
@@ -6561,6 +6573,14 @@ def open_next_tab_if_needed(next_url: str):
     if next_url in next_tabs or next_url in next_open_pending:
         if LOG_NEXT_ALREADY_OPEN_VERBOSE:
             log(f"ℹ️ NEXT már nyitva vagy épp nyílik: {next_url}")
+        return
+
+    if not ENABLE_GROUP_NEXT_OPENER_WORKER:
+        next_open_pending.add(next_url)
+        try:
+            _open_next_tab_sync(next_url)
+        finally:
+            next_open_pending.discard(next_url)
         return
 
     next_open_pending.add(next_url)
@@ -8223,10 +8243,13 @@ if __name__ == "__main__":
     except Exception:
         MAIN_HANDLE = None
 
-    # GROUP/NEXT tab-nyitó háttér worker - BOOTSTRAP ELŐTT indul!
-    groupnext_thread = threading.Thread(target=group_next_opener_worker, daemon=True)
-    groupnext_thread.start()
-    log("🚀 Group/NEXT opener worker elindítva (BOOTSTRAP előtt)")
+    # GROUP/NEXT tab-nyitó háttér worker - BOOTSTRAP ELŐTT indul (ha engedélyezve)
+    if ENABLE_GROUP_NEXT_OPENER_WORKER:
+        groupnext_thread = threading.Thread(target=group_next_opener_worker, daemon=True)
+        groupnext_thread.start()
+        log("🚀 Group/NEXT opener worker elindítva (BOOTSTRAP előtt)")
+    else:
+        log("⚙️ Group/NEXT opener worker KIKAPCSOLVA (direct sync tab open mode)")
 
     # Dinamikus BOOTSTRAP futtatása
     run_dynamic_bootstrap()
@@ -9175,12 +9198,10 @@ def open_new_tabs_and_inject(driver, new_group_urls, new_next_urls, json_data, g
         # Open new GROUP tabs
         for url in new_group_urls:
             try:
-                # You'll need to call your existing _open_group_tab_sync function
-                # _open_group_tab_sync(url)
-                
-                # For now, just log
-                log(f"[OPEN-TABS] Would open GROUP: {url[:60]}...")
-                opened_count += 1
+                was_open = url in group_tabs
+                _open_group_tab_sync(url)
+                if (not was_open) and (url in group_tabs):
+                    opened_count += 1
                 
                 # Small delay
                 time.sleep(random.uniform(0.35, 0.47))
@@ -9191,12 +9212,10 @@ def open_new_tabs_and_inject(driver, new_group_urls, new_next_urls, json_data, g
         # Open new NEXT tabs
         for url in new_next_urls:
             try:
-                # You'll need to call your existing _open_next_tab_sync function
-                # _open_next_tab_sync(url)
-                
-                # For now, just log
-                log(f"[OPEN-TABS] Would open NEXT: {url[:60]}...")
-                opened_count += 1
+                was_open = url in next_tabs
+                _open_next_tab_sync(url)
+                if (not was_open) and (url in next_tabs):
+                    opened_count += 1
                 
                 # Small delay
                 time.sleep(random.uniform(0.35, 0.47))
