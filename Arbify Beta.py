@@ -615,6 +615,7 @@ ENABLE_JSON_AUTO_UPDATE = False         # Disabled: avoid extra per-tab fetch lo
 JSON_UPDATE_INTERVAL_MIN = 50           # Minimum interval (random 50-60s)
 JSON_UPDATE_INTERVAL_MAX = 60           # Maximum interval (random 50-60s)
 JSON_SHOW_UPDATE_TIME = True            # Show "Updated X seconds ago"
+ENABLE_LEGACY_NEXT_GROUP_SCAN = False   # Enable/disable legacy NEXT/GROUP scan loop block in main while cycle
 # =============================================================================
 
 # =============================================================================
@@ -8495,19 +8496,29 @@ if __name__ == "__main__":
             except Exception:
                 pass
 
-            # --- NEXT tabok scan ---
-            next_all_curr_ids, next_pending_deletes, next_to_close, next_open_requests = scan_next_tabs_evented(curr_ids_main)
+            if ENABLE_LEGACY_NEXT_GROUP_SCAN:
+                # --- NEXT tabok scan ---
+                next_all_curr_ids, next_pending_deletes, next_to_close, next_open_requests = scan_next_tabs_evented(curr_ids_main)
 
-            # új NEXT URL-ek nyitása (BOOTSTRAP alatt is)
-            for nurl in next_open_requests:
-                try:
-                    open_next_tab_if_needed(nurl)
-                except Exception:
-                    pass
+                # új NEXT URL-ek nyitása (BOOTSTRAP alatt is)
+                for nurl in next_open_requests:
+                    try:
+                        open_next_tab_if_needed(nurl)
+                    except Exception:
+                        pass
 
-            # --- GROUP tabok scan ---
-            higher_ids = curr_ids_main | next_all_curr_ids
-            group_all_curr_ids, group_pending_deletes, group_to_close = scan_group_tabs_evented(curr_ids_main, higher_ids)
+                # --- GROUP tabok scan ---
+                higher_ids = curr_ids_main | next_all_curr_ids
+                group_all_curr_ids, group_pending_deletes, group_to_close = scan_group_tabs_evented(curr_ids_main, higher_ids)
+            else:
+                # Defaults used when legacy NEXT/GROUP scan loop is disabled
+                next_all_curr_ids = set()
+                next_pending_deletes = []
+                next_to_close = []
+                next_open_requests = []
+                group_all_curr_ids = set()
+                group_pending_deletes = []
+                group_to_close = []
 
             curr_ids_all_now = curr_ids_main | next_all_curr_ids | group_all_curr_ids
             now2 = time.time()
