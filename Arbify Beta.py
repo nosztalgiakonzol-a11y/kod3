@@ -266,6 +266,9 @@ LOGIN_URL = "https://surebet.com/users/sign_in"
 CHECK_INTERVAL = 1.25
 MAIN_URL = "https://en.surebet.com/surebets"
 
+# Unified cycle toggle (default: enabled)
+USE_UNIFIED_CYCLE = os.getenv("USE_UNIFIED_CYCLE", "1") == "1"
+
 
 ACCOUNTS = {
     "acc1": {  # első account
@@ -8024,7 +8027,7 @@ runtime_state = load_runtime_state()
 accumulated_runtime_minutes = runtime_state.get("accumulated_minutes", 0.0)
 
 # NOTE: A futtatáskor a login() hívás indít. Ha csak importálod, ne fusson automatikusan.
-if __name__ == "__main__":
+if __name__ == "__main__" and not USE_UNIFIED_CYCLE:
     SESSION_START_TIME = time.time()
     RUN_STARTED_AT = SESSION_START_TIME
     
@@ -9158,3 +9161,57 @@ def unified_json_refresh_and_scrape_cycle(driver, main_tab_handle, group_tabs, n
 # =============================================================================
 # END OF UNIFIED JSON ARCHITECTURE
 # =============================================================================
+
+
+# Unified runner must be defined AFTER unified function definitions above
+if __name__ == "__main__" and USE_UNIFIED_CYCLE:
+    SESSION_START_TIME = time.time()
+    RUN_STARTED_AT = SESSION_START_TIME
+
+    # Persist account/runtime state similarly to legacy startup
+    last_session_start = runtime_state.get("last_session_start")
+    if last_session_start and (SESSION_START_TIME - last_session_start) < 3600:
+        log(f"📊 Előző akkumulált futásidő: {accumulated_runtime_minutes:.1f} perc")
+
+    runtime_state["last_session_start"] = SESSION_START_TIME
+    if runtime_state.get("account_rotation_pending"):
+        log(f"✅ Account rotation sikeres volt: {runtime_state.get('current_account')} → {ACTIVE_ACCOUNT_KEY}")
+    runtime_state["current_account"] = ACTIVE_ACCOUNT_KEY
+    runtime_state["account_rotation_pending"] = False
+    save_runtime_state(runtime_state)
+    log(f"💾 Account állapot frissítve: current={ACTIVE_ACCOUNT_KEY}, pending=False")
+
+    log("")
+    log("=" * 80)
+    log("🔍 KRITIKUS ELLENŐRZÉS: surebet.com szerver elérhető-e?")
+    log("=" * 80)
+    if not is_surebet_server_available():
+        log("❌ Szerver nem elérhető - nem lehet bejelentkezni!")
+        wait_for_server_recovery()
+    log("✅ Szerver elérhető, folytatás...")
+    log("=" * 80)
+    log("")
+
+    login()
+
+    log("🚀 DINAMIKUS BOOTSTRAP fázis: rekurzív MAIN + NEXT + GROUP oldalak megnyitása")
+    try:
+        MAIN_HANDLE = driver.current_window_handle
+    except Exception:
+        MAIN_HANDLE = None
+
+    # Keep existing background helpers that are useful in unified mode too
+    groupnext_thread = threading.Thread(target=group_next_opener_worker, daemon=True)
+    groupnext_thread.start()
+    log("🚀 Group/NEXT opener worker elindítva (BOOTSTRAP előtt)")
+
+    run_dynamic_bootstrap()
+
+    tab_cleanup_thread = threading.Thread(target=tab_cleanup_worker, daemon=True)
+    tab_cleanup_thread.start()
+    log("🧹 TAB cleanup worker elindítva")
+
+    ensure_main_autoupdate()
+
+    log("🚀 UNIFIED MODE AKTÍV - unified_json_refresh_and_scrape_cycle indul")
+    unified_json_refresh_and_scrape_cycle(driver, MAIN_HANDLE, group_tabs, next_tabs)
