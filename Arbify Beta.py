@@ -291,6 +291,7 @@ LOGIN_URL = "https://surebet.com/users/sign_in"
 CHECK_INTERVAL = 1.25
 MAIN_URL = "https://en.surebet.com/surebets"
 MANUAL_TAB_INSPECTION_MODE = os.getenv("MANUAL_TAB_INSPECTION_MODE", "0") == "1"  # Debug: don't force MAIN while manually checking tabs
+USE_UNIFIED_MAIN_CYCLE = os.getenv("USE_UNIFIED_MAIN_CYCLE", "1") == "1"  # Run 60-75s unified cycle as main loop
 
 
 ACCOUNTS = {
@@ -8377,8 +8378,9 @@ if __name__ == "__main__":
 
         return group_all_curr_ids, pending_deletes, to_close
 
+    # Legacy main loop path (only when unified mode is disabled)
     try:
-        while True:
+        while not USE_UNIFIED_MAIN_CYCLE:
             loop_start_time = time.time()
             
             # 💀 Ha a WebDriver meghalt, ne kínlódjunk tovább – lépjünk ki a fő loopból
@@ -9433,3 +9435,10 @@ def unified_json_refresh_and_scrape_cycle(driver, main_tab_handle, group_tabs, n
 # =============================================================================
 # END OF UNIFIED JSON ARCHITECTURE
 # =============================================================================
+
+if __name__ == "__main__" and USE_UNIFIED_MAIN_CYCLE:
+    if "driver" in globals() and MAIN_HANDLE and "group_tabs" in globals() and "next_tabs" in globals():
+        log("⚙️ USE_UNIFIED_MAIN_CYCLE=1 → unified 60-75s cycle started")
+        unified_json_refresh_and_scrape_cycle(driver, MAIN_HANDLE, group_tabs, next_tabs)
+    else:
+        warn("⚠️ Unified cycle not started: runtime context not initialized (driver/MAIN_HANDLE/group_tabs/next_tabs)")
