@@ -26,37 +26,6 @@ except ImportError:
     print("⚠️ aiohttp not available - install with: pip install aiohttp")
     print("   Parallel URL extraction will be slower without it.")
 
-# NOTE: httpx path disabled by request.
-# This bot now runs in aiohttp-only mode to avoid httpx timeout instability.
-HTTPX_AVAILABLE = False
-print("ℹ️ httpx path disabled (aiohttp-only mode)")
-
-# Performance & reliability imports
-try:
-    from bs4 import BeautifulSoup
-    import lxml
-    BS4_AVAILABLE = True
-    print("✅ BeautifulSoup4 + lxml loaded (10× faster parsing!)")
-except ImportError:
-    BS4_AVAILABLE = False
-    print("⚠️ BeautifulSoup4 not available - install with: pip install beautifulsoup4 lxml")
-
-try:
-    from tenacity import retry, stop_after_attempt, wait_exponential, retry_if_exception_type
-    TENACITY_AVAILABLE = True
-    print("✅ Tenacity loaded (auto-retry enabled!)")
-except ImportError:
-    TENACITY_AVAILABLE = False
-    print("⚠️ Tenacity not available - install with: pip install tenacity")
-
-try:
-    from fake_useragent import UserAgent
-    FAKE_UA_AVAILABLE = True
-    print("✅ Fake-UserAgent loaded (UA rotation enabled!)")
-except ImportError:
-    FAKE_UA_AVAILABLE = False
-    print("⚠️ Fake-UserAgent not available - install with: pip install fake-useragent")
-
 warnings.filterwarnings("ignore", category=ResourceWarning)
 
 import requests
@@ -97,118 +66,6 @@ KEY_MOD = Keys.COMMAND if IS_MAC else Keys.CONTROL
 
 # --- Driver életjelző ---
 DRIVER_DEAD = False
-
-# ========================================
-# REQUEST RATE MONITOR
-# ========================================
-class RequestRateMonitor:
-    """
-    Monitor HTTP request rates
-    Logs to console and request_stats.txt file
-    Tracks requests per minute for rate limiting analysis
-    """
-    def __init__(self, log_file="request_stats.txt"):
-        self.requests = []
-        self.total_requests = 0
-        self.log_file = log_file
-        self.start_time = time.time()
-        
-        # Initialize log file with header
-        try:
-            with open(self.log_file, 'w', encoding='utf-8') as f:
-                f.write("="*70 + "\n")
-                f.write("REQUEST RATE MONITOR - Session Started\n")
-                f.write(f"Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}\n")
-                f.write("="*70 + "\n\n")
-            print(f"✅ Request rate monitor initialized (logging to {self.log_file})")
-        except Exception as e:
-            print(f"⚠️ Could not initialize request log file: {e}")
-    
-    def log_request(self, url):
-        """Log a request to memory and file"""
-        timestamp = time.time()
-        self.requests.append({'timestamp': timestamp, 'url': url})
-        self.total_requests += 1
-        
-        # Write to file
-        try:
-            with open(self.log_file, 'a', encoding='utf-8') as f:
-                dt = datetime.fromtimestamp(timestamp).strftime('%Y-%m-%d %H:%M:%S')
-                f.write(f"[{dt}] REQUEST #{self.total_requests} → {url}\n")
-        except Exception:
-            pass  # Silent fail on file write
-    
-    def get_requests_per_minute(self):
-        """Get requests in last 60 seconds"""
-        now = time.time()
-        recent = [r for r in self.requests if now - r['timestamp'] < 60]
-        return len(recent)
-    
-    def get_average_rpm(self):
-        """Get average RPM over last 5 minutes"""
-        now = time.time()
-        recent = [r for r in self.requests if now - r['timestamp'] < 300]
-        if not recent:
-            return 0
-        duration = min(300, now - recent[0]['timestamp'])
-        if duration == 0:
-            return 0
-        return (len(recent) / duration) * 60
-    
-    def get_peak_rpm(self):
-        """Get peak RPM in any 1-minute window"""
-        if not self.requests:
-            return 0
-        
-        peak = 0
-        for i in range(len(self.requests)):
-            start_time = self.requests[i]['timestamp']
-            count = sum(1 for r in self.requests if start_time <= r['timestamp'] < start_time + 60)
-            peak = max(peak, count)
-        return peak
-    
-    def log_stats(self):
-        """Log statistics to console and file"""
-        rpm = self.get_requests_per_minute()
-        avg_rpm = self.get_average_rpm()
-        peak_rpm = self.get_peak_rpm()
-        runtime = (time.time() - self.start_time) / 60
-        
-        stats = f"""
-{"="*70}
-REQUEST RATE MONITOR - Statistics
-{"="*70}
-Timestamp: {datetime.now().strftime('%Y-%m-%d %H:%M:%S')}
-{"-"*70}
-Current Requests/min: {rpm}
-Average RPM (5 min): {avg_rpm:.1f}
-Peak RPM: {peak_rpm}
-Total Requests: {self.total_requests}
-Runtime: {runtime:.1f} minutes
-{"="*70}
-"""
-        
-        # Console log
-        print(stats)
-        
-        # File log
-        try:
-            with open(self.log_file, 'a', encoding='utf-8') as f:
-                f.write(stats + "\n")
-        except Exception:
-            pass
-
-
-# =============================================================================
-# Initialize Global Request Rate Monitor
-# =============================================================================
-try:
-    rate_monitor = RequestRateMonitor()
-    print("[INIT] ✅ Request rate monitor initialized → request_stats.txt will be created")
-except Exception as e:
-    print(f"[INIT] ⚠️ Failed to initialize rate monitor: {e}")
-    rate_monitor = None
-
 
 def _is_driver_connection_error(exc: Exception) -> bool:
     """
@@ -8099,10 +7956,10 @@ if __name__ == "__main__":
     tab_cleanup_thread.start()
     log("🧹 TAB cleanup worker elindítva")
 
-    # Smart async JSON refresh worker - DISABLED (using unified cycle instead)
-    # smart_refresh_thread = threading.Thread(target=smart_json_refresh_loop, daemon=True)
-    # smart_refresh_thread.start()
-    log("⚠️ Old smart_json_refresh_loop DISABLED (using unified cycle to prevent constant tab cycling)")
+    # Smart async JSON refresh worker
+    smart_refresh_thread = threading.Thread(target=smart_json_refresh_loop, daemon=True)
+    smart_refresh_thread.start()
+    log("🔄 Smart async JSON refresh worker elindítva")
 
     # Autoupdate indítása Shift+P-vel, ha kell
     ensure_main_autoupdate()
@@ -8668,31 +8525,24 @@ async def fetch_unified_json(driver):
         cookies = {c['name']: c['value'] for c in driver.get_cookies()}
         user_agent = driver.execute_script("return navigator.userAgent;")
         
-        # Log request for monitoring
-        if rate_monitor:
-            rate_monitor.log_request(url)
-        
-        # aiohttp-only mode (httpx disabled)
+        # Async fetch with aiohttp
         async with aiohttp.ClientSession() as session:
             async with session.get(
                 url,
                 cookies=cookies,
-                headers={
-                    "User-Agent": user_agent,
-                    "Accept-Encoding": "br, gzip, deflate",  # Enable compression
-                },
+                headers={"User-Agent": user_agent},
                 timeout=aiohttp.ClientTimeout(total=5)
             ) as response:
                 if response.status == 200:
                     # Try to get JSON data
                     try:
                         json_data = await response.json()
-                        log(f"[UNIFIED-JSON] ✅ Fetched via aiohttp")
+                        log(f"[UNIFIED-JSON] ✅ Fetched unified JSON")
                         return json_data
                     except:
                         # If not JSON, get text (might be HTML with embedded JSON)
                         text_data = await response.text()
-                        log(f"[UNIFIED-JSON] ✅ Fetched data via aiohttp ({len(text_data)} chars)")
+                        log(f"[UNIFIED-JSON] ✅ Fetched unified data ({len(text_data)} chars)")
                         return {'html': text_data}
                 else:
                     log(f"[UNIFIED-JSON] HTTP {response.status}")
@@ -8932,96 +8782,6 @@ def open_new_tabs_and_inject(driver, new_group_urls, new_next_urls, json_data, g
         return 0
 
 
-def check_and_disable_autoupdate(driver, main_tab_handle, next_tabs):
-    """
-    Check and disable auto-update on MAIN and NEXT pages
-    Integrated into scraping cycle - runs every 60-75s
-    """
-    disabled_count = 0
-    current_handle = driver.current_window_handle
-    
-    try:
-        # Check MAIN page
-        if main_tab_handle:
-            try:
-                driver.switch_to.window(main_tab_handle)
-                if disable_autoupdate_on_page(driver, "MAIN"):
-                    disabled_count += 1
-            except Exception as e:
-                log(f"[AUTO-UPDATE] MAIN check error: {e}")
-        
-        # Check NEXT pages
-        for url, tab_info in list(next_tabs.items()):
-            try:
-                driver.switch_to.window(tab_info['handle'])
-                if disable_autoupdate_on_page(driver, "NEXT"):
-                    disabled_count += 1
-            except Exception as e:
-                log(f"[AUTO-UPDATE] NEXT check error: {e}")
-        
-        # Switch back
-        driver.switch_to.window(current_handle)
-        
-        if disabled_count > 0:
-            log(f"[AUTO-UPDATE] ✅ Disabled on {disabled_count} pages")
-        else:
-            log(f"[AUTO-UPDATE] All pages already have auto-update disabled")
-        
-    except Exception as e:
-        log(f"[AUTO-UPDATE] Error: {e}")
-
-
-def disable_autoupdate_on_page(driver, page_type):
-    """
-    Disable auto-update on current page
-    Multiple selector fallbacks + JavaScript
-    Returns True if disabled something, False if already disabled
-    """
-    try:
-        # Try common selectors for auto-update buttons/checkboxes
-        selectors = [
-            '#auto-update-toggle',
-            '.auto-update-btn',
-            '[data-auto-update]',
-            'input[type="checkbox"][name*="auto"]',
-            'button[data-toggle="auto-update"]',
-        ]
-        
-        for selector in selectors:
-            try:
-                btn = driver.find_element(By.CSS_SELECTOR, selector)
-                # Check if it's enabled
-                is_enabled = btn.is_selected() if btn.get_attribute('type') == 'checkbox' else btn.get_attribute('checked') == 'true'
-                
-                if is_enabled:
-                    btn.click()
-                    log(f"[{page_type}] ✅ Auto-update disabled via {selector}")
-                    return True
-            except:
-                continue
-        
-        # JavaScript fallback - disable all auto-update related checkboxes
-        driver.execute_script("""
-            const autoElements = document.querySelectorAll(
-                '[id*="auto"][id*="update"], [class*="auto"][class*="update"], [data-auto-update]'
-            );
-            let disabled = false;
-            autoElements.forEach(el => {
-                if (el.type === 'checkbox' && el.checked) {
-                    el.checked = false;
-                    disabled = true;
-                }
-            });
-            return disabled;
-        """)
-        
-        return False
-        
-    except Exception as e:
-        log(f"[{page_type}] Auto-update check error: {e}")
-        return False
-
-
 def scrape_all_group_and_next_tabs(driver, group_tabs, next_tabs):
     """
     Final step: Scrape ALL GROUP and NEXT tabs
@@ -9081,14 +8841,6 @@ def unified_json_refresh_and_scrape_cycle(driver, main_tab_handle, group_tabs, n
             log("[UNIFIED] ═══════════════════════════════════════")
             log("[UNIFIED] 🔄 Starting new cycle")
             log("[UNIFIED] ═══════════════════════════════════════")
-            
-            # Log statistics
-            if rate_monitor:
-                rate_monitor.log_stats()
-            
-            # Check and disable auto-update
-            log("[UNIFIED] Step 0: Checking auto-update states...")
-            check_and_disable_autoupdate(driver, main_tab_handle, next_tabs)
             
             # ─────────────────────────────────────────────
             # STEP 1: Fetch ONE JSON for ALL tabs

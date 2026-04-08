@@ -1,0 +1,967 @@
+[2026-02-11 12:15:18] chrome://resources/js/load_time_data.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] chrome://resources/lit/v3_0/lit.rollup.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] chrome://resources/mojo/mojo/public/mojom/base/time.mojom-webui.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] chrome://resources/js/cr.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] chrome://resources/cr_components/color_change_listener/color_change_listener.mojom-webui.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] chrome://resources/mojo/mojo/public/js/bindings.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] chrome://new-tab-page/new_tab_page.mojom-webui.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] chrome://new-tab-page/customize_chrome.mojom-webui.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] chrome://new-tab-page/strings.m.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] chrome://resources/cr_components/composebox/composebox_query.mojom-webui.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] chrome://new-tab-page/ntp_promo.mojom-webui.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] chrome://new-tab-page/customize_buttons.mojom-webui.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] chrome://new-tab-page/action_chips.mojom-webui.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] chrome://resources/mojo/mojo/public/mojom/base/string16.mojom-webui.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] chrome://resources/mojo/url/mojom/url.mojom-webui.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] chrome://new-tab-page/shared.rollup.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] chrome://resources/cr_components/composebox/composebox.mojom-webui.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] chrome://resources/polymer/v3_0/polymer/polymer_bundled.min.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] chrome://resources/js/assert.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] chrome://resources/js/promise_resolver.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] chrome://resources/mojo/mojo/public/mojom/base/time_converters.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] chrome://resources/mojo/mojo/public/mojom/base/time.mojom-converters.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] chrome://resources/mojo/mojo/public/mojom/base/big_buffer.mojom-webui.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] chrome://resources/mojo/mojo/public/mojom/base/string16_converter.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] chrome://resources/mojo/mojo/public/mojom/base/string16.mojom-converters.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] chrome://resources/mojo/components/ntp_tiles/tile_type.mojom-webui.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] chrome://resources/mojo/skia/public/mojom/skcolor.mojom-webui.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] chrome://resources/cr_components/most_visited/most_visited.mojom-webui.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] chrome://new-tab-page/ntp_microsoft_auth_shared_ui.mojom-webui.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] chrome://resources/mojo/components/omnibox/browser/searchbox.mojom-webui.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] chrome://resources/mojo/mojo/public/mojom/base/token.mojom-webui.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] chrome://resources/mojo/mojo/public/mojom/base/text_direction.mojom-webui.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] chrome://resources/mojo/components/ntp_tiles/tile_source.mojom-webui.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] chrome://resources/mojo/mojo/public/mojom/base/unguessable_token.mojom-webui.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] chrome://resources/mojo/ui/gfx/geometry/mojom/geometry.mojom-webui.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] chrome://resources/mojo/components/omnibox/composebox/composebox_query.mojom-webui.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] chrome://resources/mojo/components/omnibox/browser/omnibox.mojom-webui.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] chrome://resources/mojo/mojo/public/mojom/base/unguessable_token_converter.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] chrome://resources/mojo/mojo/public/mojom/base/unguessable_token.mojom-converters.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] chrome://new-tab-page/lazy_load.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] chrome://new-tab-page/microsoft_auth.mojom-webui.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] chrome://new-tab-page/outlook_calendar.mojom-webui.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] chrome://new-tab-page/google_calendar.mojom-webui.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] chrome://new-tab-page/drive_suggestion.mojom-webui.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] chrome://new-tab-page/microsoft_files.mojom-webui.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] chrome://new-tab-page/most_relevant_tab_resumption.mojom-webui.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] chrome://new-tab-page/url_visit_types.mojom-webui.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] chrome://new-tab-page/file_suggestion.mojom-webui.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] chrome://new-tab-page/tab_group_types.mojom-webui.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] chrome://resources/cr_components/page_image_service/page_image_service.mojom-webui.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] chrome://new-tab-page/tab_groups.mojom-webui.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] chrome://new-tab-page/calendar_data.mojom-webui.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] chrome-untrusted://new-tab-page/one-google-bar?paramsencoded=
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] https://en.surebet.com/users/sign_in
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/themes/base-009d6ff4474eeef243d0490626ecebfe2e965d888971411af188560ff6a06a42.css
+  Status: 200
+  Type: text/css
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/authentication/form-260401c438f1531002572702c0e435b2b9c3bba8fdb820cd314167f73e625172.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/authentication/link_with_email-4c2a43d633b112d9355ac8380d1cb5f43a84ce2630941524557789eb3f012778.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/authentication/email_check-da54f4204235ff1d79be79ee1ff796baaf8c28e570d22f05d1aab10152d27c13.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/authentication/sign_in-2e84e60d5578b733d9eff6f0bbd01fee8ad1718fd0d5b9a0085433cf3c7cec47.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/es-module-shims.min-4ca9b3dd5e434131e3bb4b0c1d7dff3bfd4035672a5086deec6f73979a49be73.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] blob:https://en.surebet.com/08ce6a07-2cb8-4884-b404-cf94cdf59734
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/user/settings/regional-3af04838cfe129036da1f771639ba4d47e16af53cd15a81fa272c340cc06e3e4.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/modules/jquery-plugins-e8925364d590f5927adfe5b7dd98bda66009ffe3ced7471c0fde5cd82fc1da33.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/stimulus.min-dd364f16ec9504dfb72672295637a1c8838773b01c0b441bd41008124c407894.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/dynamic-en/6a197c0977b33f001fd76e858141a34b1df4050523d84a438dcade19b15a419a.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/bootstrap/js/index.esm-aa15727e5121f6c6ba4978e5c057c22046b13b0509f5b0ab492abfbe27bd112b.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://www.googletagmanager.com/gtag/js?id=UA-1803143-12
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/modules/jquery-5e56ad09eaeaa275536ba37232525ef14a6922f1c557c86b19dcfd72ffd57e1d.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/vue-i18n/dist/vue-i18n.esm-browser-41429d6d976760d265d7c2684fbef65d3699c02201983b74a0f742f5281029e2.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/stimulus-loading-3576ce92b149ad5d6959438c6f291e2426c86df3b874c525b30faad51b0d96b3.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/sentry-727ef4651f28bcb691c1d802720c129ee5d99a89b08d21acc9473a76996b68dc.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/@popperjs/core/dist/esm/index-4f497d5f634c20983c873313342248abecebd248354ab689f27514f7c03a75aa.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/modules/utils-6d5fd60e6bcf6d338cfa4fc7ea8b8b8e37d5b6fc621dcf6bcb20728d3820924c.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/application-840e4de4571ff0e5164415eadb1250d710081fa795dcb3010434acaf13548d89.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/vue/dist/vue.esm-browser-ea863f12a953e14aafd0f9065c59653b021629d8b9eef218f65444bf0bb899ed.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/report/error
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] https://www.googletagmanager.com/gtag/js?id=G-4H2DFG8NDS&cx=c&gtm=4e6291
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://www.google-analytics.com/analytics.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/base/manifest.webmanifest
+  Status: 200
+  Type: application/manifest+json
+
+[2026-02-11 12:15:18] https://region1.google-analytics.com/g/collect?v=2&tid=G-4H2DFG8NDS&gtm=45je6291v9135678315za20g&_p=1770808265972&gcd=13l3l3l2l1l1&npa=1&dma_cps=syphamo&dma=1&cid=1577220263.1770376246&ul=hu-hu&sr=1920x1080&uaa=&uab=&uafvl=&uamb=0&uam=&uap=Windows&uapv=&uaw=0&are=1&frm=0&pscdl=noapi&_eu=AAAIAAQ&_s=1&tag_exp=103116026~103200004~104527907~104528500~104684208~104684211~115616985~115938466~115938468~116185181~116185182~116988315&sid=1770808266&sct=9&seg=0&dl=https%3A%2F%2Fen.surebet.com%2Fusers%2Fsign_in&dt=SureBet%20-%20Professional%20betting&_tu=QA&en=page_view&_ss=1&tfd=2121
+  Status: 204
+  Type: text/plain
+
+[2026-02-11 12:15:18] https://en.surebet.com/users/sign_in/check_account?utf8=%E2%9C%93&authenticity_token=xc5AkY4WYbTFRcppnmAH3vwrKyDG8gg9ee_MM7mi2i0EXjbg015V1jnNbi8ZRkqM84GCj8gFlAdUnp_pHyVMQQ&user%5Bjs%5D=enabled&user%5Bemail%5D=secretcodeforme%40gmail.com&user%5Bpassword%5D=Pankix123!&button=&user%5Bremember_me%5D=1&user%5Bdesirable_plan_id%5D=1&commit=Continue%20with%20e-mail
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/users/sign_in/check_password?utf8=%E2%9C%93&authenticity_token=xc5AkY4WYbTFRcppnmAH3vwrKyDG8gg9ee_MM7mi2i0EXjbg015V1jnNbi8ZRkqM84GCj8gFlAdUnp_pHyVMQQ&user%5Bjs%5D=enabled&user%5Bemail%5D=secretcodeforme%40gmail.com&user%5Bpassword%5D=Pankix123!&button=&user%5Bremember_me%5D=1&user%5Bdesirable_plan_id%5D=1&commit=Log%20in
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/surebets
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/sentry-727ef4651f28bcb691c1d802720c129ee5d99a89b08d21acc9473a76996b68dc.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/es-module-shims.min-4ca9b3dd5e434131e3bb4b0c1d7dff3bfd4035672a5086deec6f73979a49be73.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/modules/jquery-5e56ad09eaeaa275536ba37232525ef14a6922f1c557c86b19dcfd72ffd57e1d.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/modules/jquery-plugins-e8925364d590f5927adfe5b7dd98bda66009ffe3ced7471c0fde5cd82fc1da33.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/bootstrap/js/index.esm-aa15727e5121f6c6ba4978e5c057c22046b13b0509f5b0ab492abfbe27bd112b.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/@popperjs/core/dist/esm/index-4f497d5f634c20983c873313342248abecebd248354ab689f27514f7c03a75aa.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/vue/dist/vue.esm-browser-ea863f12a953e14aafd0f9065c59653b021629d8b9eef218f65444bf0bb899ed.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/vue-i18n/dist/vue-i18n.esm-browser-41429d6d976760d265d7c2684fbef65d3699c02201983b74a0f742f5281029e2.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/stimulus.min-dd364f16ec9504dfb72672295637a1c8838773b01c0b441bd41008124c407894.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/stimulus-loading-3576ce92b149ad5d6959438c6f291e2426c86df3b874c525b30faad51b0d96b3.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/application-840e4de4571ff0e5164415eadb1250d710081fa795dcb3010434acaf13548d89.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/dynamic-en/6a197c0977b33f001fd76e858141a34b1df4050523d84a438dcade19b15a419a.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] blob:https://en.surebet.com/13994946-4624-4d6c-a909-7225ff6f0220
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/report/error
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/user/settings/regional-3af04838cfe129036da1f771639ba4d47e16af53cd15a81fa272c340cc06e3e4.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/popups/buttons/autoupdate-3ac7ede6e5ff66a46ca7655d2cd7333f2bb9d692e26fbdc9e5f6b8fb40b91d19.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/starred_share-17488ae3c022943d484d4cddf86c483668793d397648f831d05eeefc362cb5f0.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/themes/slate-30508894b185c4e4d45f89b120c41c22c7b592ee7a3f6997fc78bf868e0dd12f.css
+  Status: 200
+  Type: text/css
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/autoupdate-6544ebfdbfa53a60f3cbf15c6b82f9fad6b4ebf4d94172a9018f6270e73d1df4.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/popups/buttons/plugin-87b781f47daee5e00dba952838bfc4b35ec583ff751c4e6e0410b8ef00afc136.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/navigation/search-791040172fd025de7459fac7995489784d58a3f477f2772526b2a022fe39ba0b.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/filter/order-5ab5e2c201d9d659ba511b2027ac6dc9e542eead36ebfa09df03ae0209791eda.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/navigation-903155d05d9f35e3d53338051ee2d73675131df4fe1ae214eb23c2fb3cb9a104.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/filter-502198691c3bdcfa7bc621c75cb76d48611320ed3e1790b7dec20a8d9230456f.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/filter/search/complex_conditions-489ffa13cf9d33d5e7f9de6372997132a9d84f28ef9a59393bd7a90cfa226725.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://www.googletagmanager.com/gtag/js?id=UA-1803143-12
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/filter/tournaments-11ebc88d6611f728ecd27b0667c11e8f8a79bb62899437d001a6304dadc4ac6d.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/modules/utils-6d5fd60e6bcf6d338cfa4fc7ea8b8b8e37d5b6fc621dcf6bcb20728d3820924c.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/webpush/subscriptions/count
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:18] https://www.googletagmanager.com/gtag/js?id=G-4H2DFG8NDS&cx=c&gtm=4e6291
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://www.google-analytics.com/analytics.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/base/manifest.webmanifest
+  Status: 200
+  Type: application/manifest+json
+
+[2026-02-11 12:15:18] https://en.surebet.com/surebets?cursor=4613756399922587858%3AV081v1pwBwc%2B
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/themes/slate-30508894b185c4e4d45f89b120c41c22c7b592ee7a3f6997fc78bf868e0dd12f.css
+  Status: 200
+  Type: text/css
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/@popperjs/core/dist/esm/index-4f497d5f634c20983c873313342248abecebd248354ab689f27514f7c03a75aa.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/modules/jquery-5e56ad09eaeaa275536ba37232525ef14a6922f1c557c86b19dcfd72ffd57e1d.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/stimulus-loading-3576ce92b149ad5d6959438c6f291e2426c86df3b874c525b30faad51b0d96b3.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/sentry-727ef4651f28bcb691c1d802720c129ee5d99a89b08d21acc9473a76996b68dc.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/modules/jquery-plugins-e8925364d590f5927adfe5b7dd98bda66009ffe3ced7471c0fde5cd82fc1da33.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/starred_share-17488ae3c022943d484d4cddf86c483668793d397648f831d05eeefc362cb5f0.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/filter/order-5ab5e2c201d9d659ba511b2027ac6dc9e542eead36ebfa09df03ae0209791eda.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/filter/search/complex_conditions-489ffa13cf9d33d5e7f9de6372997132a9d84f28ef9a59393bd7a90cfa226725.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/navigation-903155d05d9f35e3d53338051ee2d73675131df4fe1ae214eb23c2fb3cb9a104.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/navigation/search-791040172fd025de7459fac7995489784d58a3f477f2772526b2a022fe39ba0b.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/popups/buttons/autoupdate-3ac7ede6e5ff66a46ca7655d2cd7333f2bb9d692e26fbdc9e5f6b8fb40b91d19.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/autoupdate-6544ebfdbfa53a60f3cbf15c6b82f9fad6b4ebf4d94172a9018f6270e73d1df4.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/popups/buttons/plugin-87b781f47daee5e00dba952838bfc4b35ec583ff751c4e6e0410b8ef00afc136.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/vue-i18n/dist/vue-i18n.esm-browser-41429d6d976760d265d7c2684fbef65d3699c02201983b74a0f742f5281029e2.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/bootstrap/js/index.esm-aa15727e5121f6c6ba4978e5c057c22046b13b0509f5b0ab492abfbe27bd112b.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/filter/tournaments-11ebc88d6611f728ecd27b0667c11e8f8a79bb62899437d001a6304dadc4ac6d.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/stimulus.min-dd364f16ec9504dfb72672295637a1c8838773b01c0b441bd41008124c407894.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/dynamic-en/6a197c0977b33f001fd76e858141a34b1df4050523d84a438dcade19b15a419a.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/application-840e4de4571ff0e5164415eadb1250d710081fa795dcb3010434acaf13548d89.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/vue/dist/vue.esm-browser-ea863f12a953e14aafd0f9065c59653b021629d8b9eef218f65444bf0bb899ed.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/user/settings/regional-3af04838cfe129036da1f771639ba4d47e16af53cd15a81fa272c340cc06e3e4.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/filter-502198691c3bdcfa7bc621c75cb76d48611320ed3e1790b7dec20a8d9230456f.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/es-module-shims.min-4ca9b3dd5e434131e3bb4b0c1d7dff3bfd4035672a5086deec6f73979a49be73.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://www.googletagmanager.com/gtag/js?id=UA-1803143-12
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] blob:https://en.surebet.com/833ad418-23db-448d-86c9-232a5c03d98f
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/modules/utils-6d5fd60e6bcf6d338cfa4fc7ea8b8b8e37d5b6fc621dcf6bcb20728d3820924c.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/report/error
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] https://www.google-analytics.com/analytics.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/webpush/subscriptions/count
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:18] https://www.googletagmanager.com/gtag/js?id=G-4H2DFG8NDS&cx=c&gtm=4e6291
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/base/manifest.webmanifest
+  Status: 200
+  Type: application/manifest+json
+
+[2026-02-11 12:15:18] https://en.surebet.com/surebets?cursor=4613392096954810058%3AWezrTVl-O9g%2B
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/themes/slate-30508894b185c4e4d45f89b120c41c22c7b592ee7a3f6997fc78bf868e0dd12f.css
+  Status: 200
+  Type: text/css
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/@popperjs/core/dist/esm/index-4f497d5f634c20983c873313342248abecebd248354ab689f27514f7c03a75aa.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/modules/jquery-plugins-e8925364d590f5927adfe5b7dd98bda66009ffe3ced7471c0fde5cd82fc1da33.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/modules/jquery-5e56ad09eaeaa275536ba37232525ef14a6922f1c557c86b19dcfd72ffd57e1d.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/stimulus-loading-3576ce92b149ad5d6959438c6f291e2426c86df3b874c525b30faad51b0d96b3.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/vue-i18n/dist/vue-i18n.esm-browser-41429d6d976760d265d7c2684fbef65d3699c02201983b74a0f742f5281029e2.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/filter/order-5ab5e2c201d9d659ba511b2027ac6dc9e542eead36ebfa09df03ae0209791eda.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/starred_share-17488ae3c022943d484d4cddf86c483668793d397648f831d05eeefc362cb5f0.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/filter/search/complex_conditions-489ffa13cf9d33d5e7f9de6372997132a9d84f28ef9a59393bd7a90cfa226725.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/navigation-903155d05d9f35e3d53338051ee2d73675131df4fe1ae214eb23c2fb3cb9a104.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/popups/buttons/autoupdate-3ac7ede6e5ff66a46ca7655d2cd7333f2bb9d692e26fbdc9e5f6b8fb40b91d19.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/navigation/search-791040172fd025de7459fac7995489784d58a3f477f2772526b2a022fe39ba0b.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/popups/buttons/plugin-87b781f47daee5e00dba952838bfc4b35ec583ff751c4e6e0410b8ef00afc136.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/bootstrap/js/index.esm-aa15727e5121f6c6ba4978e5c057c22046b13b0509f5b0ab492abfbe27bd112b.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/stimulus.min-dd364f16ec9504dfb72672295637a1c8838773b01c0b441bd41008124c407894.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/sentry-727ef4651f28bcb691c1d802720c129ee5d99a89b08d21acc9473a76996b68dc.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/autoupdate-6544ebfdbfa53a60f3cbf15c6b82f9fad6b4ebf4d94172a9018f6270e73d1df4.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/dynamic-en/6a197c0977b33f001fd76e858141a34b1df4050523d84a438dcade19b15a419a.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/filter/tournaments-11ebc88d6611f728ecd27b0667c11e8f8a79bb62899437d001a6304dadc4ac6d.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/application-840e4de4571ff0e5164415eadb1250d710081fa795dcb3010434acaf13548d89.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/vue/dist/vue.esm-browser-ea863f12a953e14aafd0f9065c59653b021629d8b9eef218f65444bf0bb899ed.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/user/settings/regional-3af04838cfe129036da1f771639ba4d47e16af53cd15a81fa272c340cc06e3e4.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/es-module-shims.min-4ca9b3dd5e434131e3bb4b0c1d7dff3bfd4035672a5086deec6f73979a49be73.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/filter-502198691c3bdcfa7bc621c75cb76d48611320ed3e1790b7dec20a8d9230456f.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://www.googletagmanager.com/gtag/js?id=UA-1803143-12
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] blob:https://en.surebet.com/17176b68-3c6b-493b-ba85-b3052985f7a5
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/modules/utils-6d5fd60e6bcf6d338cfa4fc7ea8b8b8e37d5b6fc621dcf6bcb20728d3820924c.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/report/error
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] https://www.google-analytics.com/analytics.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] https://www.googletagmanager.com/gtag/js?id=G-4H2DFG8NDS&cx=c&gtm=4e6291
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/webpush/subscriptions/count
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:18] https://en.surebet.com/base/manifest.webmanifest
+  Status: 200
+  Type: application/manifest+json
+
+[2026-02-11 12:15:18] https://en.surebet.com/surebets?signature=&product=surebets&autoupdate=1&cursor=4613756399922587858:V081v1pwBwc%2B&format=json
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:18] https://en.surebet.com/surebets/group?group_title=Celtic+%E2%80%93+Livingston&like=ELlqVw
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/themes/slate-30508894b185c4e4d45f89b120c41c22c7b592ee7a3f6997fc78bf868e0dd12f.css
+  Status: 200
+  Type: text/css
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/@popperjs/core/dist/esm/index-4f497d5f634c20983c873313342248abecebd248354ab689f27514f7c03a75aa.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/stimulus.min-dd364f16ec9504dfb72672295637a1c8838773b01c0b441bd41008124c407894.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/sentry-727ef4651f28bcb691c1d802720c129ee5d99a89b08d21acc9473a76996b68dc.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/modules/jquery-5e56ad09eaeaa275536ba37232525ef14a6922f1c557c86b19dcfd72ffd57e1d.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/modules/jquery-plugins-e8925364d590f5927adfe5b7dd98bda66009ffe3ced7471c0fde5cd82fc1da33.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/vue-i18n/dist/vue-i18n.esm-browser-41429d6d976760d265d7c2684fbef65d3699c02201983b74a0f742f5281029e2.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/bootstrap/js/index.esm-aa15727e5121f6c6ba4978e5c057c22046b13b0509f5b0ab492abfbe27bd112b.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/vue/dist/vue.esm-browser-ea863f12a953e14aafd0f9065c59653b021629d8b9eef218f65444bf0bb899ed.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/stimulus-loading-3576ce92b149ad5d6959438c6f291e2426c86df3b874c525b30faad51b0d96b3.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/starred_share-17488ae3c022943d484d4cddf86c483668793d397648f831d05eeefc362cb5f0.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/filter/order-5ab5e2c201d9d659ba511b2027ac6dc9e542eead36ebfa09df03ae0209791eda.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/navigation-903155d05d9f35e3d53338051ee2d73675131df4fe1ae214eb23c2fb3cb9a104.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/navigation/search-791040172fd025de7459fac7995489784d58a3f477f2772526b2a022fe39ba0b.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/popups/buttons/plugin-87b781f47daee5e00dba952838bfc4b35ec583ff751c4e6e0410b8ef00afc136.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/filter/tournaments-11ebc88d6611f728ecd27b0667c11e8f8a79bb62899437d001a6304dadc4ac6d.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/dynamic-en/6a197c0977b33f001fd76e858141a34b1df4050523d84a438dcade19b15a419a.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/application-840e4de4571ff0e5164415eadb1250d710081fa795dcb3010434acaf13548d89.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/filter/search/group/complex_conditions-4ef06499113fb3f48c024bb43976d66470f9a9c9b433ace1942a66fb5d97e79f.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/es-module-shims.min-4ca9b3dd5e434131e3bb4b0c1d7dff3bfd4035672a5086deec6f73979a49be73.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://www.googletagmanager.com/gtag/js?id=UA-1803143-12
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/user/settings/regional-3af04838cfe129036da1f771639ba4d47e16af53cd15a81fa272c340cc06e3e4.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/filter-502198691c3bdcfa7bc621c75cb76d48611320ed3e1790b7dec20a8d9230456f.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] blob:https://en.surebet.com/f99eded5-b868-4e53-9849-21663ad6dbd6
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/modules/utils-6d5fd60e6bcf6d338cfa4fc7ea8b8b8e37d5b6fc621dcf6bcb20728d3820924c.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/report/error
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] https://www.google-analytics.com/analytics.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] https://www.googletagmanager.com/gtag/js?id=G-4H2DFG8NDS&cx=c&gtm=4e6291
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/base/manifest.webmanifest
+  Status: 200
+  Type: application/manifest+json
+
+[2026-02-11 12:15:18] https://en.surebet.com/surebets/group?group_title=DEAC+%E2%80%93+Soroksar&like=j5gsVw
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/themes/slate-30508894b185c4e4d45f89b120c41c22c7b592ee7a3f6997fc78bf868e0dd12f.css
+  Status: 200
+  Type: text/css
+
+[2026-02-11 12:15:18] https://en.surebet.com/surebets?product=surebets&autoupdate=1&cursor=4613756399922587858:V081v1pwBwc%2B&format=json
+  Status: 200
+  Type: application/json
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/@popperjs/core/dist/esm/index-4f497d5f634c20983c873313342248abecebd248354ab689f27514f7c03a75aa.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/modules/jquery-plugins-e8925364d590f5927adfe5b7dd98bda66009ffe3ced7471c0fde5cd82fc1da33.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/stimulus-loading-3576ce92b149ad5d6959438c6f291e2426c86df3b874c525b30faad51b0d96b3.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/sentry-727ef4651f28bcb691c1d802720c129ee5d99a89b08d21acc9473a76996b68dc.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/modules/jquery-5e56ad09eaeaa275536ba37232525ef14a6922f1c557c86b19dcfd72ffd57e1d.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/starred_share-17488ae3c022943d484d4cddf86c483668793d397648f831d05eeefc362cb5f0.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/filter/order-5ab5e2c201d9d659ba511b2027ac6dc9e542eead36ebfa09df03ae0209791eda.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/filter/search/group/complex_conditions-4ef06499113fb3f48c024bb43976d66470f9a9c9b433ace1942a66fb5d97e79f.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/bootstrap/js/index.esm-aa15727e5121f6c6ba4978e5c057c22046b13b0509f5b0ab492abfbe27bd112b.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/navigation-903155d05d9f35e3d53338051ee2d73675131df4fe1ae214eb23c2fb3cb9a104.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/navigation/search-791040172fd025de7459fac7995489784d58a3f477f2772526b2a022fe39ba0b.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/popups/buttons/plugin-87b781f47daee5e00dba952838bfc4b35ec583ff751c4e6e0410b8ef00afc136.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/stimulus.min-dd364f16ec9504dfb72672295637a1c8838773b01c0b441bd41008124c407894.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/vue-i18n/dist/vue-i18n.esm-browser-41429d6d976760d265d7c2684fbef65d3699c02201983b74a0f742f5281029e2.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/filter/tournaments-11ebc88d6611f728ecd27b0667c11e8f8a79bb62899437d001a6304dadc4ac6d.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/dynamic-en/6a197c0977b33f001fd76e858141a34b1df4050523d84a438dcade19b15a419a.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/application-840e4de4571ff0e5164415eadb1250d710081fa795dcb3010434acaf13548d89.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/vue/dist/vue.esm-browser-ea863f12a953e14aafd0f9065c59653b021629d8b9eef218f65444bf0bb899ed.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/user/settings/regional-3af04838cfe129036da1f771639ba4d47e16af53cd15a81fa272c340cc06e3e4.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/filter-502198691c3bdcfa7bc621c75cb76d48611320ed3e1790b7dec20a8d9230456f.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/es-module-shims.min-4ca9b3dd5e434131e3bb4b0c1d7dff3bfd4035672a5086deec6f73979a49be73.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://www.googletagmanager.com/gtag/js?id=UA-1803143-12
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] blob:https://en.surebet.com/acc95cc4-037b-4a1f-9aac-c60c084b6365
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/assets/modules/utils-6d5fd60e6bcf6d338cfa4fc7ea8b8b8e37d5b6fc621dcf6bcb20728d3820924c.js
+  Status: 200
+  Type: application/javascript
+
+[2026-02-11 12:15:18] https://en.surebet.com/report/error
+  Status: 200
+  Type: text/html
+
+[2026-02-11 12:15:18] https://www.google-analytics.com/analytics.js
+  Status: 200
+  Type: text/javascript
+
+[2026-02-11 12:15:18] https://www.googletagmanager.com/gtag/js?id=G-4H2DFG8NDS&cx=c&gtm=4e6291
+  Status: 200
+  Type: application/javascript

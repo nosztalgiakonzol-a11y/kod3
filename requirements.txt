@@ -1,0 +1,19 @@
+# Python dependencies for ArbifyBeta
+
+# Core dependencies
+requests>=2.31.0
+selenium>=4.15.0
+undetected-chromedriver>=3.5.0
+
+# Async HTTP requests (for parallel JSON fetching)
+aiohttp>=3.9.0
+
+# HTML parsing
+beautifulsoup4>=4.12.0
+lxml>=4.9.0
+
+# Database - Supabase SDK for direct database queries
+supabase>=2.0.0
+
+# Environment variables (optional but recommended for VPS)
+python-dotenv>=1.0.0
